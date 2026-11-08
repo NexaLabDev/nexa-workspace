@@ -1,0 +1,216 @@
+/* Aba Serviços: configurador de campos personalizados e checklist padrão */
+
+.config {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.config section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.configTitulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--texto-3);
+}
+
+.configTitulo svg {
+  color: var(--lima);
+}
+
+.vazio,
+.dica {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--texto-3);
+}
+
+.rotuloOculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.listaCampos,
+.listaChecklist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.linhaCampo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.linhaCampoTopo {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.linhaCampoTopo :global(input),
+.linhaCampoTopo :global(select),
+.listaChecklist :global(input) {
+  height: 40px;
+  font-size: 14px;
+}
+
+.opcoes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--texto-3);
+}
+
+.opcoes textarea {
+  height: auto;
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.linhaCampoRodape {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.empurra {
+  flex: 1;
+}
+
+.marcar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: #dcdcdc;
+  cursor: pointer;
+}
+
+.marcar input {
+  width: 16px;
+  height: 16px;
+  accent-color: #c4f03a;
+}
+
+.perigo:hover {
+  color: #ff9d85;
+}
+
+.linhaCampoRodape button:disabled,
+.listaChecklist button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.erro {
+  font-size: 12.5px;
+  color: #ff9d85;
+}
+
+.listaChecklist li {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.listaChecklist li :global(input) {
+  flex: 1;
+  min-width: 0;
+  margin-right: 4px;
+}
+
+.arquivados {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  font-size: 13.5px;
+}
+
+.arquivados summary {
+  cursor: pointer;
+  color: var(--texto-2);
+}
+
+.arquivados ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.arquivados li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* Resumo no cartão do serviço */
+.resumoConfig {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 12px;
+}
+
+.resumoConfig span {
+  padding: 2px 9px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--texto-2);
+  font-size: 12px;
+}
+
+.btnConfig {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #dff88f;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btnConfig:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+  .linhaCampoTopo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

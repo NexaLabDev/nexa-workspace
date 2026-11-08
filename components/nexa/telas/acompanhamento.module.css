@@ -1,0 +1,307 @@
+/* ============================================
+   PÁGINA DO CLIENTE — "Acompanhamento do seu projeto"
+   Medidas do layout (941 × 1672, celular), em proporção.
+   ============================================ */
+
+.pagina {
+  --lima: #c4f03a;
+  position: relative;
+  min-height: 100vh;
+  padding: 32px 18px 120px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(196, 240, 58, 0.08), transparent 55%),
+    radial-gradient(ellipse at 50% 100%, rgba(196, 240, 58, 0.08), transparent 55%),
+    #0d1112;
+  color: #fff;
+  font-family: var(--fonte-jakarta), 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+.ondaTopo,
+.ondaBase {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 140px;
+  pointer-events: none;
+  filter: drop-shadow(0 0 8px rgba(196, 240, 58, 0.5));
+}
+
+.ondaTopo {
+  top: 120px;
+}
+
+.ondaBase {
+  bottom: 0;
+}
+
+.coluna {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(560px, 100%);
+  margin: 0 auto;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.marca img {
+  width: 34px;
+  height: auto;
+}
+
+.marca span {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.cabecalho {
+  margin: 18px 0 12px;
+  text-align: center;
+}
+
+.cabecalho h1 {
+  margin: 0;
+  font-size: clamp(26px, 7vw, 34px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.cabecalho h1 span {
+  color: var(--lima);
+}
+
+.subtitulo {
+  margin: 8px 0 0;
+  font-size: 15.5px;
+  color: #cfcfcf;
+}
+
+.tituloErro {
+  margin: 0;
+  font-size: 26px;
+}
+
+.cartao {
+  padding: 20px 22px;
+  border-radius: 18px;
+  background: rgba(22, 26, 27, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.35);
+}
+
+.linha {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.linha small {
+  display: block;
+  font-size: 14px;
+  color: #cfcfcf;
+}
+
+.linha strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.divisor {
+  align-self: stretch;
+  flex-shrink: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.iconeCaixa {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  background: linear-gradient(160deg, rgba(196, 240, 58, 0.25), rgba(60, 100, 20, 0.35));
+  border: 1px solid rgba(196, 240, 58, 0.3);
+  color: var(--lima);
+}
+
+.iconeGrande {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.iconeSolto {
+  flex-shrink: 0;
+  margin: 0 10px;
+  color: #fff;
+}
+
+.nomeProjeto {
+  font-size: 20px !important;
+}
+
+.progressoTopo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  font-size: 15px;
+  color: #dcdcdc;
+}
+
+.progressoTopo strong {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--lima);
+}
+
+.barra {
+  height: 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.barra i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #b9ec22, #d0f73c);
+  box-shadow: 0 0 14px rgba(196, 240, 58, 0.5);
+}
+
+/* ----- Linha do tempo ----- */
+.linhaTempo {
+  margin: 8px 0;
+  padding: 0 0 0 22px;
+  list-style: none;
+}
+
+.linhaTempo li {
+  position: relative;
+  display: flex;
+  gap: 22px;
+  padding-bottom: 22px;
+}
+
+.linhaTempo li:last-child {
+  padding-bottom: 0;
+}
+
+/* trilho entre as bolinhas */
+.linhaTempo li::before {
+  content: '';
+  position: absolute;
+  left: 17px;
+  top: 38px;
+  bottom: -2px;
+  width: 3px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.linhaTempo li:last-child::before {
+  display: none;
+}
+
+.linhaTempo li.feito:not(.atual)::before {
+  background: var(--lima);
+}
+
+.marcador {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 37px;
+  height: 37px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.35);
+  background: #0d1112;
+  color: #10140a;
+}
+
+.feito .marcador {
+  border-color: var(--lima);
+  background: var(--lima);
+}
+
+.atual .marcador {
+  box-shadow: 0 0 0 5px #0d1112, 0 0 0 7px var(--lima), 0 0 22px rgba(196, 240, 58, 0.6);
+}
+
+.linhaTempo strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.linhaTempo p {
+  margin: 4px 0 0;
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: #cfcfcf;
+}
+
+/* ----- Status atual ----- */
+.status {
+  padding: 24px 22px;
+  border-color: rgba(205, 250, 95, 0.6);
+  background: linear-gradient(160deg, rgba(196, 240, 58, 0.1), rgba(22, 26, 27, 0.88) 55%);
+  box-shadow: 0 0 26px rgba(183, 255, 0, 0.14), 0 16px 34px rgba(0, 0, 0, 0.35);
+}
+
+.statusNome {
+  font-size: clamp(22px, 6vw, 28px) !important;
+  font-weight: 800 !important;
+  color: var(--lima);
+  line-height: 1.15;
+}
+
+.status p {
+  margin: 6px 0 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: #e6e6e6;
+}
+
+.compacto {
+  padding: 16px 22px;
+}
+
+/* Recado autorizado pela equipe */
+.recado {
+  margin: 4px 0 0;
+  color: #f2f2f2;
+  font-size: 15px;
+  line-height: 1.5;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.progressoIndisponivel {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: inherit;
+  opacity: 0.85;
+}
+
+.progressoBase {
+  margin: 10px 0 0;
+  font-size: 13px;
+  opacity: 0.75;
+}

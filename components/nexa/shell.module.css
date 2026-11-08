@@ -1,0 +1,873 @@
+/* ============================================
+   MOLDURA DO NEXA WORKSPACE (todas as abas)
+   Medidas tiradas do layout aprovado (1672 × 941).
+   ============================================ */
+
+.raiz {
+  /* Paleta medida no layout */
+  --lima: #c4f03a;          /* textos, ícones, barra */
+  --lima-forte: #b0e808;
+  --lima-claro: #d8f870;    /* botão Novo, selos */
+  --lima-vidro: rgba(190, 245, 60, 0.16);
+  --lima-borda: rgba(205, 250, 95, 0.55);
+  --texto: #ffffff;
+  --texto-2: #d4d4d4;
+  --texto-3: #a9a9a9;
+  --vidro: rgba(24, 26, 28, 0.62);
+  --vidro-borda: rgba(255, 255, 255, 0.09);
+  --fonte: var(--fonte-jakarta), 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  column-gap: 5px;
+  padding: 25px 25px 36px 10px;
+  font-family: var(--fonte);
+  color: var(--texto);
+  background-color: #141516;
+  background-image:
+    linear-gradient(180deg, rgba(12, 14, 16, 0.1) 0%, rgba(12, 14, 16, 0) 45%, rgba(10, 10, 12, 0.55) 100%),
+    url('/dashboard/fundo-montanhas.jpg');
+  /* Foto ampliada para os picos subirem até perto do relógio, como no layout */
+  background-size: 100% 100%, auto 150%;
+  background-position: center, 50% 77%;
+  background-repeat: no-repeat;
+  overflow: hidden;
+}
+
+/* Abas de conteúdo: montanhas no alto à direita (como no layout do CRM) e fundo mais escuro embaixo */
+.raizInterna {
+  background-image:
+    linear-gradient(180deg, rgba(14, 19, 22, 0) 0%, rgba(14, 19, 22, 0.3) 18%, rgba(14, 19, 22, 0.9) 36%, rgba(14, 19, 22, 0.95) 100%),
+    linear-gradient(90deg, rgba(14, 19, 22, 0.92) 0%, rgba(14, 19, 22, 0.55) 45%, rgba(14, 19, 22, 0) 72%),
+    url('/dashboard/fundo-montanhas.jpg');
+  background-size: 100% 100%, 100% 100%, auto 190%;
+  background-position: center, center, 85% 90%;
+}
+
+.raiz button,
+.raiz select,
+.raiz input {
+  font-family: inherit;
+}
+
+.raiz :focus-visible {
+  outline: 2px solid var(--lima);
+  outline-offset: 2px;
+}
+
+/* ============ Barra de ícones ============ */
+.trilho {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0 22px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #1f1f20 0%, #171718 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+}
+
+.simbolo {
+  width: 42px;
+  height: auto;
+  margin-bottom: 18px;
+}
+
+.trilhoBtn {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 15px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #d9d9d9;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.trilhoBtn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.trilhoAtivo,
+.trilhoAtivo:hover {
+  background: radial-gradient(circle at 50% 40%, rgba(196, 240, 58, 0.28), rgba(196, 240, 58, 0.1));
+  border-color: var(--lima-borda);
+  color: var(--lima);
+  box-shadow: 0 0 18px rgba(183, 255, 0, 0.22), inset 0 0 10px rgba(196, 240, 58, 0.15);
+}
+
+.trilhoDivisor {
+  width: 34px;
+  height: 1px;
+  margin: 22px 0;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.trilhoRodape {
+  margin-top: auto;
+}
+
+/* ============ Área principal ============ */
+.principal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 5px 0 20px 19px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+
+.principal::-webkit-scrollbar {
+  display: none;
+}
+
+/* ----- Busca e botões ----- */
+.topo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 57px;
+  flex-shrink: 0;
+}
+
+/* Reserva o espaço do cartão no canto direito (clima do painel inicial: 240 + margem) */
+.topoComCanto {
+  padding-right: 268px;
+}
+
+.busca {
+  display: flex;
+  align-items: center;
+  flex: 0 1 742px;
+  min-width: 0;
+  height: 57px;
+  margin-right: 14px;
+  padding: 0 9px 0 26px;
+  border-radius: 29px;
+  background: rgba(30, 32, 32, 0.72);
+  border: 1px solid rgba(200, 245, 90, 0.24);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+  cursor: text;
+}
+
+.buscaRaio {
+  flex-shrink: 0;
+  color: var(--lima);
+}
+
+
+
+
+.atalhoTecla {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.1);
+  font-family: inherit;
+  font-size: 13.5px;
+  color: #e2e2e2;
+}
+
+.buscaSep {
+  flex-shrink: 0;
+  width: 1.5px;
+  height: 22px;
+  margin: 0 16px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.btnNovo {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+  width: 112px;
+  height: 40px;
+  border: 0;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #e0fb83 0%, #d2f55a 100%);
+  color: #161616;
+  font-size: 15.5px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 0 16px rgba(200, 245, 80, 0.25);
+}
+
+.btnNovo:hover {
+  filter: brightness(1.05);
+}
+
+.btnRedondo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 57px;
+  height: 57px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(34, 36, 37, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.35);
+}
+
+.btnRedondo:hover {
+  background: rgba(50, 52, 53, 0.85);
+}
+
+.pontoAviso {
+  position: absolute;
+  top: 13px;
+  right: 13px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--lima);
+  border: 2px solid #1e2021;
+}
+
+/* ----- Topo compacto (CRM): ícones soltos e avatar ----- */
+.topoCompacto {
+  height: 50px;
+  gap: 10px;
+}
+
+.topoCompacto .busca {
+  flex: 0 1 812px;
+  height: 50px;
+  border-color: rgba(255, 255, 255, 0.1);
+  padding-right: 4px;
+}
+
+.topoCompacto .btnNovo {
+  width: auto;
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 22px;
+  font-size: 16.5px;
+}
+
+.topoCompacto .btnRedondo {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.topoCompacto .btnRedondo:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.topoCompacto .pontoAviso {
+  top: 7px;
+  right: 8px;
+  width: 9px;
+  height: 9px;
+}
+
+.espaco {
+  flex: 1;
+}
+
+.perfil {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+.avatarPerfil {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #f4f4f4;
+  color: #151515;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+
+/* ============ Telas menores ============ */
+@media (max-width: 1100px), (max-height: 700px) {
+  .raiz {
+    overflow-y: auto;
+  }
+  .principal {
+    overflow: visible;
+  }
+  .topoComCanto {
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .raiz {
+    position: absolute;
+    min-height: 100vh;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 16px;
+  }
+  .trilho {
+    display: none;
+  }
+  .principal {
+    padding: 0;
+  }
+  .topo {
+    flex-wrap: wrap;
+    height: auto;
+    gap: 12px;
+  }
+  .busca {
+    flex: 1 1 100%;
+    margin-right: 0;
+    padding-left: 18px;
+  }
+  .atalhoTecla,
+  .buscaSep {
+    display: none;
+  }
+  .btnNovo {
+    width: auto;
+    padding: 0 16px;
+    margin-left: 8px;
+  }
+}
+
+/* ============ Busca do topo (abre a busca global) ============ */
+.buscaGatilho {
+  flex: 1;
+  min-width: 0;
+  margin-left: 18px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #e4e4e4;
+  font-size: 15.5px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: text;
+}
+
+/* ============ Botões do topo e seus menus ============ */
+.topoAcoes {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.topoCompacto .topoAcoes {
+  gap: 10px;
+}
+
+.ancora {
+  position: relative;
+}
+
+.menuFlutuante {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 40;
+  width: 320px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 18px 18px 16px;
+  border-radius: 18px;
+  background: rgba(28, 31, 32, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.55);
+  color: #fff;
+  text-align: left;
+}
+
+.menuFlutuante h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.menuFlutuante h4 {
+  margin: 16px 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #bdbdbd;
+}
+
+.menuLista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  color: #e6e6e6;
+}
+
+.menuLista li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.menuLista strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.menuLista small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: #a9a9a9;
+}
+
+.menuHora {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: 10px;
+  background: rgba(196, 240, 58, 0.15);
+  color: #d4f66a;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.menuLink {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  margin: 0 -10px;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.menuLink:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.menuLink svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--lima);
+}
+
+.menuNota {
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #a9a9a9;
+}
+
+.tecla {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  font-family: inherit;
+  font-size: 12px;
+}
+
+/* ============ Busca global (Ctrl + K) ============ */
+.paletaFundo {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  justify-content: center;
+  padding: 12vh 16px 16px;
+  background: rgba(6, 7, 8, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.paleta {
+  display: flex;
+  flex-direction: column;
+  width: min(640px, 100%);
+  max-height: 70vh;
+  border-radius: 20px;
+  background: rgba(28, 31, 32, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.55);
+  color: #fff;
+  overflow: hidden;
+}
+
+.paletaCampo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--lima);
+}
+
+.paletaCampo input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 16.5px;
+  outline: none;
+}
+
+.paletaCampo input::placeholder {
+  color: #9a9a9a;
+}
+
+.paletaFechar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: #cfcfcf;
+  cursor: pointer;
+}
+
+.paletaLista {
+  flex: 1;
+  margin: 0;
+  padding: 8px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.paletaGrupo {
+  margin: 10px 10px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #8f8f8f;
+}
+
+.paletaItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.paletaItem strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.paletaItem small {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  color: #a9a9a9;
+}
+
+.paletaItem svg {
+  flex-shrink: 0;
+  color: #8f8f8f;
+}
+
+.paletaItemAtivo {
+  background: rgba(196, 240, 58, 0.12);
+}
+
+.paletaItemAtivo svg {
+  color: var(--lima);
+}
+
+.paletaVazio {
+  padding: 24px 12px;
+  text-align: center;
+  color: #a9a9a9;
+}
+
+.paletaRodape {
+  margin: 0;
+  padding: 10px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 12.5px;
+  color: #8f8f8f;
+}
+
+.paletaRodape kbd {
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  font-family: inherit;
+}
+
+/* ============ Navegação no celular ============ */
+.navCelular {
+  display: none;
+}
+
+@media (max-height: 820px) {
+  .trilho {
+    gap: 8px;
+  }
+  .trilhoDivisor {
+    margin: 10px 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .principal {
+    padding-bottom: 96px;
+  }
+  .navCelular {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    display: flex;
+    gap: 2px;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    background: rgba(20, 22, 23, 0.96);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .navCelularItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 0 0 64px;
+    padding: 6px 0;
+    border-radius: 12px;
+    color: #cfcfcf;
+    font-size: 11px;
+    text-decoration: none;
+  }
+  .navCelularAtivo {
+    background: rgba(196, 240, 58, 0.15);
+    color: #d4f66a;
+  }
+  .topoAcoes {
+    gap: 8px;
+  }
+  .btnRedondo {
+    width: 46px;
+    height: 46px;
+  }
+  .menuFlutuante {
+    position: fixed;
+    top: 80px;
+    left: 16px;
+    right: 16px;
+    width: auto;
+  }
+}
+
+/* ============ Topo com marca (tela de Conversas) ============ */
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  color: #fff;
+  text-decoration: none;
+}
+
+.marca img {
+  width: 34px;
+  height: auto;
+}
+
+.marca span {
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.marcaSep {
+  flex-shrink: 0;
+  width: 1px;
+  height: 30px;
+  margin: 0 14px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.marcaTitulo {
+  flex-shrink: 0;
+  margin: 0 28px 0 0;
+  font-size: 24px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.buscaSimples {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 1 580px;
+  min-width: 0;
+  height: 46px;
+  padding: 0 8px 0 18px;
+  border-radius: 23px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(36, 40, 46, 0.85);
+  color: #e4e4e4;
+  font-size: 15.5px;
+  text-align: left;
+  cursor: text;
+}
+
+.buscaSimples span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+  .marcaTitulo {
+    margin-right: 14px;
+    font-size: 20px;
+  }
+  .marca span {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .marca,
+  .marcaSep {
+    display: none;
+  }
+  .buscaSimples {
+    flex: 1 1 100%;
+  }
+}
+
+/* Ponto de alerta na barra (cobranças vencidas ou perto do vencimento) */
+.trilhoBtn {
+  position: relative;
+}
+
+.pontoTrilho {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #f5c542;
+  border: 2px solid #1b1b1c;
+}
+
+.contadorAviso {
+  position: absolute;
+  top: 4px;
+  right: 2px;
+  display: grid;
+  place-items: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: #f5c542;
+  color: #141414;
+  font-size: 11px;
+  font-weight: 800;
+  border: 2px solid #1e2021;
+}
+
+.iconeAlerta {
+  color: #ff9d85 !important;
+}
+
+.verTodos {
+  display: inline-block;
+  margin: 10px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #d4f66a;
+  text-decoration: none;
+}
+
+/* Central de notificações */
+.tituloLinha {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.linkPequeno {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #c4f03a;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.linkPequeno:hover,
+.linkPequeno:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.lida .menuLink {
+  opacity: 0.62;
+}
+
+.naoLida {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin: 6px 0 0 auto;
+  border-radius: 50%;
+  background: #c4f03a;
+}

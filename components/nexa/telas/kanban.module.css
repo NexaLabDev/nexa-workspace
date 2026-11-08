@@ -1,0 +1,587 @@
+/* Kanban de projetos: barra de progresso nos cartões e janela do projeto */
+
+.progresso {
+  height: 5px;
+  margin-top: 9px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.progresso i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #c2ef32, #d7f86b);
+}
+
+.pct {
+  align-self: flex-start;
+  font-size: 13px;
+  font-weight: 700;
+  color: #d4f66a;
+}
+
+.slider {
+  width: 100%;
+  height: 46px;
+  accent-color: #c4f03a;
+  cursor: pointer;
+}
+
+.linkCaixa {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(196, 240, 58, 0.07);
+  border: 1px solid rgba(196, 240, 58, 0.25);
+}
+
+.linkCaixa strong {
+  font-size: 15px;
+}
+
+.linkCaixa p {
+  margin: 6px 0 14px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #cfd6bd;
+}
+
+.linkBotoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.excluirLinha {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  font-size: 14px;
+}
+
+.excluir {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #ff9d85;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.btnPerigo {
+  height: 38px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 19px;
+  background: #e5583c;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ===== Projeto que veio de uma venda ===== */
+.seloVenda {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgba(196, 240, 58, 0.15);
+  color: #d4f66a;
+  font-size: 11.5px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.venda {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 14px;
+}
+
+.vendaTopo {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #d4f66a;
+}
+
+.vendaTopo strong {
+  color: #fff;
+  font-size: 15px;
+}
+
+.vendaTopo span {
+  color: #bdbdbd;
+}
+
+.vendaLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.vendaLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+  font-size: 13.5px;
+  text-decoration: none;
+}
+
+.vendaLink:hover {
+  background: rgba(196, 240, 58, 0.15);
+}
+
+.venda h4 {
+  margin: 16px 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #bdbdbd;
+}
+
+.dados {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 14px;
+  margin: 0;
+}
+
+.dados dt {
+  font-size: 12px;
+  color: #9a9a9a;
+}
+
+.dados dd {
+  margin: 2px 0 0;
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lista li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.lista li > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #d6d6d6;
+}
+
+.lista li > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.lista small {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  font-size: 12px;
+  color: #9a9a9a;
+}
+
+.lista button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+  cursor: pointer;
+}
+
+.feita {
+  color: #9a9a9a;
+  text-decoration: line-through;
+}
+
+.vazio {
+  margin: 0;
+  font-size: 13px;
+  color: #9a9a9a;
+}
+
+.resumoPag {
+  margin: 0 0 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(196, 240, 58, 0.08);
+  font-size: 13px;
+  color: #e3fa98;
+}
+
+.paga {
+  color: #d4f66a;
+}
+
+.atrasada {
+  color: #ff9d85;
+}
+
+.linkPag {
+  color: #d4f66a;
+  overflow-wrap: anywhere;
+}
+
+.recadoCampo {
+  margin-bottom: 14px;
+}
+
+.recadoCampo textarea {
+  min-height: 64px;
+  padding-top: 10px;
+  resize: vertical;
+}
+
+/* Novo projeto: aviso de cliente existente/novo e checklist */
+.dicaCliente {
+  font-size: 12.5px;
+  color: var(--texto-3);
+}
+
+.marcar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #dcdcdc;
+  cursor: pointer;
+}
+
+.marcar input {
+  width: 18px;
+  height: 18px;
+  accent-color: #c4f03a;
+}
+
+/* ===== Frente do card no Kanban (código, cliente, projeto, serviço, prazo…) ===== */
+.cartao {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.cartaoTopo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cartaoCodigo {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--texto-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.cartaoPrioridade {
+  padding: 1px 7px;
+  border-radius: 8px;
+  background: rgba(229, 88, 60, 0.18);
+  color: #ffb4a3;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.cartaoTopo .seloVenda {
+  margin-top: 0;
+  padding: 1px 7px;
+  font-size: 11px;
+}
+
+.cartaoSeta {
+  margin-left: auto;
+  color: var(--texto-3);
+}
+
+.cartaoCliente {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cartaoNome {
+  margin: -4px 0 0;
+  font-size: 13px;
+  color: var(--texto-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cartaoCampos {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 3px 10px;
+  margin: 2px 0 0;
+  font-size: 12.5px;
+}
+
+.cartaoCampos dt {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--texto-3);
+}
+
+.cartaoCampos dd {
+  margin: 0;
+  color: #e6e6e6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cartaoEtiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cartaoEtiquetas li {
+  max-width: 120px;
+  padding: 1px 8px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.09);
+  color: #e6e6e6;
+  font-size: 11.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cartaoRodape {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 2px;
+}
+
+.cartaoPrazo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #f0f0f0;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.cartaoPrazo[data-tom='vencido'] {
+  background: #d9483a;
+  color: #fff;
+}
+
+.cartaoPrazo[data-tom='proximo'] {
+  background: rgba(245, 180, 70, 0.22);
+  color: #f6c56b;
+}
+
+.cartaoPrazo[data-tom='ok'] {
+  background: rgba(196, 240, 58, 0.16);
+  color: #dff88f;
+}
+
+.cartaoRelativo {
+  font-size: 12px;
+  color: var(--texto-3);
+}
+
+.cartaoInfos {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--texto-3);
+}
+
+.cartaoInfos > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cartaoAlerta {
+  color: #ff9d85;
+  font-weight: 700;
+}
+
+/* ===== Card mais detalhado ===== */
+.cartaoCliente {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cartaoCliente svg {
+  flex: none;
+  color: var(--texto-3);
+}
+
+.cartaoPrioridade[data-nivel='media'],
+.cartaoPrioridade[data-nivel='baixa'] {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--texto-2);
+}
+
+.cartaoPrioridade[data-nivel='alta'] {
+  background: rgba(245, 180, 70, 0.18);
+  color: #f6c56b;
+}
+
+.cartaoServicos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cartaoServicos li {
+  max-width: 100%;
+  padding: 1px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--texto-2);
+  font-size: 11.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cartaoServicoPrincipal {
+  border-color: var(--lima-borda) !important;
+  color: #dff88f !important;
+}
+
+.cartaoPessoas {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+}
+
+.cartaoPessoas i {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-right: -5px;
+  border-radius: 50%;
+  border: 1.5px solid #26292a;
+  background: #3a3f2a;
+  color: #e3fa98;
+  font-size: 9.5px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.cartaoPessoas span {
+  margin-left: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cartaoPessoas small {
+  margin-left: 4px;
+  color: var(--texto-3);
+}
+
+.cartaoVazio {
+  color: var(--texto-3);
+  font-style: italic;
+}
+
+.cartaoAtencao {
+  color: #f6c56b !important;
+}
+
+.cartaoProgresso {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cartaoProgresso .progresso {
+  flex: 1;
+  margin-top: 0;
+  height: 4px;
+}
+
+.cartaoProgresso b {
+  font-size: 12px;
+  color: #d4f66a;
+  font-variant-numeric: tabular-nums;
+}
+
+.cartaoProgresso small {
+  font-size: 11px;
+  color: var(--texto-3);
+}
+
+.cartaoPrazoLinha {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.cartaoRodape {
+  justify-content: space-between;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.cartaoRodape .cartaoInfos {
+  margin-left: 0;
+}

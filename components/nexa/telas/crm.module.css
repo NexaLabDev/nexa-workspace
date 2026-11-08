@@ -1,0 +1,607 @@
+/* ============================================
+   ABA CRM — "CRM de Leads"
+   Medidas e cores tiradas do layout aprovado (1672 × 941).
+   ============================================ */
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding-top: 36px;
+}
+
+/* ----- Cabeçalho ----- */
+.cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.iconeTitulo {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 70px;
+  height: 70px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #dafb4c 0%, #c9f02e 100%);
+  color: #141414;
+  box-shadow: 0 0 26px rgba(200, 245, 60, 0.25);
+}
+
+.titulo h1 {
+  margin: 0;
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.titulo p {
+  margin: 8px 0 0;
+  font-size: 17px;
+  color: #d2d2d2;
+}
+
+.numeros {
+  display: flex;
+  gap: 14px;
+  margin-left: auto;
+}
+
+.numero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 82px;
+  padding: 0 24px 0 22px;
+  border-radius: 16px;
+  background: rgba(25, 32, 35, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+}
+
+.numero > svg {
+  flex-shrink: 0;
+  color: var(--lima);
+}
+
+.numero strong {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.numero span {
+  display: block;
+  margin-top: 2px;
+  font-size: 14px;
+  color: #cfcfcf;
+  white-space: nowrap;
+}
+
+/* ----- Abas ----- */
+.abas {
+  display: flex;
+  gap: 4px;
+  margin-top: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.aba {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  height: 56px;
+  padding: 0 24px;
+  border: 0;
+  background: none;
+  color: #f0f0f0;
+  font-size: 16.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.aba:hover {
+  color: #fff;
+}
+
+.abaAtiva {
+  font-weight: 600;
+  color: #fff;
+}
+
+.abaAtiva::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  border-radius: 2px;
+  background: #d4ec2c;
+  box-shadow: 0 0 12px rgba(212, 236, 44, 0.55);
+}
+
+/* ----- Filtros ----- */
+.filtros {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 30px;
+}
+
+.seletor,
+.buscaFunil,
+.visoes,
+.engrenagem {
+  background: rgba(36, 40, 46, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.seletor {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 196px;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 22px;
+  font-size: 15px;
+  color: #e2e2e2;
+  cursor: pointer;
+}
+
+.seletor select {
+  flex: 1;
+  padding-right: 26px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.seletor select option {
+  background: #1d1f20;
+  font-weight: 400;
+}
+
+.seletor > svg {
+  position: absolute;
+  right: 16px;
+  color: #e0e0e0;
+  pointer-events: none;
+}
+
+.buscaFunil {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 265px;
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 22px;
+  color: #dcdcdc;
+}
+
+.buscaFunil input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 15.5px;
+  outline: none;
+}
+
+.buscaFunil input::placeholder {
+  color: #d0d0d0;
+}
+
+.visoes {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  padding: 3px;
+  border-radius: 24px;
+}
+
+.visao {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 38px;
+  border: 1px solid transparent;
+  border-radius: 19px;
+  background: transparent;
+  color: #e0e0e0;
+  cursor: pointer;
+}
+
+.visao:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.visaoAtiva,
+.visaoAtiva:hover {
+  background: rgba(196, 240, 58, 0.22);
+  border-color: var(--lima-borda);
+  color: #d4f66a;
+}
+
+.engrenagem {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  color: #e6e6e6;
+  cursor: pointer;
+}
+
+.engrenagem:hover {
+  color: #fff;
+}
+
+/* ----- Quadro ----- */
+.quadro {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(210px, 1fr));
+  gap: 14px;
+  flex: 1;
+  min-height: 430px;
+  margin-top: 32px;
+  overflow-x: auto;
+}
+
+.coluna {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-radius: 16px;
+  background: rgba(36, 43, 46, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.colunaTopo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  row-gap: 8px;
+  padding: 12px 14px 14px;
+}
+
+.colunaTopo h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.colunaTopo h3 span {
+  font-weight: 400;
+  color: #bdbdbd;
+}
+
+.colunaMais {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+.colunaMais:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.colunaValor {
+  grid-column: 1 / -1;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+/* Coluna Fechamento: topo verde e borda com brilho */
+.colunaFinal {
+  background: rgba(28, 37, 37, 0.84);
+  border-color: rgba(205, 250, 95, 0.6);
+  box-shadow: 0 0 26px rgba(183, 255, 0, 0.16), 0 18px 36px rgba(0, 0, 0, 0.35);
+}
+
+.colunaFinal .colunaTopo {
+  background: linear-gradient(135deg, #c2ea22 0%, #a5d116 100%);
+  color: #11160a;
+}
+
+.colunaFinal .colunaTopo h3 span {
+  color: rgba(17, 22, 10, 0.6);
+}
+
+.colunaFinal .colunaMais {
+  color: #11160a;
+}
+
+.colunaFinal .colunaMais:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.colunaFinal .lista {
+  padding-top: 10px;
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-height: 60px;
+  padding: 2px 8px 8px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  transition: background 0.15s;
+}
+
+.listaAlvo {
+  background: rgba(196, 240, 58, 0.05);
+}
+
+/* ----- Cartão do lead ----- */
+.cartao {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  column-gap: 14px;
+  row-gap: 11px;
+  flex-shrink: 0;
+  padding: 12px 12px 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+  color: #fff;
+  cursor: grab;
+}
+
+.cartao:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.cartaoArrastando {
+  background: rgba(46, 53, 56, 0.97);
+  border-color: var(--lima-borda);
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.5);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.cartaoTexto {
+  min-width: 0;
+}
+
+.cartaoTexto strong {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cartaoTexto strong svg {
+  flex-shrink: 0;
+  color: #e6e6e6;
+}
+
+.cartaoTexto span {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
+  color: #c4c4c4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cartaoRodape {
+  grid-column: 1 / -1;
+  padding-left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cartaoRodape b {
+  font-size: 15.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.data {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #d6d6d6;
+  white-space: nowrap;
+}
+
+.seloContrato {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 13px;
+  background: rgba(196, 240, 58, 0.16);
+  border: 1px solid rgba(196, 240, 58, 0.4);
+  font-size: 13px;
+  font-weight: 600;
+  color: #cff25a;
+  white-space: nowrap;
+}
+
+.adicionar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-shrink: 0;
+  height: 54px;
+  border: 0;
+  background: none;
+  color: #ececec;
+  font-size: 16.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.adicionar:hover {
+  color: #e3fa98;
+}
+
+/* Coluna larga: rodapé do cartão alinhado ao texto, como no layout */
+@container (min-width: 268px) {
+  .cartaoRodape {
+    padding-left: 58px;
+  }
+}
+
+/* Coluna Venda ganha: alimenta a Meta Mensal */
+.colunaGanho {
+  border-color: rgba(205, 250, 95, 0.35);
+  background: linear-gradient(180deg, rgba(196, 240, 58, 0.08), rgba(36, 43, 46, 0.8) 40%);
+}
+
+.colunaGanho .colunaTopo h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.trofeu {
+  flex-shrink: 0;
+  color: var(--lima);
+}
+
+.numeroLink {
+  color: #fff;
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+
+.numeroLink:hover {
+  border-color: var(--lima-borda);
+}
+
+.linhaClicavel {
+  cursor: pointer;
+}
+
+/* ----- Lista e abas sem conteúdo ----- */
+.painelLista {
+  margin-top: 36px;
+}
+
+.painelVazio {
+  align-items: center;
+  gap: 12px;
+  margin-top: 36px;
+  padding: 60px 28px;
+  text-align: center;
+  color: #d6d6d6;
+}
+
+.painelVazio h2 {
+  margin: 0;
+  font-size: 22px;
+  color: #fff;
+}
+
+.painelVazio p {
+  margin: 0;
+  font-size: 15px;
+  color: #bdbdbd;
+}
+
+/* ----- Telas menores ----- */
+@media (max-width: 1500px) {
+  .numero {
+    padding: 0 18px;
+    gap: 12px;
+  }
+  .filtros {
+    gap: 12px;
+  }
+  .seletor {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 1100px) {
+  .numeros {
+    width: 100%;
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+  .visoes {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .pagina {
+    padding-top: 24px;
+  }
+  .titulo h1 {
+    font-size: 30px;
+  }
+  .numero {
+    flex: 1 1 100%;
+  }
+  .buscaFunil {
+    width: 100%;
+  }
+}

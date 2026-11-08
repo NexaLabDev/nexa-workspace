@@ -1,0 +1,692 @@
+/* ============================================
+   ABA META MENSAL — medidas tiradas do layout "Meta Mensal"
+   ============================================ */
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding-top: 28px;
+}
+
+/* ----- Cabeçalho ----- */
+.cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.iconeTitulo {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #dafb4c 0%, #c9f02e 100%);
+  color: #141414;
+  box-shadow: 0 0 26px rgba(200, 245, 60, 0.25);
+}
+
+.titulo h1 {
+  margin: 0;
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.titulo p {
+  margin: 6px 0 0;
+  font-size: 17px;
+  color: #d2d2d2;
+}
+
+.seletorMes {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  height: 52px;
+  padding: 0 18px;
+  border-radius: 16px;
+  background: rgba(24, 28, 29, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.seletorMes select {
+  padding-right: 28px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 17px;
+  font-weight: 600;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.seletorMes select option {
+  background: #1d1f20;
+}
+
+.seletorMes > svg:last-child {
+  position: absolute;
+  right: 18px;
+  pointer-events: none;
+}
+
+/* ----- Cartão base ----- */
+.cartao {
+  position: relative;
+  border-radius: 20px;
+  background: rgba(24, 28, 29, 0.74);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.35);
+}
+
+.icone {
+  flex-shrink: 0;
+  color: var(--lima);
+}
+
+.verde {
+  color: #c4f03a;
+}
+
+.cinza {
+  color: #e8e8e8;
+}
+
+/* ----- Linha 1 ----- */
+.linha1 {
+  display: grid;
+  grid-template-columns: minmax(0, 600fr) minmax(0, 745fr);
+  gap: 22px;
+}
+
+.cartaoAnel {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  min-height: 285px;
+  padding: 22px 30px;
+}
+
+.anel {
+  position: relative;
+  flex-shrink: 0;
+  width: 240px;
+  height: 240px;
+}
+
+.anel svg {
+  width: 100%;
+  height: 100%;
+}
+
+.anelTrilho {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 22;
+}
+
+.anelValor {
+  fill: none;
+  stroke: url(#nx-anel);
+  stroke-width: 22;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 10px rgba(196, 240, 58, 0.45));
+  transition: stroke-dasharray 0.6s ease;
+}
+
+.anelTexto {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.anelTexto strong {
+  font-size: 52px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.anelTexto span {
+  margin-top: 6px;
+  font-size: 22px;
+  color: #cfcfcf;
+}
+
+.anelDados {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-left: 22px;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.rotulo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 17px;
+  color: #d0d0d0;
+}
+
+.editar {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #cfcfcf;
+  cursor: pointer;
+}
+
+.editar:hover {
+  background: rgba(196, 240, 58, 0.18);
+  color: #d4f66a;
+}
+
+.valorGrande {
+  display: block;
+  margin-top: 4px;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.valorMedio {
+  display: block;
+  margin-top: 4px;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.gradeMini {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.gradeMini .cartao {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-height: 128px;
+  padding: 0 24px 0 30px;
+}
+
+.miniTexto {
+  flex: 1;
+  min-width: 0;
+}
+
+.miniTexto span {
+  display: block;
+  font-size: 17px;
+  color: #e6e6e6;
+}
+
+.miniTexto strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 32px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.selo {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  align-self: flex-end;
+  margin-bottom: 30px;
+  height: 34px;
+  padding: 0 13px;
+  border-radius: 17px;
+  background: rgba(196, 240, 58, 0.16);
+  color: #d4f66a;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.seloNegativo {
+  background: rgba(255, 120, 90, 0.15);
+  color: #ff9d85;
+}
+
+.cartaoBrilho {
+  border-color: rgba(205, 250, 95, 0.55);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.35), 0 8px 24px -10px rgba(196, 240, 58, 0.55);
+}
+
+.infoCaixa {
+  position: relative;
+  z-index: 5;
+  align-self: center;
+}
+
+.info {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: #e6e6e6;
+  cursor: pointer;
+}
+
+.info:hover {
+  color: #d4f66a;
+}
+
+.infoBalao {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 300px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(28, 31, 32, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.55);
+  font-size: 14px;
+  color: #dcdcdc;
+}
+
+.infoBalao strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 15px;
+  color: #fff;
+}
+
+.infoBalao p {
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+
+/* ----- Linha 2 ----- */
+.linha2 {
+  display: grid;
+  grid-template-columns: minmax(0, 892fr) minmax(0, 462fr);
+  gap: 22px;
+}
+
+.grafico {
+  display: flex;
+  flex-direction: column;
+  padding: 22px 26px 14px;
+}
+
+.grafico h2 {
+  margin: 0 0 14px;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.graficoArea {
+  display: flex;
+  gap: 14px;
+  height: 236px;
+}
+
+.eixoY {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-bottom: 32px;
+  font-size: 16px;
+  color: #d6d6d6;
+  text-align: right;
+  white-space: nowrap;
+  transform: translateY(9px);
+}
+
+.plot {
+  position: relative;
+  flex: 1;
+  margin-bottom: 32px;
+  border-left: 1px solid rgba(255, 255, 255, 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.grade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.linhaMeta {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  border-top: 2px dashed #c4f03a;
+}
+
+.linhaMeta span {
+  position: absolute;
+  right: -10px;
+  top: 0;
+  transform: translateY(-50%);
+  padding: 6px 14px;
+  border-radius: 16px;
+  background: #d4f53c;
+  color: #121212;
+  font-size: 15.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.barras {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  padding-right: 130px;
+}
+
+.colunaBarra {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 110px;
+  height: 100%;
+}
+
+.barra {
+  position: relative;
+  width: 100%;
+  min-height: 4px;
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(180deg, #d0f73c 0%, #9fd61a 100%);
+  transition: height 0.5s ease;
+}
+
+.barraAtual {
+  background: linear-gradient(180deg, #5aa61f 0%, #2f7012 100%);
+}
+
+.rotuloBarra {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 5px 11px;
+  border-radius: 10px;
+  background: rgba(22, 24, 25, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.semana {
+  position: absolute;
+  bottom: -30px;
+  font-size: 16px;
+  color: #d6d6d6;
+}
+
+.legenda {
+  margin: 0;
+  font-size: 13px;
+  color: #9a9a9a;
+}
+
+.andamento {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 22px;
+  border-color: rgba(205, 250, 95, 0.5);
+  background: linear-gradient(160deg, rgba(196, 240, 58, 0.07), rgba(24, 28, 29, 0.78) 45%);
+  box-shadow: 0 0 26px rgba(183, 255, 0, 0.12), 0 18px 36px rgba(0, 0, 0, 0.35);
+}
+
+.andamentoTopo {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.andamentoIcone {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  background: linear-gradient(160deg, #3f7417 0%, #1d3a0c 100%);
+  border: 1px solid rgba(196, 240, 58, 0.35);
+  color: #c4f03a;
+}
+
+.andamentoTopo h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.andamentoTopo p {
+  margin: 6px 0 0;
+  font-size: 17px;
+  color: #e0e0e0;
+}
+
+.andamentoLista {
+  margin: 0;
+  padding: 6px 20px;
+  list-style: none;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.andamentoLista li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  font-size: 18px;
+  color: #ececec;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.andamentoLista li:first-child {
+  border-top: 0;
+}
+
+.andamentoLista li svg {
+  flex-shrink: 0;
+  color: var(--lima);
+}
+
+.andamentoLista strong {
+  margin-left: auto;
+  font-size: 19px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.irCrm {
+  align-self: flex-end;
+  margin-top: 16px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #d4f66a;
+  text-decoration: none;
+}
+
+.irCrm:hover {
+  text-decoration: underline;
+}
+
+/* ----- Telas menores ----- */
+@media (max-width: 1500px) {
+  .gradeMini .cartao {
+    gap: 16px;
+    padding: 0 18px;
+  }
+  .miniTexto strong {
+    font-size: 26px;
+  }
+  .anel {
+    width: 200px;
+    height: 200px;
+  }
+  .anelTexto strong {
+    font-size: 44px;
+  }
+  .valorGrande,
+  .valorMedio {
+    font-size: 26px;
+  }
+  .barras {
+    padding-right: 120px;
+  }
+  .colunaBarra {
+    width: 80px;
+  }
+}
+
+@media (max-width: 1250px) {
+  .linha1,
+  .linha2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .pagina {
+    padding-top: 20px;
+  }
+  .titulo h1 {
+    font-size: 30px;
+  }
+  .seletorMes {
+    margin-left: 0;
+  }
+  .cartaoAnel {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .anelDados {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .gradeMini {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .barras {
+    padding-right: 0;
+  }
+  .colunaBarra {
+    width: 48px;
+  }
+  .rotuloBarra {
+    font-size: 12px;
+  }
+  .linhaMeta span {
+    right: 0;
+    top: -34px;
+    transform: none;
+  }
+}
+
+/* Receita recorrente (acompanhamento) */
+.recorrente {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px 24px;
+  padding: 18px 24px;
+}
+
+.recorrenteIcone {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(160deg, #3f7417 0%, #1d3a0c 100%);
+  border: 1px solid rgba(196, 240, 58, 0.35);
+  color: #c4f03a;
+}
+
+.recorrenteTexto h2 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.recorrenteTexto p {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  color: #bdbdbd;
+}
+
+.recorrenteNumeros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 28px;
+  margin-left: auto;
+}
+
+.recorrenteNumeros span {
+  display: block;
+  font-size: 13px;
+  color: #bdbdbd;
+}
+
+.recorrenteNumeros strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.recorrente .irCrm {
+  margin-top: 0;
+  align-self: center;
+}
+
+/* Financeiro do mês (4 indicadores) */
+.financeiro {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.financeiroTopo h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.financeiroTopo p {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  color: #bdbdbd;
+}

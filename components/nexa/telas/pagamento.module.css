@@ -1,0 +1,787 @@
+/* Bloco de Pagamento no Fechamento (painel da conversa) */
+
+.bloco {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.titulo svg {
+  color: #c4f03a;
+}
+
+.subtitulo {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: #b9b9b9;
+}
+
+.nota {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #9a9a9a;
+}
+
+.erro {
+  margin: 0;
+  font-size: 12.5px;
+  color: #ff9d85;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  height: 30px;
+  padding: 0 11px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #e6e6e6;
+  font-family: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.chipAtivo {
+  background: rgba(196, 240, 58, 0.18);
+  border-color: rgba(205, 250, 95, 0.55);
+  color: #e3fa98;
+  font-weight: 600;
+}
+
+.segmentado {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.segmento {
+  min-height: 32px;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: #d6d6d6;
+  font-family: inherit;
+  font-size: 12.5px;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.segmentoAtivo {
+  background: rgba(196, 240, 58, 0.2);
+  color: #e3fa98;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(205, 250, 95, 0.5);
+}
+
+.linha {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+  color: #b9b9b9;
+}
+
+.campo input {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  color-scheme: dark;
+}
+
+.campo input:focus {
+  border-color: var(--lima-borda);
+}
+
+.opcoes {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.opcao {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 2px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.opcao strong {
+  font-size: 14px;
+}
+
+.opcao span {
+  font-size: 11px;
+  color: #bdbdbd;
+  white-space: nowrap;
+}
+
+.opcao:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.opcaoAtiva,
+.opcaoAtiva:hover {
+  background: rgba(196, 240, 58, 0.18);
+  border-color: rgba(205, 250, 95, 0.6);
+}
+
+.opcaoAtiva span {
+  color: #e3fa98;
+}
+
+.opcaoOutra {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 6px;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  font-size: 13px;
+  color: #bdbdbd;
+}
+
+.opcaoOutra input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: none;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  text-align: center;
+  outline: none;
+}
+
+.montar {
+  height: 36px;
+  border: 0;
+  border-radius: 18px;
+  background: #d4f53c;
+  color: #141414;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.aviso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(245, 197, 66, 0.12);
+  font-size: 12.5px;
+  color: #f5d77a;
+}
+
+.aviso button {
+  padding: 3px 9px;
+  border: 0;
+  border-radius: 8px;
+  background: #f5c542;
+  color: #1b1b1b;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.resumo {
+  margin: 4px 0 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(196, 240, 58, 0.08);
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #e3fa98;
+}
+
+.totais {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 10px;
+  font-size: 12.5px;
+  color: #cfcfcf;
+}
+
+.totais b {
+  color: #fff;
+}
+
+.barra {
+  flex: 1 1 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.barra i {
+  display: block;
+  height: 100%;
+  background: #c4f03a;
+  border-radius: inherit;
+}
+
+.parcelas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.parcela {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 3px solid rgba(255, 255, 255, 0.25);
+}
+
+.sit-paga {
+  border-left-color: #c4f03a;
+}
+
+.sit-atrasada {
+  border-left-color: #ff8a65;
+  background: rgba(255, 138, 101, 0.07);
+}
+
+.parcelaTopo {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.parcelaInfo {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px;
+  font-size: 12px;
+  color: #b9b9b9;
+}
+
+.situacao {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sit-paga .situacao {
+  color: #d4f66a;
+}
+
+.sit-atrasada .situacao {
+  color: #ff9d85;
+}
+
+.comprovante {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 12.5px;
+  color: #e6e6e6;
+}
+
+.comprovante span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.comprovante button {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+  cursor: pointer;
+}
+
+.acoesParcela {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.btnComprovante {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px dashed rgba(205, 250, 95, 0.45);
+  border-radius: 14px;
+  background: none;
+  color: #e3fa98;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.usarArquivo {
+  flex: 1 1 120px;
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #d6d6d6;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.usarArquivo option {
+  background: #1d1f20;
+}
+
+.marcarPaga {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #cfcfcf;
+  cursor: pointer;
+}
+
+.marcarPaga input {
+  accent-color: #c4f03a;
+}
+
+.acoesParcela,
+.comprovante {
+  padding-right: 58px;
+}
+
+.remover {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #ff9d85;
+  font-family: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.explica {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  padding: 9px 11px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #dcdcdc;
+}
+
+.explica svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #c4f03a;
+}
+
+.explica b {
+  color: #fff;
+}
+
+.linkCaixa {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.linkBotoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.btnLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 15px;
+  background: rgba(196, 240, 58, 0.16);
+  color: #e3fa98;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btnLink:hover {
+  background: rgba(196, 240, 58, 0.26);
+}
+
+.ok {
+  margin: 0;
+  font-size: 12.5px;
+  color: #d4f66a;
+}
+
+.seloContrato {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 8px;
+  background: #d4f53c;
+  color: #141414;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ===== Pagamento reorganizado (à vista / entrada + parcelas) e mensalidade ===== */
+.segmentado2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.cartaoPag {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.grade3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 8px;
+}
+
+.campoLargo {
+  grid-column: 1 / -1;
+}
+
+.campo select,
+.parcelaLinha select {
+  height: 36px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13.5px;
+  outline: none;
+  color-scheme: dark;
+}
+
+.campo select option {
+  background: #1d1f20;
+}
+
+.campo input[type='date'],
+.dataParcela {
+  color-scheme: dark;
+}
+
+.subtitulo span {
+  color: #8f8f8f;
+}
+
+.valorParcela {
+  width: 86px;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.valorParcela:focus,
+.dataParcela:focus {
+  border-color: var(--lima-borda);
+}
+
+.dataParcela {
+  height: 30px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-family: inherit;
+  font-size: 12.5px;
+  outline: none;
+}
+
+.parcelaLinha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  font-size: 13px;
+}
+
+.parcelaLinha strong {
+  min-width: 30px;
+}
+
+.parcelaLinha .situacao {
+  margin-left: auto;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.parcelaLinha2 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.vencTexto {
+  font-size: 12px;
+  color: #b9b9b9;
+}
+
+.marcar {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  color: #dcdcdc;
+  cursor: pointer;
+}
+
+.marcar input,
+.interruptorLinha input {
+  accent-color: #c4f03a;
+}
+
+.sit-proxima {
+  border-left-color: #f5c542;
+}
+
+.sit-proxima .situacao {
+  color: #f5d77a;
+}
+
+.contagem {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.contagem span,
+.mensalStatus > span:first-child {
+  padding: 2px 9px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.cPaga {
+  background: rgba(196, 240, 58, 0.15);
+  color: #d4f66a;
+}
+
+.cPend {
+  background: rgba(255, 255, 255, 0.08);
+  color: #d6d6d6;
+}
+
+.cVenc {
+  background: rgba(255, 138, 101, 0.15);
+  color: #ff9d85;
+}
+
+.comprovanteCaixa {
+  min-width: 0;
+  flex: 1 1 160px;
+}
+
+.cartaoPag > .comprovanteCaixa {
+  flex: none;
+}
+
+.comprovanteCaixa .comprovante,
+.comprovanteCaixa .acoesParcela {
+  padding-right: 0;
+}
+
+.interruptorLinha {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.interruptorLinha svg {
+  color: #c4f03a;
+}
+
+.linkAcao {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #d4f66a;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mensalStatus {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.proximo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(196, 240, 58, 0.08);
+  font-size: 12.5px;
+  color: #e3fa98;
+}
+
+.proximo b {
+  color: #fff;
+}
+
+.aviso span {
+  flex: 1 1 180px;
+}
+
+/* ---------- Reajuste da mensalidade ---------- */
+.valorFixo {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.reajuste {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.reajuste > .cartaoPag {
+  align-self: stretch;
+}
+
+.acoesLinha {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.botaoPrimario {
+  height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 10px;
+  background: #c4f03a;
+  color: #111;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.botaoPrimario:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.botaoPrimario:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}

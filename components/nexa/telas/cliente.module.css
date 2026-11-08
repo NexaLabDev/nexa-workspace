@@ -1,0 +1,125 @@
+/* Página do cliente: reaproveita painéis e números da interface; aqui só a organização. */
+
+.titulo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.titulo h1 {
+  margin: 0;
+}
+
+.titulo p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 0;
+  color: #cfcfcf;
+}
+
+.numerosCliente {
+  margin-bottom: 21px;
+}
+
+.grade {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 21px;
+  align-items: start;
+}
+
+.coluna {
+  display: flex;
+  flex-direction: column;
+  gap: 21px;
+  min-width: 0;
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lista > li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.lista > li:first-child {
+  border-top: 0;
+}
+
+.lista > li > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.lista strong {
+  display: block;
+  color: #fff;
+  font-size: 15px;
+}
+
+.lista span {
+  display: block;
+  margin-top: 3px;
+  color: #bdbdbd;
+  font-size: 13px;
+}
+
+.barra {
+  height: 6px;
+  margin-top: 8px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.barra i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #c4f03a;
+}
+
+.historico {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 420px;
+  overflow: auto;
+}
+
+.historico p {
+  margin: 0;
+  color: #e6e6e6;
+  font-size: 14px;
+}
+
+.historico small {
+  color: #9a9a9a;
+  font-size: 12px;
+}
+
+@media (max-width: 1100px) {
+  .grade {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .titulo {
+    flex-wrap: wrap;
+  }
+}

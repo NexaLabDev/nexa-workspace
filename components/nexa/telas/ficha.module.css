@@ -1,0 +1,249 @@
+/* Ficha do lead (painel lateral) */
+
+.fundo {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(6, 7, 8, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.ficha {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: min(480px, 100%);
+  height: 100%;
+  padding: 24px 24px 20px;
+  overflow-y: auto;
+  background: rgba(24, 27, 28, 0.98);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: -24px 0 50px rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-family: var(--fonte);
+  outline: none;
+  animation: entrar 0.18s ease-out;
+}
+
+@keyframes entrar {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ficha {
+    animation: none;
+  }
+}
+
+.topo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.nome {
+  flex: 1;
+  min-width: 0;
+}
+
+.nome h2 {
+  margin: 0 0 6px;
+  font-size: 21px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.ganhoTexto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 100%;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(196, 240, 58, 0.12);
+  border: 1px solid rgba(196, 240, 58, 0.35);
+  color: #dcf88a;
+  font-size: 14px;
+}
+
+.resultadoPerdido {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 140, 90, 0.1);
+  border: 1px solid rgba(255, 140, 90, 0.3);
+  font-size: 14px;
+  color: #ffd2c2;
+}
+
+.resultadoPerdido p {
+  margin: 0;
+}
+
+.perda {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.areaTexto {
+  height: auto;
+  min-height: 78px;
+  padding: 12px 14px;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.45;
+}
+
+.linhaBotoes {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+
+.secao {
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.secao h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 15.5px;
+  font-weight: 600;
+}
+
+.secao h3 svg {
+  color: var(--lima);
+}
+
+.novoComentario {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.novoComentario textarea {
+  width: 100%;
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lista li {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.lista p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.lista small {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #9a9a9a;
+}
+
+.lista .vazio {
+  background: none;
+  padding: 0;
+  font-size: 13.5px;
+  color: #9a9a9a;
+}
+
+.erro {
+  font-size: 12.5px;
+  color: #ff9d85;
+}
+
+.dica {
+  font-size: 12.5px;
+  color: #9a9a9a;
+}
+
+.rodape {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.excluir {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #ff9d85;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.excluir:hover {
+  text-decoration: underline;
+}
+
+.btnPerigo {
+  height: 42px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 21px;
+  background: #e5583c;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
