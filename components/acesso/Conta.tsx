@@ -45,7 +45,14 @@ export default function Conta({retorno=false}:{retorno?:boolean}) {
       if(error)throw error;
       if(!data){await db.auth.signOut({scope:'local'});setAviso('Conta sem vínculo ativo. Peça acesso à administração.');return;}
       sessionStorage.removeItem('nexa:convite');location.replace('/');
-    } catch {setAviso(modo==='entrar'?'Verifique o e-mail e a senha e tente novamente.':'Não foi possível concluir. Verifique o link ou tente novamente.');}
+    } catch (erro: unknown) {
+      const falha = erro as { status?: number; code?: string } | null;
+      if (falha?.status === 429 || falha?.code === 'over_email_send_rate_limit') {
+        setAviso('O Supabase atingiu o limite temporário de envio de e-mails. Nenhum novo link foi enviado. Tente novamente mais tarde.');
+      } else {
+        setAviso(modo==='entrar'?'Verifique o e-mail e a senha e tente novamente.':'Não foi possível concluir. Verifique o link ou tente novamente.');
+      }
+    }
     finally{setOcupado(false);}
   }
   return <main className="conta"><form onSubmit={enviar}><img src="/dashboard/simbolo-nexa.png" alt="Nexa Lab" width="42"/><h1>{{entrar:'Entrar no workspace',recuperar:'Recuperar senha',convite:'Ativar convite',senha:'Definir senha'}[modo]}</h1>
