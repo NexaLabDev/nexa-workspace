@@ -1,0 +1,16 @@
+begin;
+insert into auth.users(id,email,email_confirmed_at) values ('10000000-0000-0000-0000-000000000011','teste@example.invalid',now()),('10000000-0000-0000-0000-000000000012','convite@example.invalid',now());
+insert into nexa_privado.autorizacao_inicial(email) values('teste@example.invalid');
+select set_config('teste.ws',nexa_privado.ativar_inicial('10000000-0000-0000-0000-000000000011')::text,true);
+set local role authenticated;
+select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000011',true);
+insert into public.convites_workspace(email) values('convite@example.invalid');
+select set_config('teste.convite',(select id::text from public.convites_workspace limit 1),true);
+select public.gravar_registros(public.workspace_id_atual(),auth.uid(),'[{"colecao":"leads","id":"teste","conteudo":{"id":"teste","empresa":"teste"},"versao":0,"ordem":0}]');
+do $$begin if jsonb_array_length(public.ler_registros())<>1 then raise exception 'leitura';end if;
+begin perform public.gravar_registros(public.workspace_id_atual(),auth.uid(),'[{"colecao":"leads","id":"teste","conteudo":{"id":"teste","empresa":"outro"},"versao":0,"ordem":0}]');raise exception 'conflito ignorado';exception when serialization_failure then null;end;end$$;
+select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000012',true);
+do $$begin if public.aceitar_convite_workspace(gen_random_uuid()) is not null then raise exception 'convite errado'; end if;
+if public.aceitar_convite_workspace(current_setting('teste.convite')::uuid) is distinct from current_setting('teste.ws')::uuid then raise exception 'vinculo'; end if;
+begin perform public.gravar_registros(public.workspace_id_atual(),auth.uid(),'[{"colecao":"leads","id":"2","conteudo":{"id":"2"},"versao":0,"ordem":0}]');raise exception 'escrita indevida';exception when insufficient_privilege then null; end;end$$;
+rollback;

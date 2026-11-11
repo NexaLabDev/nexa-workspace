@@ -31,7 +31,6 @@ import PaletaBusca from './PaletaBusca';
 import { useLeads } from './dados';
 import { alertasCobranca } from './financeiro';
 import TopoAcoes from './TopoAcoes';
-import SincronizarServidor from './SincronizarServidor';
 import ReconciliarRelacoes from './ReconciliarRelacoes';
 
 export type AbaNexa =
@@ -230,7 +229,6 @@ export default function NexaShell({
       </nav>
 
       {buscaAberta && <PaletaBusca onFechar={() => setBuscaAberta(false)} />}
-      <SincronizarServidor />
       <ReconciliarRelacoes />
     </div>
   );

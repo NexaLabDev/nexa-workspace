@@ -10,6 +10,7 @@ import u from '../ui.module.css';
 import { restaurarExemplos } from '../store';
 import { apagarTodosArquivos } from '../arquivos';
 import { OPCOES_DIAS_PRAZO_PROXIMO, diasPrazoProximo, usePerfil, usePreferencias, usePrestadora } from '../dados';
+import Importar from '@/components/acesso/Importar';
 import Equipe from '@/components/acesso/Equipe';
 import AvisosPush from './AvisosPush';
 import { baixarBackup, lerBackup, restaurarBackup } from '../backup';
@@ -67,6 +68,7 @@ export default function TelaConfiguracoes() {
           </section>
         </div>
 
+        <Importar/>
         {/* ----- Dados da prestadora: usados nos documentos (nunca ficam no código) ----- */}
         <section className={u.painel} id="prestadora">
           <header className={u.painelTopo}>
@@ -129,80 +131,7 @@ export default function TelaConfiguracoes() {
           </p>
         </section>
 
-        <section className={u.painel}>
-          <header className={u.painelTopo}>
-            <Database size={28} strokeWidth={1.7} />
-            <div>
-              <h2>Dados deste navegador</h2>
-              <small>Leads, conversas, vendas, metas, projetos, clientes, documentos e arquivos anexados ficam salvos aqui até existir um banco de dados.</small>
-            </div>
-          </header>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-            <button
-              type="button"
-              className={u.btnPrimario}
-              disabled={backupOcupado}
-              onClick={async () => {
-                setBackupOcupado(true);
-                setBackupMsg(null);
-                try {
-                  const r = await baixarBackup();
-                  setBackupMsg({ texto: `Backup baixado: ${r.listas} listas e ${r.arquivos} anexos. Guarde em local seguro (tem dados de clientes).` });
-                } catch (e) {
-                  setBackupMsg({ texto: `Não foi possível gerar o backup: ${(e as Error).message}`, erro: true });
-                } finally {
-                  setBackupOcupado(false);
-                }
-              }}
-            >
-              <Download size={17} /> Baixar backup completo
-            </button>
-            <label className={u.btnSecundario} style={{ cursor: backupOcupado ? 'not-allowed' : 'pointer' }}>
-              <Upload size={17} /> Restaurar backup
-              <input
-                type="file"
-                accept="application/json,.json"
-                hidden
-                disabled={backupOcupado}
-                onChange={async (e) => {
-                  const arquivo = e.currentTarget.files?.[0];
-                  e.currentTarget.value = '';
-                  if (!arquivo) return;
-                  setBackupMsg(null);
-                  try {
-                    const b = await lerBackup(arquivo);
-                    const quando = new Date(b.criadoEm).toLocaleString('pt-BR');
-                    if (!window.confirm(`Restaurar o backup de ${quando}? As listas atuais serão substituídas pelas do backup. Antes, um backup do estado atual será baixado automaticamente.`)) return;
-                    setBackupOcupado(true);
-                    await restaurarBackup(b);
-                    setBackupMsg({ texto: `Backup de ${quando} restaurado. O estado anterior foi baixado como backup.` });
-                  } catch (err) {
-                    setBackupMsg({ texto: (err as Error).message, erro: true });
-                  } finally {
-                    setBackupOcupado(false);
-                  }
-                }}
-              />
-            </label>
-            <button
-              type="button"
-              className={u.btnSecundario}
-              onClick={() => {
-                if (window.confirm('Apagar tudo o que foi salvo neste navegador e voltar aos dados de exemplo? Baixe um backup antes, se quiser guardar os dados.')) {
-                  restaurarExemplos();
-                  apagarTodosArquivos().catch(() => undefined);
-                }
-              }}
-            >
-              <RotateCcw size={17} /> Restaurar dados de exemplo
-            </button>
-          </div>
-          {backupMsg && (
-            <p className={u.nota} role="status" style={{ marginTop: 12, ...(backupMsg.erro ? { color: '#ffb199' } : {}) }}>
-              {backupMsg.texto}
-            </p>
-          )}
-        </section>
+
       </div>
     </NexaShell>
   );

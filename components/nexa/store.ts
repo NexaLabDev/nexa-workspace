@@ -8,6 +8,7 @@
 // Limites: só vale neste computador/navegador e some se o histórico for apagado.
 // ============================================
 
+import * as remoto from './remoto';
 import { useCallback, useSyncExternalStore } from 'react';
 
 const PREFIXO = 'nexa-workspace:v1:';
@@ -34,77 +35,14 @@ export const CHAVES = {
 
 type Chave = (typeof CHAVES)[keyof typeof CHAVES];
 
-// Cache por chave: o mesmo texto salvo devolve o mesmo objeto (exigência do React).
-const cache = new Map<string, { bruto: string | null; valor: unknown }>();
-
-function ler<T>(chave: Chave, inicial: T): T {
-  let bruto: string | null = null;
-  try {
-    bruto = window.localStorage.getItem(PREFIXO + chave);
-  } catch {
-    return inicial;
-  }
-  const emCache = cache.get(chave);
-  if (emCache && emCache.bruto === bruto) return emCache.valor as T;
-  let valor: T = inicial;
-  if (bruto != null) {
-    try {
-      valor = JSON.parse(bruto) as T;
-    } catch {
-      valor = inicial;
-    }
-  }
-  cache.set(chave, { bruto, valor });
-  return valor;
+export function usePersistido<T>(chave:Chave,inicial:T):[T,(novo:T|((atual:T)=>T))=>boolean]{
+ const valor=useSyncExternalStore(remoto.assinar,()=>remoto.ler(chave,inicial),()=>inicial);
+ const definir=useCallback((novo:T|((atual:T)=>T))=>{
+ const atual=remoto.ler(chave,inicial);
+ return remoto.alterar(chave,typeof novo==='function'?(novo as (x:T)=>T)(atual):novo);
+ },[chave,inicial]);
+ return [valor,definir];
 }
-
-/** Grava e devolve true se ficou salvo no navegador (false = só na memória desta aba). */
-function gravar<T>(chave: Chave, valor: T): boolean {
-  let ok = true;
-  try {
-    window.localStorage.setItem(PREFIXO + chave, JSON.stringify(valor));
-  } catch {
-    /* navegador sem espaço ou bloqueado: segue só na memória */
-    cache.set(chave, { bruto: '__memoria__', valor });
-    ok = false;
-  }
-  window.dispatchEvent(new CustomEvent(EVENTO, { detail: chave }));
-  return ok;
-}
-
-function assinar(aviso: () => void) {
-  const aoMudar = () => aviso();
-  window.addEventListener(EVENTO, aoMudar);
-  window.addEventListener('storage', aoMudar); // outras abas do navegador
-  return () => {
-    window.removeEventListener(EVENTO, aoMudar);
-    window.removeEventListener('storage', aoMudar);
-  };
-}
-
-/**
- * Como useState, mas salvo no navegador e compartilhado entre as telas.
- * No servidor (primeira renderização) usa o valor inicial.
- */
-export function usePersistido<T>(chave: Chave, inicial: T): [T, (novo: T | ((atual: T) => T)) => boolean] {
-  const valor = useSyncExternalStore(
-    assinar,
-    () => ler(chave, inicial),
-    () => inicial
-  );
-  const definir = useCallback(
-    (novo: T | ((atual: T) => T)) => {
-      const atual = ler(chave, inicial);
-      const proximo = typeof novo === 'function' ? (novo as (a: T) => T)(atual) : novo;
-      return gravar(chave, proximo);
-    },
-    // `inicial` vem de constantes dos dados de exemplo
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [chave]
-  );
-  return [valor, definir];
-}
-
 /** Apaga tudo o que foi salvo e volta aos dados de exemplo. */
 export function restaurarExemplos() {
   try {
@@ -112,7 +50,7 @@ export function restaurarExemplos() {
   } catch {
     /* ignora */
   }
-  cache.clear();
+
   window.dispatchEvent(new CustomEvent(EVENTO, { detail: '*' }));
 }
 
@@ -125,7 +63,7 @@ export function lerTudoSalvo(): Record<string, unknown> {
     try {
       saida[c] = JSON.parse(bruto);
     } catch {
-      /* valor corrompido fica fora */
+      throw new Error('Dados locais ilegíveis em '+c+'. A importação foi interrompida.');
     }
   }
   return saida;
@@ -137,6 +75,6 @@ export function gravarTudoSalvo(dados: Record<string, unknown>) {
   for (const [c, v] of Object.entries(dados)) {
     if (conhecidas.has(c)) window.localStorage.setItem(PREFIXO + c, JSON.stringify(v));
   }
-  cache.clear();
+
   window.dispatchEvent(new CustomEvent(EVENTO, { detail: '*' }));
 }

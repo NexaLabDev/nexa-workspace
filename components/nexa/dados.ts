@@ -54,7 +54,7 @@ const PRESTADORA_VAZIA: Prestadora = {};
 export const usePrestadora = () => usePersistido<Prestadora>(CHAVES.prestadora, PRESTADORA_VAZIA);
 
 /** Perfil de quem usa este navegador (Configurações → Perfil). */
-export type Perfil = { nome?: string };
+export type Perfil = { nome?: string; usuarioId?:string };
 const PERFIL_VAZIO: Perfil = {};
 export const usePerfil = () => usePersistido<Perfil>(CHAVES.perfil, PERFIL_VAZIO);
 
@@ -76,7 +76,7 @@ export function diasPrazoProximo(p: Preferencias): number {
 
 /** Autor dos registros enquanto não existe login: o nome configurado, sem autenticação. */
 export function autorAtual(perfil: Perfil): AutorRegistro {
-  return { nome: perfil.nome?.trim() || 'Sem nome configurado', autenticado: false };
+  return perfil.usuarioId ? {nome:perfil.nome??'Usuário',autenticado:true,usuarioId:perfil.usuarioId} : {nome:perfil.nome??'Sem nome',autenticado:false};
 }
 
 /** Novo registro para a linha do tempo do projeto. */

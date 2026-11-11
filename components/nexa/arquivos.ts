@@ -7,7 +7,7 @@
 // Só vale neste computador/navegador.
 // ============================================
 
-import { lerTudoSalvo } from './store';
+import { baixarPrivado,subirPrivado } from './storage';
 
 const BANCO = 'nexa-workspace-arquivos';
 const TABELA = 'arquivos';
@@ -62,9 +62,8 @@ async function operar<T>(modo: IDBTransactionMode, acao: (t: IDBObjectStore) => 
 /** Guarda o arquivo e devolve a chave para encontrá-lo depois. */
 export async function guardarArquivo(arquivo: File): Promise<string> {
   if (arquivo.size > LIMITE_BYTES) throw new Error('Arquivo maior que 25 MB.');
-  const id = `arq-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const registro = await paraRegistro(arquivo);
-  await operar('readwrite', (t) => t.put(registro, id));
+  const id = 'arq-'+crypto.randomUUID();
+  await subirPrivado(id,arquivo);
   return id;
 }
 
@@ -118,7 +117,8 @@ export async function abrirArquivo(id: string, opcoes: { confiavel?: boolean; no
   const blob = await lerArquivo(id);
   if (!blob) return false;
   const nome = opcoes.nome ?? (blob as File).name ?? 'arquivo';
-  const tipo = opcoes.confiavel ? blob.type || 'text/html' : await tipoSeguro(blob, nome);
+  if (opcoes.confiavel) return abrirDocumentoIsolado(blob, false);
+  const tipo = await tipoSeguro(blob, nome);
   if (!tipo) return baixarBlob(blob, nome);
   const url = URL.createObjectURL(new Blob([blob], { type: tipo }));
   const janela = window.open(url, '_blank');
@@ -146,7 +146,7 @@ function baixarBlob(blob: Blob, nome: string): boolean {
 
 /** Conteúdo guardado (ou undefined se não existe mais). */
 export async function lerArquivo(id: string): Promise<Blob | undefined> {
-  return deRegistro(await operar<unknown>('readonly', (t) => t.get(id)));
+  return baixarPrivado(id);
 }
 
 export type TipoPrevia = 'imagem' | 'pdf' | 'texto';
@@ -207,9 +207,9 @@ export function idsDeArquivoEmUso(dados: unknown, saida = new Set<string>()): Se
  * documentos, comprovantes) ainda usa este arquivo. Chame DEPOIS de gravar a remoção do vínculo.
  */
 export async function apagarArquivoSeSemUso(id: string): Promise<boolean> {
-  if (idsDeArquivoEmUso(lerTudoSalvo()).has(id)) return false;
-  await apagarArquivo(id);
-  return true;
+  // Outros registros ou dispositivos podem manter referências. O vínculo é
+  // removido da entidade; o objeto privado fica disponível para recuperação.
+  return false;
 }
 
 /** Todos os arquivos guardados (para o backup completo). */
@@ -222,7 +222,7 @@ export async function listarArquivos(): Promise<Array<{ id: string; arquivo: Blo
     const valores = loja.getAll();
     tx.oncomplete = () => {
       db.close();
-      resolve((chaves.result as IDBValidKey[]).map((k, i) => ({ id: String(k), arquivo: deRegistro(valores.result[i]) ?? new Blob([]) })));
+      try {resolve((chaves.result as IDBValidKey[]).map((k,i)=>{const arquivo=deRegistro(valores.result[i]);if(!arquivo)throw Error('Anexo local ilegível: '+String(k));return {id:String(k),arquivo};}));}catch(e){reject(e);}
     };
     tx.onerror = () => reject(tx.error);
   });
@@ -241,16 +241,19 @@ export async function guardarComId(id: string, arquivo: Blob): Promise<void> {
 export async function imprimirArquivo(id: string): Promise<boolean> {
   const blob = await lerArquivo(id);
   if (!blob) return false;
-  const url = URL.createObjectURL(blob);
-  const janela = window.open(url, '_blank');
-  if (!janela) {
-    URL.revokeObjectURL(url);
-    return false;
-  }
-  janela.addEventListener('load', () => {
-    janela.focus();
-    janela.print();
-  });
-  window.setTimeout(() => URL.revokeObjectURL(url), 120_000);
+  return abrirDocumentoIsolado(blob,true);
+}
+
+function abrirDocumentoIsolado(blob:Blob, imprimir:boolean){
+  const janela=window.open('about:blank','_blank');
+  if(!janela)return false;
+  janela.opener=null;
+  const frame=janela.document.createElement('iframe');
+  frame.setAttribute('sandbox','');
+  frame.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:0';
+  const url=URL.createObjectURL(blob.slice(0,blob.size,'text/html'));
+  frame.onload=()=>{if(imprimir)janela.print();};
+  frame.src=url;janela.document.body.appendChild(frame);
+  janela.addEventListener('pagehide',()=>URL.revokeObjectURL(url),{once:true});
   return true;
 }
