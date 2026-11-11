@@ -24,7 +24,11 @@ export default function Conta({retorno=false}:{retorno?:boolean}) {
       const {data,error}=await db.auth.getUser(); if(error||!data.user)throw new Error();
       // A confirmação do cadastro deve concluir o convite, sem exigir um segundo login.
       // A recuperação de senha, por outro lado, precisa manter a tela de nova senha.
-      const convitePendente=sessionStorage.getItem('nexa:convite');
+      // O identificador do convite é só uma referência de fluxo; a autorização
+      // é validada pelo banco contra o e-mail confirmado (nunca pelo metadata).
+      const referenciaConvite=data.user.user_metadata?.nexa_convite;
+      const convitePendente=sessionStorage.getItem('nexa:convite') ||
+        (typeof referenciaConvite==='string'?referenciaConvite:null);
       if(tipo!=='recovery' && convitePendente && /^[0-9a-f-]{36}$/i.test(convitePendente)){
         const {data:workspace,error:erroConvite}=await db.rpc('aceitar_convite_workspace',{p_convite:convitePendente});
         if(erroConvite)throw erroConvite;
@@ -56,7 +60,7 @@ export default function Conta({retorno=false}:{retorno?:boolean}) {
           setAviso('Para ativar sua conta, abra o link de convite enviado pela administração.');
           return;
         }
-        const {error}=await db.auth.signUp({email,password:senha,options:{emailRedirectTo:ret}});if(error)throw error;
+        const {error}=await db.auth.signUp({email,password:senha,options:{emailRedirectTo:ret,data:{nexa_convite:convitePendente}}});if(error)throw error;
         setAviso('Confirme seu endereço pelo e-mail recebido. Se já tem conta, use Entrar.');return;
       }
       const resposta=modo==='senha'?await db.auth.updateUser({password:senha}):await db.auth.signInWithPassword({email,password:senha});
