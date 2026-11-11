@@ -36,6 +36,11 @@ export default function Conta({retorno=false}:{retorno?:boolean}) {
         setAviso('Confira sua caixa de entrada e abra o link neste navegador.');return;
       }
       if(modo==='convite'){
+        const convitePendente = sessionStorage.getItem('nexa:convite');
+        if (!convitePendente || !/^[0-9a-f-]{36}$/i.test(convitePendente)) {
+          setAviso('Para ativar sua conta, abra o link de convite enviado pela administração.');
+          return;
+        }
         const {error}=await db.auth.signUp({email,password:senha,options:{emailRedirectTo:ret}});if(error)throw error;
         setAviso('Confirme seu endereço pelo e-mail recebido. Se já tem conta, use Entrar.');return;
       }
@@ -47,7 +52,7 @@ export default function Conta({retorno=false}:{retorno?:boolean}) {
       sessionStorage.removeItem('nexa:convite');location.replace('/');
     } catch (erro: unknown) {
       const falha = erro as { status?: number; code?: string } | null;
-      if (falha?.status === 429 || falha?.code === 'over_email_send_rate_limit') {
+      if (falha?.code === 'over_email_send_rate_limit' || ((modo === 'recuperar' || modo === 'convite') && falha?.status === 429)) {
         setAviso('O Supabase atingiu o limite temporário de envio de e-mails. Nenhum novo link foi enviado. Tente novamente mais tarde.');
       } else {
         setAviso(modo==='entrar'?'Verifique o e-mail e a senha e tente novamente.':'Não foi possível concluir. Verifique o link ou tente novamente.');
