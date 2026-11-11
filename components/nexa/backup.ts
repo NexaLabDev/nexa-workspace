@@ -10,7 +10,7 @@
 // ============================================
 
 import { lerTudoSalvo, gravarTudoSalvo } from './store';
-import { guardarComId, listarArquivos } from './arquivos';
+import { guardarComId, listarArquivos, idsDeArquivoEmUso } from './arquivos';
 
 export const FORMATO_BACKUP = 'nexa-workspace-backup';
 
@@ -40,12 +40,25 @@ function base64ParaBlob(base64: string, tipo: string): Blob {
 }
 
 export async function montarBackup(): Promise<Backup> {
+  // Leia primeiro os dados e, em seguida, os anexos. Falhe explicitamente se
+  // algum anexo citado não puder ser recuperado do IndexedDB deste aparelho.
+  // Nunca entregue um backup com zero arquivos quando há arquivos referenciados.
+  const dados = lerTudoSalvo();
   const arquivos = await listarArquivos();
+  const presentes = new Set(arquivos.map(({ id }) => id));
+  const ausentes = [...idsDeArquivoEmUso(dados)].filter(id => !presentes.has(id));
+  if (ausentes.length) {
+    throw new Error(
+      'Backup incompleto: ' + ausentes.length +
+      ' anexo(s) referenciado(s) não foram encontrados neste navegador. ' +
+      'Nenhum backup foi gerado. Confira o dispositivo original antes de importar.'
+    );
+  }
   return {
     formato: FORMATO_BACKUP,
     versao: 1,
     criadoEm: new Date().toISOString(),
-    dados: lerTudoSalvo(),
+    dados,
     arquivos: await Promise.all(
       arquivos.map(async ({ id, arquivo }) => ({
         id,
@@ -84,7 +97,7 @@ export async function lerBackup(arquivo: File): Promise<Backup> {
   } catch {
     throw new Error('O arquivo não é um backup do Nexa Workspace (JSON inválido).');
   }
-  if (b.formato !== FORMATO_BACKUP || b.versao !== 1 || typeof b.dados !== 'object' || !Array.isArray(b.arquivos)) {
+  if (b.formato !== FORMATO_BACKUP || b.versao !== 1 || !b.dados || typeof b.dados !== 'object' || Array.isArray(b.dados) || !Array.isArray(b.arquivos)) {
     throw new Error('O arquivo não é um backup do Nexa Workspace.');
   }
   return b as Backup;
