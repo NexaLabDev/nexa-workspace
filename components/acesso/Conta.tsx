@@ -17,7 +17,7 @@ export default function Conta({retorno=false}:{retorno?:boolean}) {
     const db=supabaseNavegador();
     const iniciar=async()=>{
       const token=param.get('token_hash'),tipo=param.get('type');
-      if(token && (tipo==='recovery'||tipo==='invite'||tipo==='signup')){
+      if(token && (tipo==='recovery'||tipo==='invite'||tipo==='signup'||tipo==='email')){
         const {error}=await db.auth.verifyOtp({token_hash:token,type:tipo}); if(error)throw error;
       }
       // O cliente SSR troca o código PKCE do retorno ao inicializar.
