@@ -1,19 +1,7 @@
--- ============================================
--- Nexa Workspace — acesso, papéis e auditoria
--- ============================================
--- Entrega 1A. Não cria leads, clientes, projetos nem qualquer outro dado operacional.
--- Não lê nem apaga o que está salvo no navegador.
--- Este arquivo não contém chave, token nem senha.
---
--- Aplicar no projeto Supabase (SQL Editor ou `supabase db push`) só quando
--- NEXT_PUBLIC_SUPABASE_URL e as chaves já estiverem definidas fora do Git.
--- O papel postgres do Supabase ignora o RLS de propósito. O navegador, não.
--- ============================================
+-- Entrega 1A. Aplicar em uma única transação. Identidades são provisionadas fora do Git.
+create schema nexa_privado;
+revoke all on schema nexa_privado from public, anon, authenticated, service_role;
 
--- gen_random_uuid() já vem no Postgres 13+, que é o do Supabase.
--- Não cria extensão: o projeto não precisa de pgcrypto além disso.
-
--- --------------------------------------------
 -- Tipos
 -- --------------------------------------------
 
@@ -56,11 +44,12 @@ create table public.workspaces (
   nome text not null,
   criado_em timestamptz not null default now(),
   atualizado_em timestamptz not null default now(),
+  admins_ativos integer not null default 0 check (admins_ativos >= 0),
   constraint workspaces_nome_ok check (char_length(btrim(nome)) between 1 and 120)
 );
 
 comment on table public.workspaces is
-  'Organização. Esta entrega cria uma só, quando a primeira conta é confirmada.';
+  'Organização criada junto com seu primeiro administrador autorizado.';
 
 create table public.perfis (
   id uuid primary key references auth.users (id) on delete cascade,
@@ -73,6 +62,7 @@ create table public.perfis (
   ativo boolean not null default true,
   criado_em timestamptz not null default now(),
   atualizado_em timestamptz not null default now(),
+  unique (workspace_id, id),
   constraint perfis_nome_ok check (nome is null or char_length(nome) <= 120),
   constraint perfis_email_ok check (email is null or char_length(email) <= 320),
   constraint perfis_cargo_ok check (cargo is null or char_length(cargo) <= 80)
@@ -89,6 +79,7 @@ create table public.equipes (
   nome text not null,
   criado_em timestamptz not null default now(),
   atualizado_em timestamptz not null default now(),
+  unique (workspace_id, id),
   constraint equipes_nome_ok check (char_length(btrim(nome)) between 1 and 80)
 );
 
@@ -96,8 +87,11 @@ comment on table public.equipes is
   'Grupo de pessoas do mesmo workspace.';
 
 create table public.equipe_membros (
-  equipe_id uuid not null references public.equipes (id) on delete cascade,
-  perfil_id uuid not null references public.perfis (id) on delete cascade,
+  workspace_id uuid not null,
+  equipe_id uuid not null,
+  perfil_id uuid not null,
+  foreign key (workspace_id, equipe_id) references public.equipes (workspace_id, id) on delete cascade,
+  foreign key (workspace_id, perfil_id) references public.perfis (workspace_id, id) on delete cascade,
   criado_em timestamptz not null default now(),
   primary key (equipe_id, perfil_id)
 );
@@ -118,7 +112,9 @@ comment on table public.permissoes_papel is
 create table public.auditoria (
   id uuid primary key default gen_random_uuid(),
   workspace_id uuid not null references public.workspaces (id) on delete restrict,
-  perfil_id uuid references public.perfis (id) on delete set null,
+  perfil_id uuid, -- Identidade histórica do ator mesmo após remoção da conta.
+  origem text not null,
+  campos text[] not null,
   em timestamptz not null default now(),
   tabela text not null,
   registro_id text not null,
@@ -131,7 +127,7 @@ create table public.auditoria (
 );
 
 comment on table public.auditoria is
-  'Quem alterou o quê. A pessoa não escolhe o próprio id: a função registrar_auditoria grava.';
+  'Quem alterou o quê. A pessoa não escolhe o próprio id: o gatilho registra a alteração na mesma transação.';
 
 create index perfis_workspace_idx on public.perfis (workspace_id);
 create index perfis_admin_idx on public.perfis (workspace_id) where papel = 'administrador' and ativo;
@@ -169,416 +165,258 @@ insert into public.permissoes_papel (papel, modulo, acao)
 select r.papel, m.modulo, a.acao
 from unnest(array['administrador', 'gestor']::public.papel[]) as r(papel)
 cross join unnest(array[
-  'metas', 'servicos', 'prestadora', 'equipes', 'usuarios'
+  'metas', 'servicos', 'prestadora', 'equipes'
 ]::public.modulo[]) as m(modulo)
 cross join unnest(array['criar', 'editar', 'excluir']::public.acao[]) as a(acao);
 
 insert into public.permissoes_papel (papel, modulo, acao)
-values ('administrador', 'workspace', 'editar');
+values ('administrador', 'workspace', 'editar'),
+       ('administrador', 'usuarios', 'editar'), ('gestor', 'usuarios', 'editar');
 
 -- --------------------------------------------
--- Funções de sessão
--- --------------------------------------------
+-- Apenas o operador do projeto configura e consome a autorização inicial.
+create table nexa_privado.autorizacao_inicial (
+  unica boolean primary key default true check (unica),
+  email text not null check (email = lower(btrim(email)) and email <> ''),
+  workspace_id uuid unique references public.workspaces(id),
+  consumida_em timestamptz,
+  check ((workspace_id is null) = (consumida_em is null))
+);
+alter table nexa_privado.autorizacao_inicial enable row level security;
+revoke all on nexa_privado.autorizacao_inicial from public, anon, authenticated, service_role;
 
-create function public.workspace_id_atual()
-returns uuid
-language sql
-stable
-security definer
-set search_path = public
+-- O lookup privado evita recursão na política de perfis. O sujeito vem da sessão.
+create function nexa_privado.perfil_atual()
+returns table (workspace_id uuid, papel public.papel)
+language sql stable security definer set search_path = ''
 as $$
-  select workspace_id
-  from public.perfis
-  where id = auth.uid()
-    and ativo
+  select p.workspace_id, p.papel from public.perfis p
+  where p.id = (select auth.uid()) and p.ativo
 $$;
 
-create function public.papel_atual()
-returns public.papel
-language sql
-stable
-security definer
-set search_path = public
+create function public.workspace_id_atual() returns uuid
+language sql stable security invoker set search_path = ''
+as $$ select workspace_id from nexa_privado.perfil_atual() $$;
+
+create function public.papel_atual() returns public.papel
+language sql stable security invoker set search_path = ''
+as $$ select papel from nexa_privado.perfil_atual() $$;
+
+create function public.pode(p_modulo public.modulo, p_acao public.acao) returns boolean
+language sql stable security invoker set search_path = ''
 as $$
-  select papel
-  from public.perfis
-  where id = auth.uid()
-    and ativo
+  select exists (select 1 from public.permissoes_papel
+    where papel = (select public.papel_atual()) and modulo = p_modulo and acao = p_acao)
 $$;
 
-create function public.pode(p_modulo public.modulo, p_acao public.acao)
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select exists (
-    select 1
-    from public.permissoes_papel
-    where papel = public.papel_atual()
-      and modulo = p_modulo
-      and acao = p_acao
-  )
-$$;
+alter table public.equipes alter workspace_id set default public.workspace_id_atual();
+alter table public.equipe_membros alter workspace_id set default public.workspace_id_atual();
 
-comment on function public.pode(public.modulo, public.acao) is
-  'Verdadeiro se o usuário ativo da sessão tem a ação naquele módulo.';
-
--- A pessoa logada grava no próprio workspace, sempre com o próprio id.
-create function public.registrar_auditoria(
-  p_tabela text,
-  p_registro_id text,
-  p_acao text,
-  p_antes jsonb,
-  p_depois jsonb
-)
-returns uuid
-language plpgsql
-security definer
-set search_path = public
+-- Usadas apenas pelo operador confiável. O e-mail esperado e o UUID precisam
+-- corresponder à mesma conta Auth confirmada e apta. O lock coordena mudanças no Auth.
+create function nexa_privado.email_verificado(p_usuario uuid, p_email text) returns text
+language plpgsql security invoker set search_path = ''
 as $$
 declare
-  novo_id uuid;
-  ws uuid;
+  email_atual text;
 begin
-  if auth.uid() is null or public.workspace_id_atual() is null then
-    raise exception 'Auditoria exige uma sessão ativa.'
-      using errcode = '42501';
-  end if;
-  if public.papel_atual() = 'visualizador' then
-    raise exception 'Visualizador não registra auditoria.'
-      using errcode = '42501';
-  end if;
-  if p_tabela is null or p_tabela !~ '^[a-z][a-z0-9_]{0,62}$' then
-    raise exception 'Tabela de auditoria inválida.'
-      using errcode = '23514';
-  end if;
-  if p_registro_id is null or char_length(p_registro_id) not between 1 and 200 then
-    raise exception 'Registro de auditoria sem identificação.'
-      using errcode = '23514';
-  end if;
-  if p_acao is null or p_acao not in ('criar', 'editar', 'excluir', 'restaurar') then
-    raise exception 'Ação de auditoria inválida.'
-      using errcode = '23514';
-  end if;
-  if pg_column_size(p_antes) > 500000 or pg_column_size(p_depois) > 500000 then
-    raise exception 'Registro de auditoria grande demais.'
-      using errcode = '54000';
-  end if;
-
-  ws := public.workspace_id_atual();
-  insert into public.auditoria (workspace_id, perfil_id, tabela, registro_id, acao, antes, depois)
-  values (ws, auth.uid(), p_tabela, p_registro_id, p_acao, p_antes, p_depois)
-  returning id into novo_id;
-  return novo_id;
+  select u.email into strict email_atual from auth.users u
+  where u.id = p_usuario and lower(u.email) = lower(btrim(p_email))
+    and u.email_confirmed_at is not null and not u.is_anonymous
+    and u.deleted_at is null and (u.banned_until is null or u.banned_until <= now())
+  for update;
+  return email_atual;
 end;
 $$;
 
-revoke all on function public.workspace_id_atual() from public;
-revoke all on function public.papel_atual() from public;
-revoke all on function public.pode(public.modulo, public.acao) from public;
-revoke all on function public.registrar_auditoria(text, text, text, jsonb, jsonb) from public;
+create function nexa_privado.ativar_inicial(p_usuario uuid) returns uuid
+language plpgsql security invoker set search_path = ''
+as $$
+declare
+  autorizado nexa_privado.autorizacao_inicial%rowtype;
+  email_atual text;
+  ws uuid;
+begin
+  select * into strict autorizado from nexa_privado.autorizacao_inicial where unica for update;
+  if autorizado.consumida_em is not null then
+    raise exception 'Autorização inicial já utilizada.' using errcode = '23514';
+  end if;
+  email_atual := nexa_privado.email_verificado(p_usuario, autorizado.email);
+  insert into public.workspaces (nome) values ('Nexa Lab') returning id into ws;
+  insert into public.perfis (id, workspace_id, email, papel)
+    values (p_usuario, ws, email_atual, 'administrador');
+  update nexa_privado.autorizacao_inicial set workspace_id = ws, consumida_em = now() where unica;
+  return ws;
+end;
+$$;
 
--- --------------------------------------------
--- Gatilhos
--- --------------------------------------------
-
-create function public.marcar_atualizado()
-returns trigger
-language plpgsql
-set search_path = public
+create function nexa_privado.associar_visualizador(p_workspace uuid, p_usuario uuid, p_email text)
+returns void language plpgsql security invoker set search_path = ''
 as $$
 begin
-  new.atualizado_em := now();
+  insert into public.perfis (id, workspace_id, email, papel)
+    values (p_usuario, p_workspace, nexa_privado.email_verificado(p_usuario, p_email), 'visualizador');
+end;
+$$;
+
+create function nexa_privado.marcar_atualizado() returns trigger
+language plpgsql set search_path = ''
+as $$
+begin
+  new.atualizado_em := statement_timestamp();
   return new;
 end;
 $$;
+create trigger workspaces_atualizado before update of nome on public.workspaces
+  for each row execute function nexa_privado.marcar_atualizado();
+create trigger perfis_atualizado before update on public.perfis
+  for each row execute function nexa_privado.marcar_atualizado();
+create trigger equipes_atualizado before update on public.equipes
+  for each row execute function nexa_privado.marcar_atualizado();
 
-revoke all on function public.marcar_atualizado() from public;
-
-create trigger workspaces_atualizado
-  before update on public.workspaces
-  for each row execute function public.marcar_atualizado();
-
-create function public.guardar_workspace()
-returns trigger
-language plpgsql
-set search_path = public
+create function nexa_privado.normalizar_nome() returns trigger
+language plpgsql set search_path = ''
 as $$
 begin
-  if new.id is distinct from old.id then
-    raise exception 'O id do workspace é fixo.'
-      using errcode = '42501';
-  end if;
   new.nome := btrim(new.nome);
   return new;
 end;
 $$;
+create trigger equipes_normalizar before insert or update of nome on public.equipes
+  for each row execute function nexa_privado.normalizar_nome();
+create trigger workspaces_normalizar before insert or update of nome on public.workspaces
+  for each row execute function nexa_privado.normalizar_nome();
 
-revoke all on function public.guardar_workspace() from public;
-
-create trigger workspaces_guardar
-  before update on public.workspaces
-  for each row execute function public.guardar_workspace();
-
-create trigger perfis_atualizado
-  before update on public.perfis
-  for each row execute function public.marcar_atualizado();
-
-create trigger equipes_atualizado
-  before update on public.equipes
-  for each row execute function public.marcar_atualizado();
-
--- Perfil só nasce pelo servidor (gatilho da conta). Papel e workspace
--- não sobem por conta própria. Gestor não mexe em administrador.
--- O workspace nunca fica sem um administrador ativo.
-create function public.guardar_perfil()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
+create function nexa_privado.guardar_perfil() returns trigger
+language plpgsql security definer set search_path = ''
 as $$
 declare
+  sujeito uuid := auth.uid();
   ator public.papel;
-  email_login text;
 begin
-  if tg_op = 'INSERT' then
-    if auth.uid() is not null then
-      raise exception 'O perfil nasce com a conta.'
-        using errcode = '42501';
-    end if;
-    return new;
-  end if;
-
-  if new.id is distinct from old.id then
-    raise exception 'O id do perfil é fixo.'
-      using errcode = '42501';
-  end if;
-  if auth.uid() is not null and new.workspace_id is distinct from old.workspace_id then
-    raise exception 'O perfil não muda de workspace.'
-      using errcode = '42501';
-  end if;
-
-  if auth.uid() is not null then
-    ator := public.papel_atual();
-    if ator is null then
-      raise exception 'Usuário sem perfil ativo.'
-        using errcode = '42501';
-    end if;
-
-    if new.email is distinct from old.email then
-      select u.email into email_login from auth.users u where u.id = new.id;
-      if new.email is distinct from email_login then
-        raise exception 'O e-mail do perfil acompanha o login.'
-          using errcode = '42501';
-      end if;
-    end if;
-
-    if ator = 'administrador' then
-      null;
-    elsif ator = 'gestor' and public.pode('usuarios', 'editar') then
-      if old.id = auth.uid() then
-        if new.papel is distinct from old.papel or new.ativo is distinct from old.ativo then
-          raise exception 'Você não pode alterar o próprio papel.'
-            using errcode = '42501';
-        end if;
-      elsif old.papel = 'administrador' or new.papel = 'administrador' then
-        raise exception 'Gestor não altera um administrador.'
-          using errcode = '42501';
-      end if;
-    else
-      if old.id is distinct from auth.uid() then
-        raise exception 'Você só altera o próprio perfil.'
-          using errcode = '42501';
-      end if;
-      if new.papel is distinct from old.papel or new.ativo is distinct from old.ativo then
-        raise exception 'Você não pode alterar o próprio papel.'
-          using errcode = '42501';
-      end if;
-    end if;
-  end if;
-
-  if old.papel = 'administrador' and old.ativo
-     and (new.papel is distinct from 'administrador' or not new.ativo) then
-    if not exists (
-      select 1
-      from public.perfis
-      where workspace_id = old.workspace_id
-        and papel = 'administrador'
-        and ativo
-        and id <> old.id
-    ) then
-      raise exception 'O workspace precisa manter um administrador ativo.'
-        using errcode = '23514';
-    end if;
-  end if;
-
-  return new;
-end;
-$$;
-
-revoke all on function public.guardar_perfil() from public;
-
-create trigger perfis_guardar
-  before insert or update on public.perfis
-  for each row execute function public.guardar_perfil();
-
-create function public.guardar_equipe()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-begin
-  new.nome := btrim(new.nome);
-  if new.nome is null or new.nome = '' then
-    raise exception 'A equipe precisa de um nome.'
-      using errcode = '23514';
-  end if;
-  if tg_op = 'UPDATE' and auth.uid() is not null
-     and new.workspace_id is distinct from old.workspace_id then
-    raise exception 'A equipe não muda de workspace.'
-      using errcode = '42501';
-  end if;
-  if auth.uid() is not null and new.workspace_id is distinct from public.workspace_id_atual() then
-    raise exception 'Equipe fora do seu workspace.'
-      using errcode = '42501';
-  end if;
-  return new;
-end;
-$$;
-
-revoke all on function public.guardar_equipe() from public;
-
-create trigger equipes_guardar
-  before insert or update on public.equipes
-  for each row execute function public.guardar_equipe();
-
-create function public.guardar_membro_equipe()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  ws_equipe uuid;
-  ws_perfil uuid;
-begin
-  select workspace_id into ws_equipe from public.equipes where id = new.equipe_id;
-  select workspace_id into ws_perfil from public.perfis where id = new.perfil_id;
-  if ws_equipe is null or ws_perfil is null or ws_equipe is distinct from ws_perfil then
-    raise exception 'Equipe e pessoa precisam ser do mesmo workspace.'
-      using errcode = '42501';
-  end if;
-  if auth.uid() is not null and ws_equipe is distinct from public.workspace_id_atual() then
-    raise exception 'Equipe fora do seu workspace.'
-      using errcode = '42501';
-  end if;
-  return new;
-end;
-$$;
-
-revoke all on function public.guardar_membro_equipe() from public;
-
-create trigger equipe_membros_guardar
-  before insert or update on public.equipe_membros
-  for each row execute function public.guardar_membro_equipe();
-
--- Primeira conta confirmada vira administrador. As seguintes entram como
--- visualizador até um administrador mudar o papel. Conta ainda não
--- confirmada não vira administrador.
-create function public.tratar_usuario_auth()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  ws uuid;
-  papel_novo public.papel;
-  nome_novo text;
-begin
-  perform pg_advisory_xact_lock(847291001);
-
-  if tg_op = 'INSERT' then
-    select id into ws
-    from public.workspaces
-    order by criado_em, id
-    limit 1;
-
-    if ws is null then
-      insert into public.workspaces (nome)
-      values ('Nexa Lab')
-      returning id into ws;
-    end if;
-
-    nome_novo := nullif(btrim(coalesce(new.raw_user_meta_data ->> 'nome', '')), '');
-    if nome_novo is null then
-      nome_novo := nullif(split_part(coalesce(new.email, ''), '@', 1), '');
-    end if;
-    nome_novo := left(nome_novo, 120);
-
-    papel_novo := 'visualizador';
-    if new.confirmed_at is not null and not exists (
-      select 1
-      from public.perfis
-      where workspace_id = ws
-        and papel = 'administrador'
-        and ativo
-    ) then
-      papel_novo := 'administrador';
-    end if;
-
-    insert into public.perfis (id, workspace_id, nome, email, papel)
-    values (new.id, ws, nome_novo, left(new.email, 320), papel_novo)
-    on conflict (id) do nothing;
-
-    return new;
-  end if;
-
   if tg_op = 'UPDATE' then
-    if new.email is distinct from old.email then
-      update public.perfis
-      set email = left(new.email, 320)
-      where id = new.id;
+    if (new.id, new.workspace_id) is distinct from (old.id, old.workspace_id) then
+      raise exception 'Identidade e workspace são fixos.' using errcode = '42501';
     end if;
-
-    if old.confirmed_at is null and new.confirmed_at is not null then
-      select workspace_id into ws from public.perfis where id = new.id;
-      if ws is not null and not exists (
-        select 1
-        from public.perfis
-        where workspace_id = ws
-          and papel = 'administrador'
-          and ativo
-      ) then
-        update public.perfis
-        set papel = 'administrador'
-        where id = new.id
-          and papel is distinct from 'administrador';
+    if sujeito is not null then
+      select p.papel into ator from public.perfis p
+      where p.id = sujeito and p.workspace_id = old.workspace_id and p.ativo for share;
+      if ator is null then
+        raise exception 'Sessão sem vínculo ativo.' using errcode = '42501';
+      end if;
+      if ator <> 'administrador' then
+        if old.id = sujeito then
+          if (new.papel, new.ativo) is distinct from (old.papel, old.ativo) then
+            raise exception 'Alteração do próprio acesso recusada.' using errcode = '42501';
+          end if;
+        elsif ator <> 'gestor' or old.papel in ('gestor', 'administrador')
+           or new.papel in ('gestor', 'administrador') then
+          raise exception 'Alteração de perfil não permitida.' using errcode = '42501';
+        end if;
       end if;
     end if;
   end if;
-
+  if new.ativo and (tg_op = 'INSERT' or not old.ativo or new.papel is distinct from old.papel) then
+    perform 1 from auth.users u where u.id = new.id and u.email_confirmed_at is not null
+      and not u.is_anonymous and u.deleted_at is null
+      and (u.banned_until is null or u.banned_until <= now()) for share;
+    if not found then
+      raise exception 'Conta indisponível para ativação.' using errcode = '23514';
+    end if;
+  end if;
   return new;
 end;
 $$;
 
-revoke all on function public.tratar_usuario_auth() from public;
+create trigger perfis_guardar before insert or update on public.perfis
+  for each row execute function nexa_privado.guardar_perfil();
 
-create trigger usuarios_tratar
-  after insert or update of email, confirmed_at on auth.users
-  for each row execute function public.tratar_usuario_auth();
+-- Um único contador por workspace serializa alterações concorrentes de administradores.
+-- A validação diferida permite criar o workspace e o primeiro perfil na mesma transação.
+create function nexa_privado.contar_administradores() returns trigger
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  delta integer := 0;
+begin
+  if tg_op <> 'INSERT' and old.ativo and old.papel = 'administrador' then delta := delta - 1; end if;
+  if tg_op <> 'DELETE' and new.ativo and new.papel = 'administrador' then delta := delta + 1; end if;
+  if delta <> 0 then
+    update public.workspaces set admins_ativos = admins_ativos + delta
+    where id = coalesce(new.workspace_id, old.workspace_id);
+  end if;
+  return null;
+end;
+$$;
+create trigger perfis_contar after insert or update or delete on public.perfis
+  for each row execute function nexa_privado.contar_administradores();
 
--- O default usa a função, que só existe a partir daqui.
-alter table public.equipes
-  alter column workspace_id set default public.workspace_id_atual();
+create function nexa_privado.exigir_administrador() returns trigger
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  if exists (select 1 from public.workspaces where id = new.id and admins_ativos < 1) then
+    raise exception 'Mantenha um administrador ativo neste workspace.' using errcode = '23514';
+  end if;
+  return null;
+end;
+$$;
+create constraint trigger workspace_com_admin after insert or update of admins_ativos on public.workspaces
+  deferrable initially deferred for each row execute function nexa_privado.exigir_administrador();
 
--- --------------------------------------------
--- RLS
--- --------------------------------------------
+-- O cadastro por si só não concede vínculo. Sincroniza somente perfis já associados.
+create function nexa_privado.sincronizar_auth() returns trigger
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  permite_acesso boolean := new.email_confirmed_at is not null and not new.is_anonymous
+    and new.deleted_at is null and (new.banned_until is null or new.banned_until <= now());
+begin
+  update public.perfis p set email = new.email, ativo = p.ativo and permite_acesso
+  where p.id = new.id and (p.email is distinct from new.email or (p.ativo and not permite_acesso));
+  return null;
+end;
+$$;
+create trigger usuarios_sincronizar after update of email, email_confirmed_at, is_anonymous, deleted_at, banned_until on auth.users
+  for each row execute function nexa_privado.sincronizar_auth();
 
+-- O histórico nasce das linhas atingidas, inclusive nas operações do operador.
+-- Nomes, cargos e e-mails aparecem só como nomes de campos alterados.
+create function nexa_privado.auditar() returns trigger
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  anterior jsonb := to_jsonb(old);
+  atual jsonb := to_jsonb(new);
+  linha jsonb := coalesce(atual, anterior);
+  campos text[];
+  ws uuid := coalesce(linha->>'workspace_id', linha->>'id')::uuid;
+  chave text := coalesce(linha->>'id', concat_ws('/', linha->>'equipe_id', linha->>'perfil_id'));
+  ator uuid := auth.uid();
+  origem_evento text := coalesce(nullif(current_setting('role', true), 'none'), session_user);
+begin
+  select array_agg(k order by k) into campos
+    from jsonb_object_keys(linha) as keys(k)
+    where k not in ('atualizado_em', 'criado_em', 'admins_ativos')
+      and (anterior->k) is distinct from (atual->k);
+  if campos is null then return null; end if;
+  insert into public.auditoria (workspace_id, perfil_id, origem, tabela, registro_id, acao, campos, antes, depois)
+    values (ws, ator, origem_evento, tg_table_name, chave,
+      case tg_op when 'INSERT' then 'criar' when 'UPDATE' then 'editar' else 'excluir' end, campos,
+      case when anterior is not null then jsonb_strip_nulls(jsonb_build_object('papel', anterior->'papel', 'ativo', anterior->'ativo')) end,
+      case when atual is not null then jsonb_strip_nulls(jsonb_build_object('papel', atual->'papel', 'ativo', atual->'ativo')) end);
+  return null;
+end;
+$$;
+
+create trigger workspaces_auditar after insert or update of nome on public.workspaces
+  for each row execute function nexa_privado.auditar();
+create trigger perfis_auditar after insert or update or delete on public.perfis
+  for each row execute function nexa_privado.auditar();
+create trigger equipes_auditar after insert or update or delete on public.equipes
+  for each row execute function nexa_privado.auditar();
+create trigger equipe_membros_auditar after insert or delete on public.equipe_membros
+  for each row execute function nexa_privado.auditar();
 alter table public.workspaces enable row level security;
 alter table public.perfis enable row level security;
 alter table public.equipes enable row level security;
@@ -595,143 +433,80 @@ alter table public.auditoria force row level security;
 
 create policy workspaces_ler on public.workspaces
   for select to authenticated
-  using (id = public.workspace_id_atual());
+  using (id = (select public.workspace_id_atual()));
 
 create policy workspaces_editar on public.workspaces
   for update to authenticated
-  using (id = public.workspace_id_atual() and public.pode('workspace', 'editar'))
-  with check (id = public.workspace_id_atual() and public.pode('workspace', 'editar'));
+  using (id = (select public.workspace_id_atual()) and (select public.pode('workspace', 'editar')))
+  with check (id = (select public.workspace_id_atual()) and (select public.pode('workspace', 'editar')));
 
 create policy perfis_ler on public.perfis
   for select to authenticated
-  using (workspace_id = public.workspace_id_atual());
+  using (workspace_id = (select public.workspace_id_atual()));
 
 create policy perfis_editar on public.perfis
   for update to authenticated
   using (
-    workspace_id = public.workspace_id_atual()
-    and (id = auth.uid() or public.pode('usuarios', 'editar'))
+    workspace_id = (select public.workspace_id_atual())
+    and (id = (select auth.uid()) or (select public.pode('usuarios', 'editar')))
   )
   with check (
-    workspace_id = public.workspace_id_atual()
-    and (id = auth.uid() or public.pode('usuarios', 'editar'))
+    workspace_id = (select public.workspace_id_atual())
+    and (id = (select auth.uid()) or (select public.pode('usuarios', 'editar')))
   );
 
 create policy equipes_ler on public.equipes
   for select to authenticated
-  using (workspace_id = public.workspace_id_atual());
+  using (workspace_id = (select public.workspace_id_atual()));
 
 create policy equipes_criar on public.equipes
   for insert to authenticated
   with check (
-    workspace_id = public.workspace_id_atual()
-    and public.pode('equipes', 'criar')
+    workspace_id = (select public.workspace_id_atual())
+    and (select public.pode('equipes', 'criar'))
   );
 
 create policy equipes_editar on public.equipes
   for update to authenticated
-  using (workspace_id = public.workspace_id_atual() and public.pode('equipes', 'editar'))
-  with check (workspace_id = public.workspace_id_atual() and public.pode('equipes', 'editar'));
+  using (workspace_id = (select public.workspace_id_atual()) and (select public.pode('equipes', 'editar')))
+  with check (workspace_id = (select public.workspace_id_atual()) and (select public.pode('equipes', 'editar')));
 
 create policy equipes_excluir on public.equipes
   for delete to authenticated
-  using (workspace_id = public.workspace_id_atual() and public.pode('equipes', 'excluir'));
+  using (workspace_id = (select public.workspace_id_atual()) and (select public.pode('equipes', 'excluir')));
 
-create policy equipe_membros_ler on public.equipe_membros
-  for select to authenticated
-  using (
-    exists (
-      select 1
-      from public.equipes e
-      where e.id = equipe_id
-        and e.workspace_id = public.workspace_id_atual()
-    )
-  );
-
-create policy equipe_membros_criar on public.equipe_membros
-  for insert to authenticated
-  with check (
-    public.pode('equipes', 'criar')
-    and exists (
-      select 1
-      from public.equipes e
-      where e.id = equipe_id
-        and e.workspace_id = public.workspace_id_atual()
-    )
-  );
-
-create policy equipe_membros_excluir on public.equipe_membros
-  for delete to authenticated
-  using (
-    public.pode('equipes', 'excluir')
-    and exists (
-      select 1
-      from public.equipes e
-      where e.id = equipe_id
-        and e.workspace_id = public.workspace_id_atual()
-    )
-  );
+create policy equipe_membros_ler on public.equipe_membros for select to authenticated
+  using (workspace_id = (select public.workspace_id_atual()));
+create policy equipe_membros_criar on public.equipe_membros for insert to authenticated
+  with check (workspace_id = (select public.workspace_id_atual()) and (select public.pode('equipes', 'criar')));
+create policy equipe_membros_excluir on public.equipe_membros for delete to authenticated
+  using (workspace_id = (select public.workspace_id_atual()) and (select public.pode('equipes', 'excluir')));
 
 create policy permissoes_ler on public.permissoes_papel
   for select to authenticated
-  using (public.workspace_id_atual() is not null);
+  using ((select public.workspace_id_atual()) is not null);
 
 create policy auditoria_ler on public.auditoria
   for select to authenticated
   using (
-    workspace_id = public.workspace_id_atual()
-    and public.papel_atual() = 'administrador'
+    workspace_id = (select public.workspace_id_atual())
+    and (select public.papel_atual()) = 'administrador'
   );
 
--- --------------------------------------------
--- Privilégios do navegador
--- --------------------------------------------
--- Sem política de insert/delete, o RLS recusa mesmo que alguém reabra o grant.
--- anon não recebe nada. A chave secreta usa service_role e ignora o RLS.
 
-revoke all on table public.workspaces from public, anon;
-revoke all on table public.perfis from public, anon;
-revoke all on table public.equipes from public, anon;
-revoke all on table public.equipe_membros from public, anon;
-revoke all on table public.permissoes_papel from public, anon;
-revoke all on table public.auditoria from public, anon;
-
-grant usage on schema public to authenticated;
-
-grant select, update on table public.workspaces to authenticated;
-grant select, update on table public.perfis to authenticated;
-grant select, insert, update, delete on table public.equipes to authenticated;
-grant select, insert, delete on table public.equipe_membros to authenticated;
-grant select on table public.permissoes_papel to authenticated;
-grant select on table public.auditoria to authenticated;
-
-grant execute on function public.workspace_id_atual() to authenticated;
-grant execute on function public.papel_atual() to authenticated;
-grant execute on function public.pode(public.modulo, public.acao) to authenticated;
-grant execute on function public.registrar_auditoria(text, text, text, jsonb, jsonb) to authenticated;
-grant execute on function public.marcar_atualizado() to authenticated;
-grant execute on function public.guardar_workspace() to authenticated;
-grant execute on function public.guardar_perfil() to authenticated;
-grant execute on function public.guardar_equipe() to authenticated;
-grant execute on function public.guardar_membro_equipe() to authenticated;
-
-do $$
-begin
-  if exists (select 1 from pg_roles where rolname = 'supabase_auth_admin') then
-    grant execute on function public.tratar_usuario_auth() to supabase_auth_admin;
-  end if;
-end;
-$$;
-
-do $$
-begin
-  if exists (select 1 from pg_roles where rolname = 'service_role') then
-    grant all on table public.workspaces to service_role;
-    grant all on table public.perfis to service_role;
-    grant all on table public.equipes to service_role;
-    grant all on table public.equipe_membros to service_role;
-    grant all on table public.permissoes_papel to service_role;
-    grant all on table public.auditoria to service_role;
-  end if;
-end;
-$$;
+-- Supabase pode conceder privilégios por padrão. Remover também os grants
+-- explícitos dos papéis da API antes de conceder as operações permitidas.
+revoke all on public.workspaces, public.perfis, public.equipes, public.equipe_membros,
+  public.permissoes_papel, public.auditoria from public, anon, authenticated, service_role;
+revoke all on all functions in schema nexa_privado from public, anon, authenticated, service_role;
+revoke all on function public.workspace_id_atual(), public.papel_atual(), public.pode(public.modulo, public.acao)
+  from public, anon, authenticated, service_role;
+grant usage on schema public, nexa_privado to authenticated;
+grant execute on function nexa_privado.perfil_atual(), public.workspace_id_atual(),
+  public.papel_atual(), public.pode(public.modulo, public.acao) to authenticated;
+grant select on public.workspaces, public.perfis, public.equipes, public.equipe_membros,
+  public.permissoes_papel, public.auditoria to authenticated;
+grant update (nome) on public.workspaces to authenticated;
+grant update (nome, cargo, papel, ativo) on public.perfis to authenticated;
+grant insert (workspace_id, nome), update (nome), delete on public.equipes to authenticated;
+grant insert (workspace_id, equipe_id, perfil_id), delete on public.equipe_membros to authenticated;
