@@ -45,3 +45,7 @@ Execute os testes em uma instância descartável com schema Auth compatível e a
 psql -X -v ON_ERROR_STOP=1 -f supabase/tests/workspace_acesso.sql
 node supabase/tests/concorrencia.cjs
 ```
+
+## Versões da migração
+
+O SQL principal mantém a versão original `20261111141500`. O conector do Supabase executou esse mesmo conteúdo e registrou o recibo `20261111165716`. O segundo arquivo valida a estrutura em novas instalações. No projeto hospedado, a versão original é reconhecida no histórico somente após comparar o conteúdo do recibo com o arquivo principal. Assim, o próximo push não tenta criar as tabelas outra vez.
