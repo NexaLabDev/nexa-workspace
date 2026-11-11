@@ -40,7 +40,7 @@ function base64ParaBlob(base64: string, tipo: string): Blob {
 }
 
 export async function montarBackup(): Promise<Backup> {
-  const arquivos = await listarArquivos().catch(() => []);
+  const arquivos = await listarArquivos();
   return {
     formato: FORMATO_BACKUP,
     versao: 1,

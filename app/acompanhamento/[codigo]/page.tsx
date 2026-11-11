@@ -3,7 +3,8 @@
 import type { Metadata } from 'next';
 import TelaAcompanhamento from '@/components/nexa/telas/TelaAcompanhamento';
 import { CODIGO_PUBLICO_VALIDO } from '@/components/nexa/acompanhamento';
-import { lerBanco } from '@/lib/servidor/armazem';
+import { createClient } from '@supabase/supabase-js';
+import { configPublica } from '@/lib/supabase/config';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,9 +14,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function Pagina({ params }: { params: { codigo: string } }) {
+export default async function Pagina({ params }: { params: { codigo: string } }) {
   const codigo = params.codigo;
-  const retrato = CODIGO_PUBLICO_VALIDO.test(codigo) ? lerBanco().acompanhamentos?.[codigo] ?? null : null;
+  const {url,chavePublica}=configPublica();
+  const db=createClient(url,chavePublica,{auth:{persistSession:false},global:{fetch:(url,options)=>fetch(url,{...options,cache:'no-store'})}});
+  const {data:retrato}=CODIGO_PUBLICO_VALIDO.test(codigo)?await db.rpc('acompanhamento_projeto',{codigo}):{data:null};
   return (
     <TelaAcompanhamento
       retrato={retrato}
