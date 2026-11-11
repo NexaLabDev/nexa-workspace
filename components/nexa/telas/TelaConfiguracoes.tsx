@@ -10,6 +10,7 @@ import u from '../ui.module.css';
 import { restaurarExemplos } from '../store';
 import { apagarTodosArquivos } from '../arquivos';
 import { OPCOES_DIAS_PRAZO_PROXIMO, diasPrazoProximo, usePerfil, usePreferencias, usePrestadora } from '../dados';
+import Equipe from '@/components/acesso/Equipe';
 import AvisosPush from './AvisosPush';
 import { baixarBackup, lerBackup, restaurarBackup } from '../backup';
 
@@ -41,40 +42,7 @@ export default function TelaConfiguracoes() {
         </div>
 
         <div className={u.grade2}>
-          <section className={u.painel}>
-            <header className={u.painelTopo}>
-              <UserRound size={28} {...ICONE} />
-              <h2>Perfil</h2>
-            </header>
-            <div className={u.formGrade}>
-              <label className={u.campo}>
-                <span>Nome</span>
-                <input
-                  className={u.entrada}
-                  value={perfil.nome ?? ''}
-                  maxLength={80}
-                  placeholder="Seu nome"
-                  onChange={(e) => setPerfil((p) => ({ ...p, nome: e.target.value }))}
-                />
-              </label>
-              <label className={u.campo}>
-                <span>E-mail</span>
-                <input className={u.entrada} placeholder="[A DEFINIR]" />
-              </label>
-              <label className={u.campo}>
-                <span>Empresa</span>
-                <input className={u.entrada} value="Nexa Lab" readOnly />
-              </label>
-              <label className={u.campo}>
-                <span>Cargo</span>
-                <input className={u.entrada} placeholder="[A DEFINIR]" />
-              </label>
-            </div>
-            <p className={u.nota} style={{ marginTop: 18 }}>
-              <Info size={16} /> O nome fica salvo neste navegador e identifica suas atividades nos projetos como &quot;não
-              autenticado&quot; até existir login. E-mail e cargo ainda não são salvos.
-            </p>
-          </section>
+          <Equipe />
 
           <section className={u.painel}>
             <header className={u.painelTopo}>

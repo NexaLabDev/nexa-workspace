@@ -7,14 +7,15 @@
 // Nunca recebe a chave secreta.
 // ============================================
 
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { type SupabaseClient } from '@supabase/supabase-js';
 import { configPublica } from './config';
+import { createBrowserClient } from '@supabase/ssr';
 
 let cliente: SupabaseClient | null = null;
 
 export function supabaseNavegador(): SupabaseClient {
   if (cliente) return cliente;
   const { url, chavePublica } = configPublica();
-  cliente = createClient(url, chavePublica);
+  cliente = createBrowserClient(url, chavePublica);
   return cliente;
 }
