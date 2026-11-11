@@ -22,6 +22,21 @@ export default function Conta({retorno=false}:{retorno?:boolean}) {
       }
       // O cliente SSR troca o código PKCE do retorno ao inicializar.
       const {data,error}=await db.auth.getUser(); if(error||!data.user)throw new Error();
+      // A confirmação do cadastro deve concluir o convite, sem exigir um segundo login.
+      // A recuperação de senha, por outro lado, precisa manter a tela de nova senha.
+      const convitePendente=sessionStorage.getItem('nexa:convite');
+      if(tipo!=='recovery' && convitePendente && /^[0-9a-f-]{36}$/i.test(convitePendente)){
+        const {data:workspace,error:erroConvite}=await db.rpc('aceitar_convite_workspace',{p_convite:convitePendente});
+        if(erroConvite)throw erroConvite;
+        sessionStorage.removeItem('nexa:convite');
+        if(!workspace){
+          await db.auth.signOut({scope:'local'});
+          location.replace('/login?vinculo=pendente');
+          return;
+        }
+        location.replace('/');
+        return;
+      }
       history.replaceState(null,'','/conta');setPronto(true);
     };
     iniciar().catch(()=>setAviso('Este link expirou ou foi aberto em outro navegador. Solicite um novo link.'));
