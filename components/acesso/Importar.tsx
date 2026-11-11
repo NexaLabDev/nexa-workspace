@@ -1,6 +1,6 @@
 'use client';
 import {useState} from 'react';
-import {montarBackup,baixarBackup,lerBackup,type Backup} from '@/components/nexa/backup';
+import {montarBackup,baixarBackup,baixarBackupNuvem,lerBackup,type Backup} from '@/components/nexa/backup';
 import {subirPrivado} from '@/components/nexa/storage';
 import {idsDeArquivoEmUso} from '@/components/nexa/arquivos';
 import {identidade,importar} from '@/components/nexa/remoto';
@@ -16,7 +16,13 @@ export default function Importar(){
  dados[c]=Array.isArray(v)?v.filter(r=>{if(exemplos[c]?.has(r.id)){sugestoes++;return incluir;}return true;}):v;
  }
  const executar=async(f:()=>Promise<void>)=>{busy(true);msg('');try{await f()}catch(e){msg((e as Error).message)}finally{busy(false)}};
- return <section className={u.painel}><h2>Importar dados deste dispositivo</h2><button className={u.btnSecundario} disabled={ocupado} onClick={()=>void executar(async()=>{setB(await montarBackup());})}>Examinar navegador</button> <label>Ou abrir backup <input disabled={ocupado} type="file" accept=".json" onChange={e=>{const f=e.target.files?.[0];if(f)void executar(async()=>setB(await lerBackup(f)));}}/></label>
+ return <section className={u.painel}><h2>Importação e backups</h2>
+ <p>Os arquivos de backup contêm informações privadas de clientes. Guarde-os em local seguro.</p>
+ <button className={u.btnSecundario} disabled={ocupado} onClick={()=>void executar(async()=>{
+   const resumo=await baixarBackupNuvem();
+   msg('Backup do Supabase baixado: '+resumo.listas+' coleções e '+resumo.arquivos+' anexos.');
+ })}>Baixar backup do Supabase (registros e anexos)</button>
+ <h3>Importar dados antigos deste dispositivo</h3><button className={u.btnSecundario} disabled={ocupado} onClick={()=>void executar(async()=>{setB(await montarBackup());})}>Examinar navegador</button> <label>Ou abrir backup <input disabled={ocupado} type="file" accept=".json" onChange={e=>{const f=e.target.files?.[0];if(f)void executar(async()=>setB(await lerBackup(f)));}}/></label>
  {b&&<><ul>{Object.entries(dados).map(([c,v])=><li key={c}>{c} · {Array.isArray(v)?v.length:1}</li>)}<li>{b.arquivos.length} anexos no backup</li></ul>{sugestoes>0&&<label><input type="checkbox" checked={incluir} onChange={e=>incl(e.target.checked)}/>Incluir {sugestoes} registros com IDs da demonstração (podem conter edições suas)</label>}
  <button disabled={ocupado} onClick={()=>void executar(async()=>{await baixarBackup();msg('Backup do navegador baixado.');})}>Baixar backup local</button> <button disabled={ocupado} onClick={()=>void executar(async()=>{
  if(!confirm('Importar os registros da prévia para este workspace? Dados locais serão preservados.'))return;
