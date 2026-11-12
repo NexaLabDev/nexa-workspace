@@ -2,7 +2,7 @@
 
 Branch: `audit/continuidade-workspace`  
 PR: https://github.com/NexaLabDev/nexa-workspace/pull/6  
-Atualizado: 2026-11-12 (validação visual/funcional)
+Atualizado: 2026-11-12 (gaps: etapa CRM, subtarefa, mobile, viewer)
 
 ## Ambiente isolado usado
 
@@ -79,6 +79,14 @@ Comando: `npm run test:e2e` (Chromium desktop + Pixel 7)
 | Conta / Acompanhamento | OK | OK | Link público gerado e aberto |
 | Fluxo empresarial E2E | OK | (só desktop) | lead→venda→projeto→tarefa→pagamento→anexo→reload |
 | Persistência pós-reload | OK | — | CRM + Kanban mantêm empresa E2E |
+| CRM etapa (ficha + DnD a11y) | OK | — | select Contato + Space/Arrow para Proposta |
+| Subtarefa + reload | OK | — | criar, reabrir sessão, reload |
+| Mensagem em Conversas | OK | — | envio no chat do lead |
+| Documentos (gerar) | OK | OK | smoke da tela |
+| Equipe / papéis | OK | OK | admin vê papéis; viewer não persiste lead |
+| Mobile forms (CRM/cliente/kanban) | — | OK | modais Cancelar usáveis |
+
+Suite adicional: `e2e/gaps-pendentes.spec.ts` (4 passed / 4 skipped por viewport).
 
 ### Correções feitas durante a validação UI
 

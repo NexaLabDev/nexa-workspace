@@ -2,7 +2,7 @@
 
 Branch: `audit/continuidade-workspace`  
 PR: https://github.com/NexaLabDev/nexa-workspace/pull/6  
-Atualizado: 2026-11-12 (validação visual/funcional)
+Atualizado: 2026-11-12 (gaps CRM/subtarefa/mobile/viewer)
 
 ## Feito nesta continuidade
 
@@ -15,12 +15,17 @@ Atualizado: 2026-11-12 (validação visual/funcional)
 - [x] Next dev apontando ao isolado; acompanhamento HTML OK
 - [x] Preview Vercel do PR #6 Ready (SSO): `https://nexa-workspace-git-audit-continuidade-workspace-nexa-lab.vercel.app`
 - [x] Playwright E2E local (desktop + rotas + fluxo empresarial)
+- [x] Gaps: movimentação CRM (ficha+DnD), subtarefa+persistência, conversa, docs, equipe, viewer, mobile forms
 - [x] Correções: metas/financeiro com vendas sem `data`; clientes sem `servicos`; race `?lead=` em Conversas
 - [x] `npm run build` OK após as correções
-- [x] Commit + push desta rodada no PR #6 (`de3bf69`)
+- [x] Commit + push no PR #6 (`de3bf69` / `a03685f` + rodada gaps)
 - [ ] `NEXT_PUBLIC_APP_URL=https://nexa-workspace-tau.vercel.app` na Vercel (Preview/Production)
 - [ ] Autorização para aplicar DELETE Storage em produção
 - [ ] Merge na `main` / publish Production (bloqueado até itens acima)
+
+```bash
+npx playwright test e2e/gaps-pendentes.spec.ts
+```
 
 ## Comandos de teste locais
 
