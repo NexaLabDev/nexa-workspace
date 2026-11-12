@@ -7,11 +7,45 @@
 
 import { useEffect } from 'react';
 import { useClientes, useLeads, useProjetos, useVendas } from './dados';
+import type { Cliente } from './dados-exemplo';
 import { reconciliarRelacoes } from './relacoes';
 import { garantirCodigosProjetos, garantirProgressoPorFase } from './projetos';
 import { garantirTarefasDoChecklist } from './tarefas';
 import { garantirBibliotecaDasTarefas } from './biblioteca';
 import { papel } from './remoto';
+
+/** Detecta mudança real em cliente sem JSON.stringify do objeto inteiro.
+ *  Serviços e histórico: conteúdo importa mesmo se o tamanho da lista for igual. */
+export function clienteMudou(antes: Cliente, depois: Cliente): boolean {
+  if (
+    antes.nome !== depois.nome ||
+    antes.nomeCompleto !== depois.nomeCompleto ||
+    antes.documento !== depois.documento ||
+    antes.email !== depois.email ||
+    antes.telefone !== depois.telefone ||
+    antes.endereco !== depois.endereco ||
+    antes.assinante !== depois.assinante ||
+    antes.contato !== depois.contato ||
+    antes.status !== depois.status ||
+    antes.segmento !== depois.segmento ||
+    antes.ultimaAtividade !== depois.ultimaAtividade ||
+    antes.origem !== depois.origem
+  ) {
+    return true;
+  }
+  const sa = antes.servicos ?? [];
+  const sd = depois.servicos ?? [];
+  if (sa.length !== sd.length || sa.some((v, i) => v !== sd[i])) return true;
+  const ha = antes.historico ?? [];
+  const hd = depois.historico ?? [];
+  if (ha.length !== hd.length) return true;
+  for (let i = 0; i < ha.length; i++) {
+    const a = ha[i];
+    const b = hd[i];
+    if (a.em !== b.em || a.texto !== b.texto || a.chave !== b.chave || a.leadId !== b.leadId) return true;
+  }
+  return false;
+}
 
 export default function ReconciliarRelacoes() {
   const [leads, setLeads] = useLeads();
@@ -28,19 +62,7 @@ export default function ReconciliarRelacoes() {
     if (m.clientes) {
       const alterados = m.clientes.filter((c) => {
         const antes = clientes.find((x) => x.id === c.id);
-        if (!antes) return true;
-        // Comparação pontual (evita JSON.stringify de objetos grandes a cada sync)
-        return (
-          antes.nome !== c.nome ||
-          antes.nomeCompleto !== c.nomeCompleto ||
-          antes.documento !== c.documento ||
-          antes.email !== c.email ||
-          antes.telefone !== c.telefone ||
-          antes.status !== c.status ||
-          antes.ultimaAtividade !== c.ultimaAtividade ||
-          (antes.servicos ?? []).join('\0') !== (c.servicos ?? []).join('\0') ||
-          (antes.historico?.length ?? 0) !== (c.historico?.length ?? 0)
-        );
+        return !antes || clienteMudou(antes, c);
       });
       setClientes((atual) => {
         let lista = atual;
