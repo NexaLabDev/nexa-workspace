@@ -139,7 +139,9 @@ export default function TelaConversas() {
     );
   });
 
-  // Abre a conversa pedida no endereço (?lead=) ou a mais recente
+  // Abre a conversa pedida no endereço (?lead=) ou a mais recente.
+  // Depende de `leads`/`conversas`: no primeiro paint o sync remoto ainda pode estar
+  // carregando — sem isso caíamos na conversa mais antiga e o ?lead= era ignorado.
   useEffect(() => {
     if (leadUrl) {
       const cv = conversas.find((x) => x.leadId === leadUrl);
@@ -151,14 +153,16 @@ export default function TelaConversas() {
       // Lead sem conversa (ex.: aberto pelo CRM): cria uma conversa vazia para abrir o painel
       if (leads.some((l) => l.id === leadUrl)) {
         const nova: Conversa = { id: `cv-${leadUrl}-${Date.now()}`, leadId: leadUrl, canal: 'whatsapp', naoLidas: 0, mensagens: [] };
-        setConversas((l) => [...l, nova]);
+        setConversas((l) => (l.some((x) => x.leadId === leadUrl) ? l : [...l, nova]));
         setSelecionadaId(nova.id);
         setVista('lead');
         return;
       }
+      // Aguarda o lead chegar do remoto; não seleciona outra conversa no meio-tempo.
+      return;
     }
     if (!selecionadaId && ordenadas[0]) setSelecionadaId(ordenadas[0].id);
-  }, [leadUrl]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [leadUrl, leads, conversas]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const selecionada = conversas.find((x) => x.id === selecionadaId) ?? ordenadas[0] ?? null;
   const lead = selecionada ? leadDe(selecionada) : undefined;

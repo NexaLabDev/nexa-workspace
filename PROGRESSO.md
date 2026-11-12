@@ -2,7 +2,7 @@
 
 Branch: `audit/continuidade-workspace`  
 PR: https://github.com/NexaLabDev/nexa-workspace/pull/6  
-Atualizado: 2026-11-12
+Atualizado: 2026-11-12 (validação visual/funcional)
 
 ## Feito nesta continuidade
 
@@ -13,9 +13,14 @@ Atualizado: 2026-11-12
 - [x] Aceitar anon JWT local em `config.ts` / `servidor.ts`
 - [x] Liberar `/api/supabase/status` no middleware (ainda localhost-only)
 - [x] Next dev apontando ao isolado; acompanhamento HTML OK
+- [x] Preview Vercel do PR #6 Ready (SSO): `https://nexa-workspace-git-audit-continuidade-workspace-nexa-lab.vercel.app`
+- [x] Playwright E2E local (desktop + rotas + fluxo empresarial)
+- [x] Correções: metas/financeiro com vendas sem `data`; clientes sem `servicos`; race `?lead=` em Conversas
+- [x] `npm run build` OK após as correções
 - [ ] Commit + push desta rodada no PR #6
-- [ ] `NEXT_PUBLIC_APP_URL` na Vercel
-- [ ] Autorização para aplicar DELETE em produção
+- [ ] `NEXT_PUBLIC_APP_URL=https://nexa-workspace-tau.vercel.app` na Vercel (Preview/Production)
+- [ ] Autorização para aplicar DELETE Storage em produção
+- [ ] Merge na `main` / publish Production (bloqueado até itens acima)
 
 ## Comandos de teste locais
 
@@ -27,6 +32,8 @@ node supabase/tests/storage_delete_api_local.mjs
 node supabase/tests/fluxos_auth_local.mjs
 node supabase/tests/modulos_operacionais_local.mjs
 npx tsc --noEmit
+npm run build
+npm run test:e2e
 ```
 
 ## Contas isoladas

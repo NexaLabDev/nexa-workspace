@@ -145,7 +145,7 @@ export function reconciliarRelacoes(r: Relacoes, agora = new Date()): MudancasRe
           atualizado = {
             ...atualizado,
             status: 'Ativo',
-            servicos: atualizado.servicos.includes(servico) ? atualizado.servicos : [...atualizado.servicos, servico],
+            servicos: (atualizado.servicos ?? []).includes(servico) ? (atualizado.servicos ?? []) : [...(atualizado.servicos ?? []), servico],
             ultimaAtividade: `Venda ganha em ${dataBr(quando)}`,
             historico: [
               ...(atualizado.historico ?? []),

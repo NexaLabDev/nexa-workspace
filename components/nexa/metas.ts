@@ -54,8 +54,12 @@ export type ResumoMeta = {
   mesAtual: boolean;
 };
 
+function dataVenda(v: Venda): string {
+  return typeof v.data === 'string' ? v.data : '';
+}
+
 function somar(vendas: Venda[]): number {
-  return vendas.reduce((s, v) => s + v.valor, 0);
+  return vendas.reduce((s, v) => s + (typeof v.valor === 'number' && Number.isFinite(v.valor) ? v.valor : 0), 0);
 }
 
 function mesAnterior(mes: string): string {
@@ -76,8 +80,10 @@ export function calcularResumoMeta(
   agora: Date = new Date()
 ): ResumoMeta {
   const [ano, mesNum] = mes.split('-').map(Number);
-  const doMes = todasVendas.filter((v) => v.data.startsWith(mes));
-  const anteriores = todasVendas.filter((v) => v.data.startsWith(mesAnterior(mes)));
+  // Ignora registros incompletos (ex.: sync antigo sem `data`) para não derrubar o Dashboard.
+  const validas = todasVendas.filter((v) => dataVenda(v).length >= 7);
+  const doMes = validas.filter((v) => dataVenda(v).startsWith(mes));
+  const anteriores = validas.filter((v) => dataVenda(v).startsWith(mesAnterior(mes)));
 
   const meta = metas[mes] ?? null;
   const realizado = somar(doMes);
@@ -106,7 +112,7 @@ export function calcularResumoMeta(
     .filter((lim, i) => i < 4 || lim > 28)
     .map((lim, i) => {
       const inicioSemana = i * 7 + 1;
-      const acumulado = somar(doMes.filter((v) => Number(v.data.slice(8, 10)) <= lim));
+      const acumulado = somar(doMes.filter((v) => Number(dataVenda(v).slice(8, 10)) <= lim));
       return { rotulo: `Sem. ${i + 1}`, acumulado: inicioSemana <= diaHoje ? acumulado : null };
     });
 
