@@ -17,8 +17,9 @@ let cliente: SupabaseClient | null = null;
 function chaveSecreta(): string {
   const chave = process.env.SUPABASE_SECRET_KEY?.trim();
   if (!chave) throw new Error('Supabase sem chave secreta: defina SUPABASE_SECRET_KEY no .env.local (só no servidor).');
-  if (!chave.startsWith('sb_secret_')) throw new Error('SUPABASE_SECRET_KEY precisa começar com sb_secret_.');
-  return chave;
+  // Nuvem: sb_secret_… · Supabase local (Docker): service_role JWT de demonstração
+  if (chave.startsWith('sb_secret_') || chave.startsWith('eyJ')) return chave;
+  throw new Error('SUPABASE_SECRET_KEY inválida (use sb_secret_ ou a service_role JWT local).');
 }
 
 /** Cliente com acesso total, para uso exclusivo do servidor. */
