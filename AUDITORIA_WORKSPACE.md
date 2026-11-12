@@ -114,7 +114,9 @@ Suite adicional: `e2e/gaps-pendentes.spec.ts` (4 passed / 4 skipped por viewport
 
 ## Riscos que ainda impedem publicação Production
 
-1. Migração DELETE **não** está em produção — exclusão real de anexos na nuvem continua falha/órfãos até autorizar.
-2. `NEXT_PUBLIC_APP_URL` ainda precisa ser cadastrada na Vercel.
+1. Migração DELETE **não** está em produção — exclusão real de anexos na nuvem continua falha/órfãos até autorizar. (Cloud hoje: só policies criar/ler.)
+2. `NEXT_PUBLIC_APP_URL` **ausente** na Vercel (confirmado via `vercel env ls`) — cadastrar `https://nexa-workspace-tau.vercel.app`.
 3. HIBP indisponível no plano Free.
-4. Preview protegido por SSO — validação UI completa foi feita no **ambiente local isolado**, não no Preview autenticado.
+4. Preview protegido por SSO — validação UI mutável foi no Docker; conta real Cloud OK no localhost.
+
+Ver `docs/FINALIZACAO_PUBLICACAO.md` para backup/implantação/reversão e backlog priorizado.
