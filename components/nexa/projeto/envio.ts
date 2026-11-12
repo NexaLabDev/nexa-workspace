@@ -8,7 +8,7 @@
 //    reaproveita: nenhuma cópia física nova é guardada.
 // 3) Só conteúdo novo é guardado. Se a gravação dos dados falhar depois, quem chamou
 //    apaga os conteúdos novos (conteudosNovos), para não sobrar arquivo solto.
-// Hoje o conteúdo fica só neste navegador (IndexedDB). Nada é enviado para a internet.
+// O conteúdo vai para o Storage privado do Supabase (`nexa-arquivos`).
 // ============================================
 
 import type { AutorRegistro, Projeto } from '../dados-exemplo';

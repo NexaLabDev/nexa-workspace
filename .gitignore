@@ -35,3 +35,7 @@ next-env.d.ts
 
 # dados locais do servidor (leads, inscrições de push)
 /.dados/
+
+# supabase CLI temp
+supabase/.temp/
+

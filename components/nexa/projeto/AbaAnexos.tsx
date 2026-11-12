@@ -7,7 +7,7 @@
 //   vincular a tarefas, pré-visualizar, baixar, excluir.
 // - Referências (só leitura, sem copiar): comprovantes (Financeiro), documentos gerados
 //   (Documentos) e arquivos da venda/conversa (CRM). Continuam sendo gerenciados lá.
-// - Tudo fica SÓ neste navegador por enquanto (a tela diz isso). Nada aparece no link do cliente.
+// - Conteúdo da biblioteca fica no Storage privado do workspace. Nada aparece no link do cliente.
 // ============================================
 
 import { useMemo, useRef, useState, type DragEvent } from 'react';
@@ -238,8 +238,8 @@ export default function AbaAnexos({ tela, setTela }: { tela: EstadoTelaAnexos; s
           />
         </div>
         <p className={a.local}>
-          <HardDrive size={14} aria-hidden /> Guardados só neste navegador. Ainda não há cópia na nuvem: em outro computador estes
-          arquivos não aparecem. Faça backup em Configurações.
+          <HardDrive size={14} aria-hidden /> Guardados no Storage privado do workspace (Supabase). Em outro aparelho com o
+          mesmo acesso, os anexos aparecem após sincronizar. Faça backup em Configurações quando precisar de cópia local.
         </p>
       </div>
 

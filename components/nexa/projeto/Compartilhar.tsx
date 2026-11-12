@@ -67,8 +67,8 @@ export default function Compartilhar() {
           </div>
           <p>
             Link permanente: mostra sempre a fase atual. O cliente vê só o nome do projeto, a fase, o progresso, a data da
-            última atualização e o recado abaixo. Enquanto o Workspace não estiver publicado na internet, o link só abre
-            neste computador.
+            última atualização e o recado abaixo — sem login e sem conta Vercel. Use o domínio público do Workspace
+            (nexa-workspace-tau.vercel.app).
           </p>
           <CampoTexto
             id="recado"

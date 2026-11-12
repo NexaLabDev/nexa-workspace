@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, type FormEvent } from 'react';
 import { supabaseNavegador } from '@/lib/supabase/navegador';
+import { origemPublica } from '@/components/nexa/acompanhamento';
 import './conta.css';
 
 type Modo='entrar'|'recuperar'|'convite'|'senha';
@@ -58,7 +59,7 @@ export default function Conta({retorno=false}:{retorno?:boolean}) {
   async function enviar(e:FormEvent){
     e.preventDefault();setOcupado(true);setAviso('');
     try {
-      const db=supabaseNavegador(),ret=location.origin+'/conta';
+      const db=supabaseNavegador(),ret=origemPublica(location.origin)+'/conta';
       if(modo==='recuperar'){
         const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:ret});if(error)throw error;
         localStorage.setItem('nexa:recuperar',String(Date.now()));

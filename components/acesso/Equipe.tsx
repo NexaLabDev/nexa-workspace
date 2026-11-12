@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { KeyRound, LogOut, UserRound, Users } from 'lucide-react';
 import { supabaseNavegador } from '@/lib/supabase/navegador';
+import { origemPublica } from '@/components/nexa/acompanhamento';
 import u from '@/components/nexa/ui.module.css';
 import a from './acesso.module.css';
 
@@ -98,7 +99,7 @@ export default function Equipe() {
   }
 
   const db = supabaseNavegador;
-  const linkConvite = (id: string) => `${location.origin}/login?convite=${id}`;
+  const linkConvite = (id: string) => `${origemPublica(location.origin)}/login?convite=${id}`;
 
   return (
     <section className={u.painel} id="conta">

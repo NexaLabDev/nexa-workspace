@@ -51,8 +51,19 @@ export function retratoPublico(p: Projeto): RetratoPublico | null {
   };
 }
 
-export function linkPermanente(codigo: string, origem: string): string {
-  return `${origem}/acompanhamento/${codigo}`;
+/** Domínio público para clientes (sem SSO Vercel). Local usa o origin do navegador. */
+export const DOMINIO_PUBLICO_PADRAO = 'https://nexa-workspace-tau.vercel.app';
+
+export function origemPublica(origemNavegador?: string): string {
+  const configurada = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/+$/, '');
+  if (configurada) return configurada;
+  const local = origemNavegador?.trim().replace(/\/+$/, '') ?? '';
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(local)) return local;
+  return DOMINIO_PUBLICO_PADRAO;
+}
+
+export function linkPermanente(codigo: string, origem?: string): string {
+  return `${origemPublica(origem)}/acompanhamento/${codigo}`;
 }
 
 function paraBase64Url(texto: string): string {
@@ -69,9 +80,9 @@ function deBase64Url(codigo: string): string {
   return new TextDecoder().decode(bytes);
 }
 
-export function montarLinkAcompanhamento(projeto: Projeto, origem: string): string {
+export function montarLinkAcompanhamento(projeto: Projeto, origem?: string): string {
   const dados = { v: 1, n: projeto.servico, e: projeto.etapa, p: projeto.progresso, a: projeto.atualizadoEm };
-  return `${origem}/acompanhamento?p=${paraBase64Url(JSON.stringify(dados))}`;
+  return `${origemPublica(origem)}/acompanhamento?p=${paraBase64Url(JSON.stringify(dados))}`;
 }
 
 /** Lê e valida o retrato do link. Retorna null se o link estiver corrompido. */
