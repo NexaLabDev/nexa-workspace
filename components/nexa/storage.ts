@@ -22,3 +22,9 @@ export async function subirPrivado(id:string,blob:Blob,conferir=false){
  if(blob.size!==outro.size||await hash(blob)!==await hash(outro))throw Error('Conteúdo divergente no anexo '+id);
  }
 }
+/** Remove o objeto privado no Storage. Exige policy DELETE no bucket (ver migração pendente). */
+export async function removerPrivado(id:string){
+ const {bucket,path}=objeto(id);
+ const {error}=await bucket.remove([path]);
+ if(error)throw Error(error.message||'Não foi possível apagar o anexo privado.');
+}

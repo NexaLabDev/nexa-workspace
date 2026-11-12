@@ -305,9 +305,9 @@ export default function TelaCliente({ id }: { id: string }) {
                   </label>
                 ))}
               </div>
-              {cliente.servicos.length > 0 && (
+              {(cliente.servicos ?? []).length > 0 && (
                 <div className={u.linhaChips} style={{ marginTop: 14 }}>
-                  {cliente.servicos.map((s) => (
+                  {(cliente.servicos ?? []).map((s) => (
                     <span key={s} className={u.chip}>
                       {s}
                     </span>

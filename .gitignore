@@ -5,6 +5,11 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/e2e/fixture-anexo*.txt
 
 # next.js
 /.next/
@@ -25,6 +30,7 @@ yarn-error.log*
 # local env files
 .env*.local
 .env
+.env.vercel*
 
 # vercel
 .vercel
@@ -35,3 +41,7 @@ next-env.d.ts
 
 # dados locais do servidor (leads, inscrições de push)
 /.dados/
+
+# supabase CLI temp
+supabase/.temp/
+

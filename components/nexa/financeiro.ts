@@ -484,9 +484,9 @@ export function linhasPagamento(lead: Lead): string[] {
 export function indicadoresFinanceiros(leads: Lead[], vendas: Array<{ valor: number; data: string }>, mes: string, hoje = hojeIso()) {
   const rec = resumoRecebimentos(leads, mes, hoje);
   const abertas = leads.flatMap((l) => cobrancasDoLead(l, hoje)).filter((c) => !c.pago);
-  const doMes = vendas.filter((v) => v.data.startsWith(mes));
+  const doMes = vendas.filter((v) => typeof v.data === 'string' && v.data.startsWith(mes));
   return {
-    vendasFechadas: arredondar(doMes.reduce((s, v) => s + v.valor, 0)),
+    vendasFechadas: arredondar(doMes.reduce((s, v) => s + (typeof v.valor === 'number' && Number.isFinite(v.valor) ? v.valor : 0), 0)),
     qtdVendas: doMes.length,
     recebido: rec.recebido,
     aReceberMes: arredondar(rec.pendente + rec.vencido),

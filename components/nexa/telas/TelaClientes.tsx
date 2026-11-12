@@ -125,7 +125,7 @@ export default function TelaClientes() {
                       </td>
                       <td>
                         <div className={u.linhaChips}>
-                          {c.servicos.map((sv) => (
+                          {(c.servicos ?? []).map((sv) => (
                             <span key={sv} className={u.chip}>
                               {sv}
                             </span>

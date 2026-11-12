@@ -5,7 +5,15 @@ import { configPublica } from '@/lib/supabase/config';
 export async function middleware(req: NextRequest) {
   const caminho = req.nextUrl.pathname;
   const api = caminho.startsWith('/api/');
-  if (caminho === '/login' || caminho === '/conta' || /^\/acompanhamento(?:\/[a-zA-Z0-9_-]{22})?$/.test(caminho)) return NextResponse.next();
+  // /api/supabase/status já se restringe a localhost em lib/servidor/guarda.ts
+  if (
+    caminho === '/login' ||
+    caminho === '/conta' ||
+    caminho === '/api/supabase/status' ||
+    /^\/acompanhamento(?:\/[a-zA-Z0-9_-]{22})?$/.test(caminho)
+  ) {
+    return NextResponse.next();
+  }
   if (api && !['GET','HEAD','OPTIONS'].includes(req.method) && req.headers.get('origin') !== req.nextUrl.origin) {
     return NextResponse.json({ erro:'Origem não autorizada.' }, {status:403});
   }

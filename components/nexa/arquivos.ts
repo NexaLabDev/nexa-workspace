@@ -1,13 +1,13 @@
 'use client';
 
 // ============================================
-// ARQUIVOS ANEXADOS (guardados no navegador, provisório até existir banco)
+// ARQUIVOS ANEXADOS (conteúdo no Storage privado do Supabase)
 // ============================================
-// Usa o IndexedDB do navegador, que aguenta arquivos maiores que o localStorage.
-// Só vale neste computador/navegador.
+// Upload/leitura vão para o bucket `nexa-arquivos` (por workspace).
+// IndexedDB local ficou só como fallback legado de limpeza/restauração antiga.
 // ============================================
 
-import { baixarPrivado,subirPrivado } from './storage';
+import { baixarPrivado, removerPrivado, subirPrivado } from './storage';
 
 const BANCO = 'nexa-workspace-arquivos';
 const TABELA = 'arquivos';
@@ -82,7 +82,16 @@ export async function baixarArquivo(id: string, nome: string): Promise<boolean> 
 }
 
 export async function apagarArquivo(id: string): Promise<void> {
-  await operar('readwrite', (t) => t.delete(id));
+  try {
+    await removerPrivado(id);
+  } catch {
+    /* pode falhar se a policy DELETE ainda não existir ou o objeto já não estiver lá */
+  }
+  try {
+    await operar('readwrite', (t) => t.delete(id));
+  } catch {
+    /* IndexedDB legado pode não ter a chave */
+  }
 }
 
 export async function apagarTodosArquivos(): Promise<void> {
@@ -230,8 +239,8 @@ export async function listarArquivos(): Promise<Array<{ id: string; arquivo: Blo
 
 /** Grava um arquivo com a chave informada (usado ao restaurar um backup). */
 export async function guardarComId(id: string, arquivo: Blob): Promise<void> {
-  const registro = await paraRegistro(arquivo);
-  await operar('readwrite', (t) => t.put(registro, id));
+  if (arquivo.size > LIMITE_BYTES) throw new Error('Arquivo maior que 25 MB.');
+  await subirPrivado(id, arquivo);
 }
 
 /**

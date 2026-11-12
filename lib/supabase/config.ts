@@ -24,10 +24,15 @@ export function configPublica(): ConfigPublica {
     throw new Error('NEXT_PUBLIC_SUPABASE_URL precisa ser um endereço https.');
   }
   if (chavePublica.startsWith('sb_secret_')) {
-    // Proteção: a chave secreta nunca pode ir para uma variável pública
-    throw new Error('A chave em NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY é SECRETA (sb_secret_). Troque pela publishable (sb_publishable_) e gere uma nova secret no Supabase.');
+    throw new Error('A chave em NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY é SECRETA (sb_secret_). Troque pela publishable.');
   }
-  if (!chavePublica.startsWith('sb_publishable_')) throw new Error('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY precisa começar com sb_publishable_.');
+  const local = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(url);
+  const publishable = chavePublica.startsWith('sb_publishable_');
+  // Supabase local (Docker) ainda usa a anon JWT de demonstração
+  const anonLocal = local && chavePublica.startsWith('eyJ') && !chavePublica.includes('service_role');
+  if (!publishable && !anonLocal) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY precisa ser sb_publishable_ (nuvem) ou a anon JWT do Supabase local.');
+  }
   return { url: url.replace(/\/+$/, ''), chavePublica };
 }
 

@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test:e2e": "playwright test",
+    "test:e2e:desktop": "playwright test --project=desktop"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^16.5.0",
@@ -19,6 +21,7 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
