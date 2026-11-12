@@ -1,7 +1,7 @@
 # Progresso — Nexa Workspace
 
-Branch: `main` (após merge do PR #6)  
-PR: https://github.com/NexaLabDev/nexa-workspace/pull/6  
+Branch: `main`  
+PR #6: MERGED (`ca40993`)  
 Atualizado: 2026-11-12 (Etapa 1 — publicação)
 
 ## Conta real (Cloud)
@@ -16,25 +16,23 @@ Atualizado: 2026-11-12 (Etapa 1 — publicação)
 - [x] Auth cloud no localhost + recuperação/redirects
 - [x] E2E Playwright no Docker
 - [x] Correções UI: metas/clientes/conversas
-- [x] `NEXT_PUBLIC_APP_URL` na Vercel (Prod+Preview)
-- [x] Backup offsite validado (`C:\Users\malui\Downloads\nexa-cloud-backups\pre-delete-20261112\`)
-- [x] Migração DELETE Storage aplicada no Cloud (`storage_delete_policy`)
-- [x] Merge PR #6 → `main`
+- [x] `NEXT_PUBLIC_APP_URL` na Vercel (Prod+Preview) — confirmado no bundle Production
+- [x] Backup offsite validado (`C:\Users\malui\Downloads\nexa-cloud-backups\pre-delete-20261112\`, `RESTORE_OK`)
+- [x] Migração DELETE Storage no Cloud (`storage_delete_policy` / `20261112180108`)
+- [x] Merge PR #6 → `main` (`ca40993`)
+- [x] Deploy Production Vercel **Ready** (`nexa-workspace-7y5aot2ww`)
+- [x] Smoke não destrutivo: `/login`, `/crm`→login, `/kanban`→login, `/acompanhamento` 200
 - [ ] Remover `ACESSO_TESTE_*` na Vercel (após estabilidade)
-- [ ] Smoke Production pós-deploy (login/CRM/Kanban/acompanhamento)
 
 ## Backup
 
-Offsite (não versionar segredos de Auth no git):  
-`C:\Users\malui\Downloads\nexa-cloud-backups\pre-delete-20261112\`  
-Inclui Auth + dados públicos + metadata Storage + `VALIDATE.log`.
+Offsite (Auth + dados + Storage metadata):  
+`C:\Users\malui\Downloads\nexa-cloud-backups\pre-delete-20261112\`
 
-## Comandos (Docker / isolado)
+## Production
 
-```bash
-npm run test:e2e
-npx playwright test e2e/gaps-pendentes.spec.ts
-```
+- Alias: https://nexa-workspace-tau.vercel.app
+- Deploy: https://nexa-workspace-7y5aot2ww-nexa-lab.vercel.app (Ready)
 
 ## Backlog pós-Etapa 1
 

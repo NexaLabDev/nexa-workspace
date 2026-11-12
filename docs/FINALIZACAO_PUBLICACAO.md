@@ -1,43 +1,59 @@
 # Finalização — Etapa 1 publicada
 
-Atualizado: 2026-11-12 (go-live)  
-PR: https://github.com/NexaLabDev/nexa-workspace/pull/6
+Atualizado: 2026-11-12 (go-live confirmado)  
+PR: https://github.com/NexaLabDev/nexa-workspace/pull/6 — **MERGED**  
+Commit merge: `ca4099396ddaa0a6c03d9c66b71d2bdb93793461`
 
 ## Veredito
 
-**Etapa 1 publicada** após backup offsite validado, migração DELETE no Cloud e merge do PR #6.
+**Etapa 1 publicada.** Backup offsite validado, DELETE no Cloud, merge na `main`, Production **Ready**, smoke OK.
 
 ## Backup recuperável (offsite)
 
-**Localização (fora do repositório):**  
-`C:\Users\malui\Downloads\nexa-cloud-backups\pre-delete-20261112\`
+**Localização:** `C:\Users\malui\Downloads\nexa-cloud-backups\pre-delete-20261112\`
 
-| Camada | Cobertura |
-|---|---|
-| Estrutura DB | `migrations/` até schema pré-DELETE + SQL de restore |
-| Dados app | workspace + perfil admin (`02-public-core.sql`) |
-| Auth | `auth.users` + `auth.identities` com hash (`03-auth.sql`) |
-| Storage | bucket metadata; **0 objetos** no dump (`04-storage.sql`) |
-| Validação | `VALIDATE.log` → `RESTORE_OK public+auth+storage_metadata` (Docker) |
+| Camada | Arquivo | Status |
+|---|---|---|
+| Estrutura | `migrations/` | OK |
+| Dados app | `02-public-core.sql` | OK |
+| Auth | `03-auth.sql` (users+identities+hash) | OK |
+| Storage | `04-storage.sql` (0 objetos) | OK |
+| Validação | `VALIDATE.log` → `RESTORE_OK` | OK |
 
-Plano Free: backups oficiais não são baixáveis — alternativa lógica offsite conforme [docs Supabase](https://supabase.com/docs/guides/platform/backups).
+Plano Free sem download de backup oficial — dump lógico offsite.
 
 ## Migração DELETE (Cloud)
 
-- Aplicada via `apply_migration` (`storage_delete_policy`, version Cloud `20261112180108`)
-- SQL idêntico a `supabase/migrations/20261112121500_storage_delete_policy.sql` (testado no Docker)
-- Policies atuais: `nexa_arquivo_apagar` (DELETE) + `criar` + `ler`
-- Sem exclusão de objetos reais (Storage com 0 arquivos)
+- Nome registrado: `storage_delete_policy` (version `20261112180108`)
+- SQL = `supabase/migrations/20261112121500_storage_delete_policy.sql` (Docker-tested)
+- Policies: `nexa_arquivo_apagar` + `criar` + `ler`
+- Sem delete de arquivos reais (bucket vazio)
 - Rollback: `drop policy if exists nexa_arquivo_apagar on storage.objects;`
 
-## Vercel
+## Deployment
 
-- `NEXT_PUBLIC_APP_URL=https://nexa-workspace-tau.vercel.app` (Production + Preview)
-- `ACESSO_TESTE_*` **mantidas** (limpeza em etapa separada)
+| Item | Valor |
+|---|---|
+| Production | **Ready** |
+| Alias | https://nexa-workspace-tau.vercel.app |
+| Deploy | https://nexa-workspace-7y5aot2ww-nexa-lab.vercel.app |
+| `NEXT_PUBLIC_APP_URL` | `https://nexa-workspace-tau.vercel.app` (env + bundle JS) |
+
+## Smoke não destrutivo
+
+| Rota | Resultado |
+|---|---|
+| `/login` | 200, formulário e-mail/senha |
+| `/crm` | redireciona → `/login` |
+| `/kanban` | redireciona → `/login` |
+| `/acompanhamento` | 200 público |
+| APP_URL no JS | presente no chunk de login |
+
+`ACESSO_TESTE_*` **não removidas** (limpeza posterior).
 
 ## Ambientes
 
 | Uso | Env |
 |---|---|
 | Conta real / UI | `.env.local` → Cloud |
-| Testes que gravam/apagam | `.env.docker.local` → Docker `54621` |
+| Testes mutáveis | `.env.docker.local` → Docker `54621` |
