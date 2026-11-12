@@ -62,6 +62,17 @@ export function origemPublica(origemNavegador?: string): string {
   return DOMINIO_PUBLICO_PADRAO;
 }
 
+/**
+ * Origem dos callbacks de Auth (recuperação de senha, convite, confirmação).
+ * Em localhost/127.0.0.1 deve voltar ao mesmo navegador — não usar o domínio
+ * público (tau), senão o PKCE quebra e o link de e-mail abre outro host.
+ */
+export function origemAuth(origemNavegador?: string): string {
+  const local = origemNavegador?.trim().replace(/\/+$/, '') ?? '';
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(local)) return local;
+  return origemPublica(origemNavegador);
+}
+
 export function linkPermanente(codigo: string, origem?: string): string {
   return `${origemPublica(origem)}/acompanhamento/${codigo}`;
 }
