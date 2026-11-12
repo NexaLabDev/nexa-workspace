@@ -1,0 +1,39 @@
+{
+  "projeto": "tiqyujibhjwnrpqpqmep",
+  "gerado_em": "2026-11-12T17:34:05.568711+00:00",
+  "ambiente": "supabase-cloud",
+  "observacao": "Snapshot lógico pré-migração DELETE. Sem writes. Storage vazio no momento da captura.",
+  "bucket": {
+    "id": "nexa-arquivos",
+    "name": "nexa-arquivos",
+    "public": false
+  },
+  "contagens": {
+    "objetos_storage": 0,
+    "workspaces": 1,
+    "perfis": 1,
+    "permissoes_papel": 143,
+    "registros_workspace": 0,
+    "equipes": 0,
+    "equipe_membros": 0,
+    "convites_workspace": 0,
+    "avisos_usuario": 0,
+    "dispositivos_push": 0,
+    "auditoria": 2
+  },
+  "policies_storage_nexa": [
+    "nexa_arquivo_criar (INSERT)",
+    "nexa_arquivo_ler (SELECT)"
+  ],
+  "policies_ausentes": ["nexa_arquivo_apagar (DELETE)"],
+  "helpers_ok": ["workspace_id_atual()", "pode(modulo, acao)", "papel_atual()"],
+  "arquivos_excluir_papeis": ["administrador", "gestor", "colaborador"],
+  "migracoes_aplicadas": [
+    "20261111141500",
+    "20261111165716",
+    "20261111173327",
+    "20261111174040",
+    "20261111174910"
+  ],
+  "migracao_pendente": "20261112121500_storage_delete_policy"
+}
