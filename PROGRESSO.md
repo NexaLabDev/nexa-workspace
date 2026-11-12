@@ -11,8 +11,8 @@ Atualizado: 2026-11-12
 - [x] HIBP: confirmado Pro+ — não ativado (custo)
 - [x] Limpeza `.env.local` (sem tokens/credenciais extras)
 - [x] Docs de auditoria atualizados
-- [ ] Commit + PR (em andamento)
-- [ ] `NEXT_PUBLIC_APP_URL` na Vercel (dashboard — MCP sem escopo após reauth)
+- [x] Commit `e166252` + PR https://github.com/NexaLabDev/nexa-workspace/pull/6 (sem merge)
+- [ ] `NEXT_PUBLIC_APP_URL` na Vercel (reautorizar equipe MCP ou dashboard)
 - [ ] Conta de teste isolada + auditoria autenticada CRM/Kanban/etc.
 
 ## Testes executados
