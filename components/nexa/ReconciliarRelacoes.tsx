@@ -11,6 +11,7 @@ import { reconciliarRelacoes } from './relacoes';
 import { garantirCodigosProjetos, garantirProgressoPorFase } from './projetos';
 import { garantirTarefasDoChecklist } from './tarefas';
 import { garantirBibliotecaDasTarefas } from './biblioteca';
+import { papel } from './remoto';
 
 export default function ReconciliarRelacoes() {
   const [leads, setLeads] = useLeads();
@@ -18,7 +19,11 @@ export default function ReconciliarRelacoes() {
   const [vendas, setVendas] = useVendas();
   const [projetos, setProjetos] = useProjetos();
 
+  // Só quem pode gravar faz os ajustes automáticos (visualizador apenas lê)
+  const podeAjustar = papel() !== null && papel() !== 'visualizador';
+
   useEffect(() => {
+    if (!podeAjustar) return;
     const m = reconciliarRelacoes({ leads, clientes, vendas, projetos });
     if (m.clientes) {
       const alterados = m.clientes.filter((c) => {
@@ -55,17 +60,18 @@ export default function ReconciliarRelacoes() {
         })
       );
     }
-  }, [leads, clientes, vendas, projetos, setLeads, setClientes, setVendas, setProjetos]);
+  }, [leads, clientes, vendas, projetos, setLeads, setClientes, setVendas, setProjetos, podeAjustar]);
 
   // Código único para todo projeto (os que já têm mantêm o seu)
   // e checklists copiados antes da aba Tarefas viram tarefas (uma única vez por serviço)
   useEffect(() => {
     // e anexos de tarefas de antes da biblioteca passam a aparecer na aba Anexos (sem copiar o conteúdo)
     // e o progresso de cada projeto é sempre o percentual fixo da fase
+    if (!podeAjustar) return;
     const ajustar = (l: typeof projetos) => garantirProgressoPorFase(garantirBibliotecaDasTarefas(garantirTarefasDoChecklist(garantirCodigosProjetos(l))));
     if (ajustar(projetos) === projetos) return;
     setProjetos((atual) => ajustar(atual));
-  }, [projetos, setProjetos]);
+  }, [projetos, setProjetos, podeAjustar]);
 
   return null;
 }

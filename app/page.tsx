@@ -5,6 +5,8 @@
 
 import DashboardNexa from '@/components/dashboard-nexa/DashboardNexa';
 
+import AreaPrivada from "@/components/acesso/AreaPrivada";
+export const dynamic = "force-dynamic";
 export default function Home() {
-  return <DashboardNexa />;
+  return <AreaPrivada><DashboardNexa /></AreaPrivada>;
 }

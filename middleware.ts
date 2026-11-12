@@ -1,81 +1,44 @@
-// ============================================
-// CONTROLE DE ACESSO DA VERSÃO DE TESTES (online)
-// ============================================
-// - No próprio computador (localhost) não pede nada: o desenvolvimento local continua igual.
-// - Em qualquer outro endereço (ex.: a Vercel), exige usuário e senha (autenticação "Basic"
-//   do navegador, sempre por HTTPS). Valores nas variáveis de ambiente da Vercel:
-//     ACESSO_TESTE_USUARIO e ACESSO_TESTE_SENHA (nunca no código nem no GitHub).
-// - Se as variáveis não existirem, BLOQUEIA tudo (não abre o site sem proteção por engano).
-// Provisório até o login com o Supabase (Fase B).
-// ============================================
-
 import { NextResponse, type NextRequest } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { configPublica } from '@/lib/supabase/config';
 
-const LOCAIS = new Set(['localhost', '127.0.0.1', '[::1]', '::1']);
-
-/** Comparação em tempo constante (não revela, pelo tempo de resposta, quantos caracteres acertou). */
-function iguais(a: string, b: string): boolean {
-  const ta = new TextEncoder().encode(a);
-  const tb = new TextEncoder().encode(b);
-  let dif = ta.length ^ tb.length;
-  const n = Math.max(ta.length, tb.length);
-  for (let i = 0; i < n; i++) dif |= (ta[i] ?? 0) ^ (tb[i] ?? 0);
-  return dif === 0;
-}
-
-function pedirLogin(): NextResponse {
-  return new NextResponse('Acesso restrito: Nexa Workspace (versão de testes).', {
-    status: 401,
-    headers: {
-      'WWW-Authenticate': 'Basic realm="Nexa Workspace - testes", charset="UTF-8"',
-      'Cache-Control': 'no-store',
-    },
-  });
-}
-
-/** Nome do endereço pedido pelo navegador (cabeçalho Host, sem a porta). */
-function hostDoPedido(req: NextRequest): string {
-  const host = (req.headers.get('host') ?? '').trim().toLowerCase();
-  if (host.startsWith('[')) return host.slice(0, host.indexOf(']') + 1);
-  return host.split(':')[0];
-}
-
-export function middleware(req: NextRequest) {
-  // Usa o Host pedido pelo navegador (req.nextUrl aponta para o nome interno do servidor)
-  // Na Vercel nunca há "localhost": lá a senha vale sempre, mesmo que alguém forje o cabeçalho
-  if (!process.env.VERCEL && LOCAIS.has(hostDoPedido(req))) return NextResponse.next();
-
-  const usuario = process.env.ACESSO_TESTE_USUARIO;
-  const senha = process.env.ACESSO_TESTE_SENHA;
-  if (!usuario || !senha || senha.length < 12) {
-    return new NextResponse('Acesso ainda não configurado (defina ACESSO_TESTE_USUARIO e ACESSO_TESTE_SENHA, mínimo 12 caracteres).', {
-      status: 503,
-      headers: { 'Cache-Control': 'no-store' },
-    });
+export async function middleware(req: NextRequest) {
+  const caminho = req.nextUrl.pathname;
+  const api = caminho.startsWith('/api/');
+  if (caminho === '/login' || caminho === '/conta' || /^\/acompanhamento(?:\/[a-zA-Z0-9_-]{22})?$/.test(caminho)) return NextResponse.next();
+  if (api && !['GET','HEAD','OPTIONS'].includes(req.method) && req.headers.get('origin') !== req.nextUrl.origin) {
+    return NextResponse.json({ erro:'Origem não autorizada.' }, {status:403});
   }
-
-  const cabecalho = req.headers.get('authorization') ?? '';
-  if (!cabecalho.startsWith('Basic ')) return pedirLogin();
-  let decodificado = '';
+  let url: string, chavePublica: string;
   try {
-    decodificado = new TextDecoder().decode(Uint8Array.from(atob(cabecalho.slice(6)), (c) => c.charCodeAt(0)));
+    ({ url, chavePublica } = configPublica());
   } catch {
-    return pedirLogin();
+    // Sem as variáveis do Supabase o site não abre nada (em vez de quebrar ou abrir sem proteção)
+    return new NextResponse('Configuração do Supabase ausente no servidor (NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY).', { status: 503, headers: { 'Cache-Control': 'no-store' } });
   }
-  const i = decodificado.indexOf(':');
-  if (i < 0) return pedirLogin();
-  // avalia os dois para não indicar qual dos dois errou
-  const okUsuario = iguais(decodificado.slice(0, i), usuario);
-  const okSenha = iguais(decodificado.slice(i + 1), senha);
-  if (!(okUsuario && okSenha)) return pedirLogin();
-
-  const resp = NextResponse.next();
-  // a versão de testes não deve aparecer em buscadores
-  resp.headers.set('X-Robots-Tag', 'noindex, nofollow');
+  let resp = NextResponse.next({ request:req });
+  const db = createServerClient(url,chavePublica,{ cookies:{
+    getAll:()=>req.cookies.getAll(),
+    setAll:(lista, headers)=>{
+      for(const c of lista) req.cookies.set(c.name,c.value);
+      resp=NextResponse.next({request:req});
+      for(const c of lista) resp.cookies.set(c.name,c.value,c.options);
+      for(const [k,v] of Object.entries(headers ?? {})) resp.headers.set(k,v);
+    }
+  } });
+  const { data:{user} }=await db.auth.getUser();
+  const ativo = user && await db.rpc('workspace_id_atual');
+  if (!user || !ativo?.data) {
+    const destino=req.nextUrl.clone();
+    destino.pathname='/login'; destino.search='';
+    if(user) destino.searchParams.set('vinculo','pendente');
+    const falha=api ? NextResponse.json({erro:user?'Sem acesso ao workspace.':'Sessão expirada.'},{status:user?403:401}) : NextResponse.redirect(destino);
+    for(const c of resp.cookies.getAll()) falha.cookies.set(c);
+    falha.headers.set('Cache-Control','private, no-store');
+    return falha;
+  }
+  resp.headers.set('Cache-Control','private, no-store');
   return resp;
 }
 
-// Protege tudo: páginas, rotas da API, arquivos do app e o service worker.
-export const config = {
-  matcher: '/:path*',
-};
+export const config={ matcher:['/((?!_next/static|_next/image|dashboard/|favicon.ico|icon.png|sw.js).*)'] };

@@ -19,7 +19,10 @@ export function configPublica(): ConfigPublica {
   if (!url || !chavePublica) {
     throw new Error('Supabase sem configuração: defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY no .env.local.');
   }
-  if (!/^https:\/\/\S+$/.test(url)) throw new Error('NEXT_PUBLIC_SUPABASE_URL precisa ser um endereço https.');
+  // http só é aceito para um Supabase de testes rodando neste computador
+  if (!/^https:\/\/\S+$/.test(url) && !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(url)) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_URL precisa ser um endereço https.');
+  }
   if (chavePublica.startsWith('sb_secret_')) {
     // Proteção: a chave secreta nunca pode ir para uma variável pública
     throw new Error('A chave em NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY é SECRETA (sb_secret_). Troque pela publishable (sb_publishable_) e gere uma nova secret no Supabase.');
