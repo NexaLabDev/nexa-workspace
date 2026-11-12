@@ -3,7 +3,7 @@
 // DADOS DO WORKSPACE NO SUPABASE (um registro por linha, com versão)
 // ============================================
 // As telas continuam usando os mesmos hooks (store.ts). Aqui fica o "fundo":
-// - lê tudo do banco (ler_registros) e relê a cada 15 s e ao voltar para a aba;
+// - lê tudo do banco (ler_registros) e relê periodicamente e ao voltar para a aba;
 // - cada alteração vira um lote pequeno (só as linhas que mudaram), enviado junto
 //   numa única transação (gravar_registros). Edições em cascata da mesma ação
 //   (ex.: venda ganha → cliente → projeto) vão no mesmo lote;
@@ -11,6 +11,7 @@
 //   exporta a edição ou descarta e recarrega;
 // - falha de rede: a edição fica na fila e é reenviada (botão e automaticamente).
 // As permissões valem no banco (RLS); aqui só evitamos tentativas inúteis.
+// Performance: poll sem mudança de versão não rematerializa nem acorda o React.
 // ============================================
 import {supabaseNavegador} from '@/lib/supabase/navegador';
 export type Identidade={id:string;workspace_id:string;papel:string;nome:string|null;email:string};
@@ -26,6 +27,7 @@ const vazio:never[]=[];
 const objVazio={};
 let pessoa:Identidade|null=null,base=new Map<string,Registro>(),dados:Record<string,unknown>={},pendentes=new Map<string,Registro>();
 let ocupado=false,geracao=0,mudanca=0,estado='Carregando…',pronto=false,bloqueado=false;
+let assinaturaBase='';
 const ouvintes=new Set<()=>void>();
 function avisar(){for(const f of ouvintes)f();}
 export function assinar(f:()=>void){ouvintes.add(f);return ()=>{ouvintes.delete(f);};}
@@ -36,12 +38,39 @@ export const temPendentes=()=>pendentes.size>0;
 export const emConflito=()=>bloqueado;
 export const papel=()=>pessoa?.papel??null;
 export const copiaPendente=()=>JSON.stringify([...pendentes.values()],null,2);
+
+/** Assinatura barata: muda só quando o servidor altera versão/ordem/presença. */
+function assinarMapa(m:Map<string,Registro>):string{
+ let out=String(m.size)+'|';
+ for(const r of m.values()) out+=r.colecao+'\0'+r.id+'\0'+r.versao+'\0'+r.ordem+'|';
+ return out;
+}
+/** Igualdade estrutural: referência, depois listas por id, senão JSON normalizado. */
+function mesmoValor(a:unknown,b:unknown):boolean{
+ if(a===b)return true;
+ if(a==null||b==null)return a===b;
+ if(typeof a!==typeof b)return false;
+ if(Array.isArray(a)&&Array.isArray(b)){
+  if(a.length!==b.length)return false;
+  for(let i=0;i<a.length;i++){
+   const x=a[i] as Item|unknown,y=b[i] as Item|unknown;
+   if(x&&y&&typeof x==='object'&&typeof y==='object'&&'id' in (x as object)&&'id' in (y as object)){
+    if((x as Item).id!==(y as Item).id)return false;
+    if(x!==y&&normalizar(x)!==normalizar(y))return false;
+   }else if(x!==y&&normalizar(x)!==normalizar(y))return false;
+  }
+  return true;
+ }
+ if(typeof a==='object'&&typeof b==='object')return normalizar(a)===normalizar(b);
+ return false;
+}
+
 export function normalizar(valor:unknown):string {
  return JSON.stringify(valor,(_,v)=>v && typeof v==='object' && !Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
 }
 export function iniciar(p:Identidade){
  if(pessoa?.id===p.id && pessoa.workspace_id===p.workspace_id){pessoa=p;return;}
- geracao++;pessoa=p;pronto=false;ocupado=false;bloqueado=false;base=new Map();pendentes=new Map();dados={};estado='Carregando…';mudanca++;avisar();
+ geracao++;pessoa=p;pronto=false;ocupado=false;bloqueado=false;base=new Map();pendentes=new Map();dados={};assinaturaBase='';estado='Carregando…';mudanca++;avisar();
 }
 export function ler<T>(c:string,inicial:T):T{
  if(c==='perfil')return (pessoa?perfil:objVazio) as T;
@@ -59,7 +88,7 @@ function materializar(){
    else novo[r.colecao]=r.conteudo;
  }
  comLinhas=new Set([...rows.values()].map(r=>r.colecao));
- for(const c of Object.keys(novo))if(normalizar(novo[c])===normalizar(anterior[c]))novo[c]=anterior[c];
+ for(const c of Object.keys(novo))if(mesmoValor(novo[c],anterior[c]))novo[c]=anterior[c];
  dados=novo;
 }
 export async function atualizar(){
@@ -69,7 +98,15 @@ export async function atualizar(){
  const {data,error}=await supabaseNavegador().rpc('ler_registros');
  if(g!==geracao||m!==mudanca||pendentes.size)return;
  if(error||!Array.isArray(data))throw Error();
- base=new Map((data as Registro[]).map(r=>[mapa(r),r]));materializar();perfil={nome:pessoa.nome??pessoa.email,usuarioId:pessoa.id};pronto=true;estado='Salvo';avisar();
+ const proximo=new Map((data as Registro[]).map(r=>[mapa(r),r]));
+ const proxAssinatura=assinarMapa(proximo);
+ // Sem mudança no servidor: não rematerializa nem acorda assinantes (exceto status)
+ if(pronto && proxAssinatura===assinaturaBase){
+  if(estado!=='Salvo'){estado='Salvo';avisar();}
+  return;
+ }
+ base=proximo;assinaturaBase=proxAssinatura;materializar();
+ perfil={nome:pessoa.nome??pessoa.email,usuarioId:pessoa.id};pronto=true;estado='Salvo';avisar();
  }catch{if(g===geracao){estado='Falha ao atualizar. Tente novamente.';avisar();}}
 }
 function linhas(c:string,valor:unknown):Registro[]{
@@ -109,7 +146,7 @@ export function alterar(c:string,valor:unknown){
  const antes=new Map(anteriores.map(r=>[mapa(r),r]));
  for(const r of [...novas,...anteriores.filter(r=>!vistos.has(mapa(r))).map(r=>({...r,conteudo:null}))]){
    const k=mapa(r),a=antes.get(k);
-   if(a && a.ordem===r.ordem && normalizar(a.conteudo)===normalizar(r.conteudo))continue;
+   if(a && a.ordem===r.ordem && (a.conteudo===r.conteudo || mesmoValor(a.conteudo,r.conteudo)))continue;
    pendentes.set(k,{...r,versao:base.get(k)?.versao??0});
  }
  if(!pendentes.size)return true;
@@ -129,7 +166,8 @@ export async function enviar(){
   if(g!==geracao)return;
   if(Array.isArray(data)){
    base=new Map((data as Registro[]).map(r=>[mapa(r),r]));
-   for(const [k,r] of [...pendentes]){const a=base.get(k);if(a&&normalizar(a.conteudo)===normalizar(r.conteudo))pendentes.delete(k);}
+   assinaturaBase=assinarMapa(base);
+   for(const [k,r] of [...pendentes]){const a=base.get(k);if(a&&mesmoValor(a.conteudo,r.conteudo))pendentes.delete(k);}
    if(!pendentes.size){materializar();estado='Salvo';return;}
   }
   bloqueado=true;
@@ -137,11 +175,12 @@ export async function enviar(){
  }
  if(error)throw Error(error.code==='42501'?'Seu perfil de acesso não permite salvar esta alteração.':'Falha ao salvar. Confira a conexão e tente novamente.');
  for(const [k,r] of lote){
-   const a=base.get(k),igual=a&&a.ordem===r.ordem&&normalizar(a.conteudo)===normalizar(r.conteudo);
+   const a=base.get(k),igual=a&&a.ordem===r.ordem&&mesmoValor(a.conteudo,r.conteudo);
    const versao=r.versao+(igual?0:1);base.set(k,{...r,versao});
    const proximo=pendentes.get(k);
    if(proximo===r)pendentes.delete(k);else if(proximo)pendentes.set(k,{...proximo,versao});
  }
+ assinaturaBase=assinarMapa(base);
  estado=pendentes.size?'Salvando…':'Salvo';ocupado=false;if(pendentes.size)agendarEnvio();
  }catch(e){if(g===geracao)estado=(e as Error).message;}finally{if(g===geracao){ocupado=false;avisar();}}
 }
@@ -158,12 +197,12 @@ export async function importar(d:Record<string,unknown>){
  if(c==='perfil')continue;
  for(const r of linhas(c,v)){
  const a=base.get(mapa(r));
- if(a){if(normalizar(a.conteudo)!==normalizar(r.conteudo))throw Error('ID já existente com conteúdo diferente: '+c+'/'+r.id);continue;}
+ if(a){if(!mesmoValor(a.conteudo,r.conteudo))throw Error('ID já existente com conteúdo diferente: '+c+'/'+r.id);continue;}
  lote.push(r);
  }}
  const {error}=await supabaseNavegador().rpc('gravar_registros',{p_workspace:pessoa.workspace_id,p_usuario:pessoa.id,p_mudancas:lote});
  if(error)throw Error(error.message);
  await atualizar();
- for(const r of lote)if(normalizar(base.get(mapa(r))?.conteudo)!==normalizar(r.conteudo))throw Error('Não foi possível conferir '+r.id+'. Preserve o backup e tente novamente.');
+ for(const r of lote)if(!mesmoValor(base.get(mapa(r))?.conteudo,r.conteudo))throw Error('Não foi possível conferir '+r.id+'. Preserve o backup e tente novamente.');
  return lote.length;
 }

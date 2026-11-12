@@ -22,12 +22,13 @@ export default function DadosWorkspace({ perfil, children }: { perfil: remoto.Id
       void remoto.enviar();
       atualizar();
     };
-    // a cada 15 s: reenvia o que ficou pendente e busca o que mudou nos outros aparelhos
+    // 30 s: ainda sincroniza outros aparelhos; remoto.atualizar() não rematerializa se nada mudou.
+    // Pendências continuam saindo pelo debounce de 300 ms + eventos focus/online.
     const timer = setInterval(() => {
       if (document.hidden) return;
       void remoto.enviar();
       atualizar();
-    }, 15000);
+    }, 30_000);
     const proteger = (e: BeforeUnloadEvent) => {
       if (remoto.temPendentes()) {
         e.preventDefault();

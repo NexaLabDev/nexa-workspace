@@ -7,7 +7,7 @@
 // Foto de fundo: Pexels nº 12701459 (licença Pexels, uso livre), com cor ajustada.
 // ============================================
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import {
   Box,
@@ -105,7 +105,7 @@ export default function NexaShell({
   const inicio = aba === 'dashboard';
   const [buscaAberta, setBuscaAberta] = useState(false);
   const [leads] = useLeads();
-  const alertas = alertasCobranca(leads).length;
+  const alertas = useMemo(() => alertasCobranca(leads).length, [leads]);
 
   // Ctrl + K (ou Cmd + K no Mac) abre a busca em qualquer tela
   useEffect(() => {

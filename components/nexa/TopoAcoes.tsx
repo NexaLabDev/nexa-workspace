@@ -2,7 +2,7 @@
 
 // Botões do topo: Agenda, Ajuda, Notificações e Perfil, cada um com seu menu.
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { Bell, Calendar, CalendarClock, CheckSquare, ChevronDown, CircleAlert, CircleHelp, Settings, Target, Users } from 'lucide-react';
 import s from './shell.module.css';
@@ -50,22 +50,38 @@ export default function TopoAcoes({ compacto, iniciais }: { compacto: boolean; i
     };
   }, []);
 
-  const contatosHoje = leads.filter((l) => l.data === 'Hoje' && !['ganho', 'perdido'].includes(l.etapa));
-  const resumo = calcularResumoMeta(mesChave(new Date()), vendas, metas, regra);
   // Central de notificações: vem do servidor; se ele não responder, calcula aqui mesmo
   const central = useNotificacoes();
-  const cobrancas: Array<{ id: string; leadId: string; cliente: string; rotulo: string; valor: number; vencimento: string; dias: number; lida: boolean }> =
-    central.servidorOk
-      ? central.lista.map((n) => ({ ...n, dias: diasAte(n.vencimento), lida: !!n.lida }))
-      : alertasCobranca(leads).map((c) => ({ ...c, id: c.chave, vencimento: c.vencimento as string, lida: false }));
-  const naoLidas = cobrancas.filter((c) => !c.lida);
   const [conversas] = useConversas();
-  const linkLead = (id: string) => (conversas.some((cv) => cv.leadId === id) ? `/conversas?lead=${id}` : `/crm?lead=${id}`);
-  // Tarefas vencidas ou com prazo próximo (calculado aqui, sem push)
   const [projetos] = useProjetos();
   const [prefs] = usePreferencias();
-  const tarefasAlerta = alertasTarefas(projetos, undefined, diasPrazoProximo(prefs));
+
+  // Derivados memoizados: o topo está em todas as páginas e reagia a cada poll/render.
+  const contatosHoje = useMemo(
+    () => leads.filter((l) => l.data === 'Hoje' && !['ganho', 'perdido'].includes(l.etapa)),
+    [leads],
+  );
+  const resumo = useMemo(() => calcularResumoMeta(mesChave(new Date()), vendas, metas, regra), [vendas, metas, regra]);
+  const cobrancas = useMemo(() => {
+    if (central.servidorOk) {
+      return central.lista.map((n) => ({ ...n, dias: diasAte(n.vencimento), lida: !!n.lida }));
+    }
+    return alertasCobranca(leads).map((c) => ({
+      id: c.chave,
+      leadId: c.leadId,
+      cliente: c.cliente,
+      rotulo: c.rotulo,
+      valor: c.valor,
+      vencimento: c.vencimento as string,
+      dias: diasAte(c.vencimento as string),
+      lida: false,
+    }));
+  }, [central.servidorOk, central.lista, leads]);
+  const naoLidas = useMemo(() => cobrancas.filter((c) => !c.lida), [cobrancas]);
+  const diasPrazo = diasPrazoProximo(prefs);
+  const tarefasAlerta = useMemo(() => alertasTarefas(projetos, undefined, diasPrazo), [projetos, diasPrazo]);
   const temAvisos = contatosHoje.length > 0 || resumo.metaDiaria != null || cobrancas.length > 0 || tarefasAlerta.length > 0;
+  const linkLead = (id: string) => (conversas.some((cv) => cv.leadId === id) ? `/conversas?lead=${id}` : `/crm?lead=${id}`);
 
   const alternar = (m: Menu) => setAberto((a) => (a === m ? null : m));
   const tam = compacto ? 24 : 26;
