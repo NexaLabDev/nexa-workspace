@@ -9,7 +9,13 @@ export async function middleware(req: NextRequest) {
   if (api && !['GET','HEAD','OPTIONS'].includes(req.method) && req.headers.get('origin') !== req.nextUrl.origin) {
     return NextResponse.json({ erro:'Origem não autorizada.' }, {status:403});
   }
-  const { url, chavePublica } = configPublica();
+  let url: string, chavePublica: string;
+  try {
+    ({ url, chavePublica } = configPublica());
+  } catch {
+    // Sem as variáveis do Supabase o site não abre nada (em vez de quebrar ou abrir sem proteção)
+    return new NextResponse('Configuração do Supabase ausente no servidor (NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY).', { status: 503, headers: { 'Cache-Control': 'no-store' } });
+  }
   let resp = NextResponse.next({ request:req });
   const db = createServerClient(url,chavePublica,{ cookies:{
     getAll:()=>req.cookies.getAll(),

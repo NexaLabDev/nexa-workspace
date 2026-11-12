@@ -1,0 +1,307 @@
+/* Telas de acesso (equipe, convites, importação, auditoria) e avisos de sincronização.
+   Usa as mesmas cores do Workspace (variáveis definidas em shell.module.css). */
+
+.carregando {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #121415;
+  color: #d4d4d4;
+  font-family: var(--fonte-jakarta), system-ui, sans-serif;
+  text-align: center;
+}
+
+.carregando > div {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  max-width: 420px;
+}
+
+.aviso {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 11000;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  max-width: min(460px, calc(100vw - 24px));
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #25282a;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-family: var(--fonte-jakarta), system-ui, sans-serif;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.avisoErro {
+  border-color: rgba(255, 120, 95, 0.6);
+  background: #33211e;
+}
+
+.aviso button,
+.carregando button {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.aviso button.principal,
+.carregando button {
+  border: 0;
+  background: #d2f55a;
+  color: #161616;
+}
+
+.faixaLeitura {
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  z-index: 10990;
+  padding: 6px 12px;
+  border-radius: 14px;
+  background: rgba(37, 40, 42, 0.95);
+  border: 1px solid rgba(245, 180, 70, 0.5);
+  color: #f6c56b;
+  font-family: var(--fonte-jakarta), system-ui, sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+/* ---------- Painéis de Configurações ---------- */
+.bloco {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 18px;
+  margin-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.bloco:first-of-type {
+  padding-top: 0;
+  margin-top: 0;
+  border-top: 0;
+}
+
+.bloco h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.linha {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+}
+
+.linha > label {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.pessoas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pessoa {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) 170px auto;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.pessoaInativa {
+  opacity: 0.6;
+}
+
+.pessoaNome {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pessoaNome strong,
+.pessoaNome small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pessoaNome small {
+  font-size: 12.5px;
+  color: var(--texto-3);
+}
+
+.pessoa select,
+.pessoa input[type='text'] {
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+}
+
+.equipesDaPessoa {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 13px;
+  color: var(--texto-2);
+}
+
+.equipesDaPessoa label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.equipesDaPessoa input,
+.marcar input {
+  width: 16px;
+  height: 16px;
+  accent-color: #c4f03a;
+}
+
+.listaSimples {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.listaSimples li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 14px;
+}
+
+.listaSimples li > span:first-child {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.btnPequeno {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btnPequeno:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.btnPequeno:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.perigo {
+  color: #ff9d85;
+  border-color: rgba(255, 120, 95, 0.4);
+}
+
+.papeis {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--texto-3);
+}
+
+.papeis b {
+  color: var(--texto-2);
+}
+
+.marcar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.previa {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  list-style: none;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.tabelaRolagem {
+  overflow-x: auto;
+}
+
+.auditoria {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.auditoria th {
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--texto-3);
+  white-space: nowrap;
+}
+
+.auditoria td {
+  padding: 8px 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  vertical-align: top;
+}
+
+.auditoria td small {
+  color: var(--texto-3);
+}
+
+@media (max-width: 760px) {
+  .pessoa {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

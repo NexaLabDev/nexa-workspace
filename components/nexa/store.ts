@@ -1,11 +1,11 @@
 'use client';
 
 // ============================================
-// DADOS SALVOS NO NAVEGADOR (provisório, até existir banco)
+// PONTO ÚNICO DE DADOS DAS TELAS
 // ============================================
-// Cada lista fica no localStorage deste navegador. Todas as abas leem
-// e gravam pelo mesmo lugar, então o CRM e a Meta Mensal ficam em sincronia.
-// Limites: só vale neste computador/navegador e some se o histórico for apagado.
+// Todas as telas leem e gravam por aqui (usePersistido). Os dados ficam no Supabase
+// (ver remoto.ts) e chegam aos outros aparelhos da equipe. As funções de localStorage
+// no fim do arquivo servem só para ler os dados ANTIGOS deste navegador (importação/backup).
 // ============================================
 
 import * as remoto from './remoto';
@@ -31,6 +31,8 @@ export const CHAVES = {
   preferencias: 'preferencias',
   /** Categorias da biblioteca de arquivos dos projetos (aba Anexos) */
   categoriasArquivos: 'categorias-arquivos',
+  /** Quando avisar sobre cobranças (dias antes, no dia, vencidas): vale para o workspace */
+  avisos: 'avisos',
 } as const;
 
 type Chave = (typeof CHAVES)[keyof typeof CHAVES];
@@ -58,6 +60,7 @@ export function restaurarExemplos() {
 export function lerTudoSalvo(): Record<string, unknown> {
   const saida: Record<string, unknown> = {};
   for (const c of Object.values(CHAVES)) {
+    if (c === 'avisos') continue; // nunca existiu no navegador (ficava no servidor local)
     const bruto = window.localStorage.getItem(PREFIXO + c);
     if (bruto == null) continue;
     try {

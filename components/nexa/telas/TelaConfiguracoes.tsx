@@ -1,35 +1,23 @@
 'use client';
 
-// ABA CONFIGURAÇÕES — perfil e notificações.
-// Nada é salvo ainda (sem banco). Dados que faltam aparecem como [A DEFINIR].
+// ABA CONFIGURAÇÕES — conta e equipe, dados da prestadora, avisos, prazos,
+// backup/importação e auditoria. Tudo salvo no Supabase, conforme o perfil de acesso.
 
-import { useState } from 'react';
-import { BadgeCheck, BellRing, CalendarClock, Database, Download, Info, RotateCcw, Upload, UserRound } from 'lucide-react';
+import { BadgeCheck, CalendarClock, Info } from 'lucide-react';
 import NexaShell from '../NexaShell';
 import u from '../ui.module.css';
-import { restaurarExemplos } from '../store';
-import { apagarTodosArquivos } from '../arquivos';
-import { OPCOES_DIAS_PRAZO_PROXIMO, diasPrazoProximo, usePerfil, usePreferencias, usePrestadora } from '../dados';
+import { OPCOES_DIAS_PRAZO_PROXIMO, diasPrazoProximo, usePreferencias, usePrestadora } from '../dados';
+import { podeEscrever } from '../remoto';
 import Importar from '@/components/acesso/Importar';
 import Equipe from '@/components/acesso/Equipe';
+import Auditoria from '@/components/acesso/Auditoria';
 import AvisosPush from './AvisosPush';
-import { baixarBackup, lerBackup, restaurarBackup } from '../backup';
-
-const ICONE = { strokeWidth: 1.7 } as const;
-
-const AVISOS = [
-  { id: 'propostas', nome: 'Novas propostas' },
-  { id: 'contratos', nome: 'Contratos assinados' },
-  { id: 'agenda', nome: 'Lembretes da agenda' },
-];
 
 export default function TelaConfiguracoes() {
-  const [perfil, setPerfil] = usePerfil();
   const [prefs, setPrefs] = usePreferencias();
   const [prestadora, setPrestadora] = usePrestadora();
-  const [backupOcupado, setBackupOcupado] = useState(false);
-  const [backupMsg, setBackupMsg] = useState<{ texto: string; erro?: boolean } | null>(null);
-  const [avisos, setAvisos] = useState<Record<string, boolean>>({ propostas: true, contratos: true, agenda: false });
+  const editaPrestadora = podeEscrever('prestadora');
+  const editaPrefs = podeEscrever('preferencias');
 
   return (
     <NexaShell aba="configuracoes">
@@ -42,40 +30,15 @@ export default function TelaConfiguracoes() {
           </div>
         </div>
 
-        <div className={u.grade2}>
-          <Equipe />
+        <Equipe />
 
-          <section className={u.painel}>
-            <header className={u.painelTopo}>
-              <BellRing size={28} {...ICONE} />
-              <h2>Notificações</h2>
-            </header>
-            <ul className={u.resumoLista}>
-              {AVISOS.map((a) => (
-                <li key={a.id} className={u.resumoItem}>
-                  <span id={`aviso-${a.id}`}>{a.nome}</span>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={avisos[a.id]}
-                    aria-labelledby={`aviso-${a.id}`}
-                    className={`${u.interruptor} ${avisos[a.id] ? u.interruptorLigado : ''}`}
-                    onClick={() => setAvisos((v) => ({ ...v, [a.id]: !v[a.id] }))}
-                  />
-                </li>
-              ))}
-            </ul>
-          </section>
-        </div>
-
-        <Importar/>
         {/* ----- Dados da prestadora: usados nos documentos (nunca ficam no código) ----- */}
         <section className={u.painel} id="prestadora">
           <header className={u.painelTopo}>
             <BadgeCheck size={28} strokeWidth={1.7} />
             <div>
               <h2>Dados da prestadora</h2>
-              <small>Aparecem no contrato, na ordem de serviço e no recibo. Ficam só salvos aqui, preenchidos por você.</small>
+              <small>Aparecem no contrato, na ordem de serviço e no recibo. Editados por administrador ou gestor.</small>
             </div>
           </header>
           <div className={u.formGrade}>
@@ -94,6 +57,7 @@ export default function TelaConfiguracoes() {
                   className={u.entrada}
                   defaultValue={prestadora[chave] ?? ''}
                   key={`${chave}-${prestadora[chave] ?? ''}`}
+                  readOnly={!editaPrestadora}
                   onBlur={(e) => {
                     const v = e.currentTarget.value.trim();
                     if (v !== (prestadora[chave] ?? '')) setPrestadora((p) => ({ ...p, [chave]: v || undefined }));
@@ -116,6 +80,7 @@ export default function TelaConfiguracoes() {
             <select
               className={u.entrada}
               value={diasPrazoProximo(prefs)}
+              disabled={!editaPrefs}
               onChange={(e) => setPrefs((p) => ({ ...p, diasPrazoProximo: Number(e.target.value) }))}
             >
               {OPCOES_DIAS_PRAZO_PROXIMO.map((n) => (
@@ -127,11 +92,12 @@ export default function TelaConfiguracoes() {
           </label>
           <p className={u.nota} style={{ marginTop: 14 }}>
             <Info size={16} /> Vale para a aba Tarefas dos projetos e para o sininho. Tarefas vencidas aparecem sempre, até serem
-            concluídas ou terem o prazo alterado. Salvo neste navegador.
+            concluídas ou terem o prazo alterado. Vale para toda a equipe; só o administrador altera.
           </p>
         </section>
 
-
+        <Importar />
+        <Auditoria />
       </div>
     </NexaShell>
   );
