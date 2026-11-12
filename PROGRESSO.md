@@ -17,7 +17,7 @@ Atualizado: 2026-11-12 (validação visual/funcional)
 - [x] Playwright E2E local (desktop + rotas + fluxo empresarial)
 - [x] Correções: metas/financeiro com vendas sem `data`; clientes sem `servicos`; race `?lead=` em Conversas
 - [x] `npm run build` OK após as correções
-- [ ] Commit + push desta rodada no PR #6
+- [x] Commit + push desta rodada no PR #6 (`de3bf69`)
 - [ ] `NEXT_PUBLIC_APP_URL=https://nexa-workspace-tau.vercel.app` na Vercel (Preview/Production)
 - [ ] Autorização para aplicar DELETE Storage em produção
 - [ ] Merge na `main` / publish Production (bloqueado até itens acima)
