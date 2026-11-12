@@ -45,3 +45,7 @@ next-env.d.ts
 # supabase CLI temp
 supabase/.temp/
 
+
+# performance local runs
+/perf-results/
+

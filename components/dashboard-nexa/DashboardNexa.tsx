@@ -47,24 +47,48 @@ function saudacao(d: Date): string {
   return 'Boa noite';
 }
 
-function useAgora(): Date {
+/** Relógio isolado: atualiza a cada segundo sem re-renderizar o restante do dashboard. */
+function RelogioDashboard() {
   const [agora, setAgora] = useState(() => new Date());
   useEffect(() => {
     const id = window.setInterval(() => setAgora(new Date()), 1000);
     return () => window.clearInterval(id);
   }, []);
-  return agora;
+  const hora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  return (
+    <section className={s.heroi}>
+      <div className={s.relogio}>
+        <time className={s.hora} suppressHydrationWarning>
+          {hora}
+        </time>
+        <p className={s.data} suppressHydrationWarning>
+          {formatarData(agora)}
+        </p>
+      </div>
+      <div className={s.saudacao}>
+        <h1 suppressHydrationWarning>
+          {saudacao(agora)}, <span className={s.nome}>{usuario.nome}!</span>
+        </h1>
+        <p>Aqui está o resumo das suas atividades hoje.</p>
+        <span className={s.sublinhado} aria-hidden />
+      </div>
+    </section>
+  );
 }
 
 const ICONE = { strokeWidth: 1.7 } as const;
 
 export default function DashboardNexa() {
-  const agora = useAgora();
-  const hora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  // Meta do mês: recalcula no máximo 1×/minuto (não a cada tick do relógio)
+  const [agoraMeta, setAgoraMeta] = useState(() => new Date());
+  useEffect(() => {
+    const id = window.setInterval(() => setAgoraMeta(new Date()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
   const [vendas] = useVendas();
   const [metas] = useMetas();
   const [regra] = useDiasTrabalho();
-  const meta = calcularResumoMeta(mesChave(agora), vendas, metas, regra, agora);
+  const meta = calcularResumoMeta(mesChave(agoraMeta), vendas, metas, regra, agoraMeta);
 
   const cartaoClima = (
     <section className={s.clima} aria-label="Clima">
@@ -79,23 +103,7 @@ export default function DashboardNexa() {
 
   return (
     <NexaShell aba="dashboard" cantoDireito={cartaoClima}>
-      <section className={s.heroi}>
-        <div className={s.relogio}>
-          <time className={s.hora} suppressHydrationWarning>
-            {hora}
-          </time>
-          <p className={s.data} suppressHydrationWarning>
-            {formatarData(agora)}
-          </p>
-        </div>
-        <div className={s.saudacao}>
-          <h1 suppressHydrationWarning>
-            {saudacao(agora)}, <span className={s.nome}>{usuario.nome}!</span>
-          </h1>
-          <p>Aqui está o resumo das suas atividades hoje.</p>
-          <span className={s.sublinhado} aria-hidden />
-        </div>
-      </section>
+      <RelogioDashboard />
 
       <section className={s.indicadores} aria-label="Indicadores">
         <article className={s.cartao}>

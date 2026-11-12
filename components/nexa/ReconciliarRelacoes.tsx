@@ -28,7 +28,19 @@ export default function ReconciliarRelacoes() {
     if (m.clientes) {
       const alterados = m.clientes.filter((c) => {
         const antes = clientes.find((x) => x.id === c.id);
-        return !antes || JSON.stringify(antes) !== JSON.stringify(c);
+        if (!antes) return true;
+        // Comparação pontual (evita JSON.stringify de objetos grandes a cada sync)
+        return (
+          antes.nome !== c.nome ||
+          antes.nomeCompleto !== c.nomeCompleto ||
+          antes.documento !== c.documento ||
+          antes.email !== c.email ||
+          antes.telefone !== c.telefone ||
+          antes.status !== c.status ||
+          antes.ultimaAtividade !== c.ultimaAtividade ||
+          (antes.servicos ?? []).join('\0') !== (c.servicos ?? []).join('\0') ||
+          (antes.historico?.length ?? 0) !== (c.historico?.length ?? 0)
+        );
       });
       setClientes((atual) => {
         let lista = atual;
