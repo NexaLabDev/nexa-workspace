@@ -1,103 +1,76 @@
 'use client';
-
-// Avisos push no navegador: permissão, inscrição no servidor local, teste e verificação.
-
-export type EstadoPush =
-  | { tipo: 'sem-suporte' }
-  | { tipo: 'bloqueado' }
-  | { tipo: 'desativado' }
-  | { tipo: 'ativado'; filtro: string | null };
-
-export type InfoServidor = { ultimaVerificacao: string | null; leadsSincronizadosEm: string | null };
-
-const JSON_HEADERS = { 'Content-Type': 'application/json' };
-
-export function pushSuportado(): boolean {
-  return typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+import { supabaseNavegador } from '@/lib/supabase/navegador';
+export type EstadoPush={tipo:'sem-suporte'|'bloqueado'|'desativado'|'ativado'};
+const db=()=>supabaseNavegador();
+function suporte(){return typeof window!=='undefined'&&'serviceWorker'in navigator&&'PushManager'in window&&'Notification'in window;}
+async function usuario(){
+ const {data,error}=await db().auth.getUser();
+ if(error||!data.user)throw Error('Faça login para ativar notificações.');
 }
-
-async function registro(): Promise<ServiceWorkerRegistration> {
-  const atual = await navigator.serviceWorker.getRegistration('/');
-  if (atual) return atual;
-  await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-  return navigator.serviceWorker.ready;
+function bytes(b64:string):Uint8Array<ArrayBuffer>{
+ const pad='='.repeat((4-b64.length%4)%4);
+ const raw=atob((b64+pad).replace(/-/g,'+').replace(/_/g,'/'));
+ const a=new Uint8Array(new ArrayBuffer(raw.length));
+ for(let i=0;i<raw.length;i++)a[i]=raw.charCodeAt(i);
+ return a;
 }
-
-function chaveParaBytes(base64: string): Uint8Array<ArrayBuffer> {
-  const pad = '='.repeat((4 - (base64.length % 4)) % 4);
-  const bin = atob((base64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
-  const bytes = new Uint8Array(new ArrayBuffer(bin.length));
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return bytes;
+export async function lerEstado():Promise<EstadoPush>{
+ if(!suporte())return{tipo:'sem-suporte'};
+ if(Notification.permission==='denied')return{tipo:'bloqueado'};
+ try{
+  await usuario();
+  const sw=await navigator.serviceWorker.getRegistration('/');
+  const insc=await sw?.pushManager.getSubscription();
+  if(!insc)return{tipo:'desativado'};
+  const {data,error}=await db().from('dispositivos_push').select('endpoint')
+   .eq('endpoint',insc.endpoint).limit(1);
+  if(error||!data?.length)return{tipo:'desativado'};
+  return{tipo:Notification.permission==='granted'?'ativado':'desativado'};
+ }catch{return{tipo:'desativado'}}
 }
-
-async function erroDe(r: Response): Promise<Error> {
-  const j = (await r.json().catch(() => null)) as { erro?: string } | null;
-  return new Error(j?.erro ?? `Falha (${r.status})`);
+export async function ativarPush(){
+ if(!suporte())throw Error('Este navegador não oferece notificações push.');
+ // Pede permissão diretamente no gesto da pessoa, necessário no iPhone.
+ const permission=await Notification.requestPermission();
+ if(permission!=='granted')throw Error('Permissão negada nas configurações do aparelho.');
+ await usuario();
+ const res=await fetch('/api/push/chave',{cache:'no-store'});
+ if(!res.ok)throw Error('O envio de notificações não está configurado neste servidor.');
+ const {chave}=await res.json() as {chave:string};
+ const sw=(await navigator.serviceWorker.getRegistration('/'))||
+  (await navigator.serviceWorker.register('/sw.js',{scope:'/'}));
+ let insc=await sw.pushManager.getSubscription();
+ const key=bytes(chave),current=insc?.options.applicationServerKey;
+ if(insc&&current){
+  const old=new Uint8Array(current);
+  if(old.length!==key.length||old.some((x,i)=>x!==key[i])){await insc.unsubscribe();insc=null;}
+ }
+ insc??=await sw.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key});
+ const sub=insc.toJSON();
+ if(!sub.endpoint||!sub.keys?.auth||!sub.keys?.p256dh)
+  throw Error('Inscrição do navegador incompleta.');
+ const {error}=await db().from('dispositivos_push').upsert({
+  endpoint:sub.endpoint,chaves:sub.keys,filtro:'todos'
+ },{onConflict:'workspace_id,perfil_id,endpoint'});
+ if(error)throw Error('Não foi possível registrar este aparelho: '+error.message);
 }
-
-export async function lerEstado(): Promise<{ estado: EstadoPush; servidor: InfoServidor | null }> {
-  if (!pushSuportado()) return { estado: { tipo: 'sem-suporte' }, servidor: null };
-  if (Notification.permission === 'denied') return { estado: { tipo: 'bloqueado' }, servidor: null };
-  const reg = await navigator.serviceWorker.getRegistration('/');
-  const insc = await reg?.pushManager.getSubscription();
-  const url = `/api/push/inscricao${insc ? `?endpoint=${encodeURIComponent(insc.endpoint)}` : ''}`;
-  const r = await fetch(url, { cache: 'no-store' }).catch(() => null);
-  const info = r?.ok ? ((await r.json()) as { inscrita: boolean; filtro: string | null } & InfoServidor) : null;
-  const servidor = info ? { ultimaVerificacao: info.ultimaVerificacao, leadsSincronizadosEm: info.leadsSincronizadosEm } : null;
-  if (insc && info?.inscrita && Notification.permission === 'granted') return { estado: { tipo: 'ativado', filtro: info.filtro }, servidor };
-  return { estado: { tipo: 'desativado' }, servidor };
+export async function desativarPush(){
+ await usuario();
+ const sw=await navigator.serviceWorker.getRegistration('/');
+ const insc=await sw?.pushManager.getSubscription();
+ if(!insc)return;
+ const {error}=await db().from('dispositivos_push').delete().eq('endpoint',insc.endpoint);
+ if(error)throw Error(error.message);
+ await insc.unsubscribe();
 }
-
-/** Pede permissão, inscreve no serviço de push do navegador e registra no servidor. */
-export async function ativarPush(filtro: string | null): Promise<void> {
-  if (!pushSuportado()) throw new Error('Este navegador não aceita notificações push.');
-  const permissao = await Notification.requestPermission();
-  if (permissao !== 'granted') throw new Error('Permissão negada. Libere as notificações deste site nas configurações do navegador.');
-  const rChave = await fetch('/api/push/chave', { cache: 'no-store' });
-  if (!rChave.ok) throw await erroDe(rChave);
-  const { chave } = (await rChave.json()) as { chave: string };
-  const reg = await registro();
-  let insc = await reg.pushManager.getSubscription();
-  // Inscrição feita com outra chave (servidor trocou as chaves): refaz
-  const chaveAtual = insc?.options.applicationServerKey;
-  if (insc && chaveAtual) {
-    const atual = new Uint8Array(chaveAtual);
-    const nova = chaveParaBytes(chave);
-    if (atual.length !== nova.length || atual.some((b, i) => b !== nova[i])) {
-      await insc.unsubscribe();
-      insc = null;
-    }
-  }
-  insc ??= await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: chaveParaBytes(chave) });
-  const r = await fetch('/api/push/inscricao', {
-    method: 'POST',
-    headers: JSON_HEADERS,
-    body: JSON.stringify({ inscricao: insc.toJSON(), filtro }),
-  });
-  if (!r.ok) throw await erroDe(r);
-}
-
-export async function desativarPush(): Promise<void> {
-  const reg = await navigator.serviceWorker.getRegistration('/');
-  const insc = await reg?.pushManager.getSubscription();
-  if (!insc) return;
-  await fetch('/api/push/inscricao', { method: 'DELETE', headers: JSON_HEADERS, body: JSON.stringify({ endpoint: insc.endpoint }) });
-  await insc.unsubscribe();
-}
-
-export async function testarPush(): Promise<void> {
-  const reg = await navigator.serviceWorker.getRegistration('/');
-  const insc = await reg?.pushManager.getSubscription();
-  if (!insc) throw new Error('Ative os avisos primeiro.');
-  const r = await fetch('/api/push/teste', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ endpoint: insc.endpoint }) });
-  if (!r.ok) throw await erroDe(r);
-}
-
-export type ResultadoVerificacao = { verificado: boolean; motivo?: string; enviados: number; falhas: number; removidas: number; ativas: number };
-
-export async function verificarAgora(): Promise<ResultadoVerificacao> {
-  const r = await fetch('/api/push/verificar', { method: 'POST', headers: JSON_HEADERS, body: '{}' });
-  if (!r.ok) throw await erroDe(r);
-  return (await r.json()) as ResultadoVerificacao;
+export async function testarPush(){
+ const sw=await navigator.serviceWorker.getRegistration('/');
+ const insc=await sw?.pushManager.getSubscription();
+ if(!insc)throw Error('Ative notificações antes do teste.');
+ const {data:{session}}=await db().auth.getSession();
+ if(!session?.access_token)throw Error('Faça login para testar.');
+ const res=await fetch('/api/push/teste',{method:'POST',
+  headers:{'Content-Type':'application/json',Authorization:'Bearer '+session.access_token},
+  body:JSON.stringify({endpoint:insc.endpoint})});
+ if(!res.ok){const j=await res.json().catch(()=>null);throw Error(j?.erro||'Falha no envio do teste.');}
 }
