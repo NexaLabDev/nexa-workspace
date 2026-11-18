@@ -34,18 +34,37 @@ export async function middleware(req: NextRequest) {
       for(const [k,v] of Object.entries(headers ?? {})) resp.headers.set(k,v);
     }
   } });
-  const { data:{user} }=await db.auth.getUser();
-  const ativo = user && await db.rpc('workspace_id_atual');
-  if (!user || !ativo?.data) {
+  // A navegação entre módulos passa por este middleware em TODA requisição.
+  // getUser() consulta sempre o Auth remoto. Com chaves JWT assimétricas,
+  // getClaims() valida o token assinado localmente/cache JWKS, evitando um
+  // round-trip ao Auth em cada clique. Para APIs, mantém getUser() porque
+  // verificações de sessão/revogação no servidor continuam obrigatórias.
+  const inicioAuth = performance.now();
+  const identidade = api
+    ? (await db.auth.getUser()).data.user?.id
+    : (await db.auth.getClaims()).data?.claims?.sub;
+  const duracaoAuth = performance.now() - inicioAuth;
+
+  // Consulta ativa ao banco em TODA rota protegida: negar acesso imediatamente
+  // caso o vínculo tenha sido desativado. Não confiar no papel do JWT/metadata.
+  const inicioVinculo = performance.now();
+  const ativo = identidade ? await db.rpc('workspace_id_atual') : null;
+  const duracaoVinculo = performance.now() - inicioVinculo;
+  const tempoServidor = `auth;dur=${duracaoAuth.toFixed(1)}, workspace;dur=${duracaoVinculo.toFixed(1)}`;
+
+  if (!identidade || !ativo?.data) {
     const destino=req.nextUrl.clone();
     destino.pathname='/login'; destino.search='';
-    if(user) destino.searchParams.set('vinculo','pendente');
-    const falha=api ? NextResponse.json({erro:user?'Sem acesso ao workspace.':'Sessão expirada.'},{status:user?403:401}) : NextResponse.redirect(destino);
+    if(identidade) destino.searchParams.set('vinculo','pendente');
+    const falha=api ? NextResponse.json({erro:identidade?'Sem acesso ao workspace.':'Sessão expirada.'},{status:identidade?403:401}) : NextResponse.redirect(destino);
     for(const c of resp.cookies.getAll()) falha.cookies.set(c);
     falha.headers.set('Cache-Control','private, no-store');
+    falha.headers.set('Server-Timing', tempoServidor);
     return falha;
   }
   resp.headers.set('Cache-Control','private, no-store');
+  // Diagnóstico no DevTools > Rede > Timing; não envia dados pessoais.
+  resp.headers.set('Server-Timing', tempoServidor);
   return resp;
 }
 
