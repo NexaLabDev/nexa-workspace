@@ -1,6 +1,6 @@
 -- Notificações reais do Workspace: por pessoa e com push assinado.
 -- Não altera nem apaga cadastros existentes.
-create extension if not exists pg_net with schema extensions;
+create extension if not exists pg_net;
 create extension if not exists pg_cron with schema pg_catalog;
 
 create table public.eventos_notificacao (
@@ -32,7 +32,7 @@ create policy eventos_notificacao_marcar on public.eventos_notificacao
 
 -- Nenhum usuário do app pode escolher destinatários ou forjar avisos.
 create function nexa_privado.emitir_notificacao(
- ws uuid, ator uuid, modulo public.modulo, tipo_ text,
+ ws uuid, ator uuid, p_modulo public.modulo, tipo_ text,
  chave_ text, titulo_ text, detalhe_ text, rota_ text, incluir_ator boolean default false
 ) returns void language plpgsql security definer set search_path='' as $$
 begin
@@ -43,7 +43,7 @@ begin
    and (incluir_ator or p.id is distinct from ator)
    and exists (
      select 1 from public.permissoes_papel pe
-     where pe.papel=p.papel and pe.modulo=modulo and pe.acao='ler'
+     where pe.papel=p.papel and pe.modulo=p_modulo and pe.acao='ler'
    )
  on conflict(workspace_id,perfil_id,chave) do nothing;
 end $$;

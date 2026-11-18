@@ -17,7 +17,7 @@ export async function middleware(req: NextRequest) {
     caminho === '/api/push/teste' ||
     caminho === '/offline.html' ||
     caminho === '/icon.png' ||
-    /^\/pwa\/icon\/(180|192|512)$/.test(caminho) ||
+    /^\/pwa-icons\/icon-(180|192|512)\.png$/.test(caminho) ||
     caminho === '/api/supabase/status' ||
     /^\/acompanhamento(?:\/[a-zA-Z0-9_-]{22})?$/.test(caminho)
   ) {

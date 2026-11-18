@@ -10,7 +10,7 @@ test('PWA: manifesto, PNGs reais e tela offline pública', async ({ request, pag
   expect(manifest.icons.some((x: { sizes: string }) => x.sizes === '192x192')).toBeTruthy();
   expect(manifest.icons.some((x: { sizes: string }) => x.sizes === '512x512')).toBeTruthy();
   for (const size of [180, 192, 512]) {
-    const response = await request.get(`/pwa/icon/${size}`);
+    const response = await request.get(`/pwa-icons/icon-${size}.png`);
     expect(response.ok(), `ícone ${size}px deve ser público`).toBeTruthy();
     expect(response.headers()['content-type']).toContain('image/png');
     const bytes = await response.body();
