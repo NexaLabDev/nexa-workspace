@@ -96,6 +96,29 @@ export default function TelaConfiguracoes() {
           </p>
         </section>
 
+        <section className={u.painel} id="privacidade-dispositivo" aria-labelledby="titulo-privacidade-dispositivo">
+          <header className={u.painelTopo}>
+            <Info size={28} strokeWidth={1.7} />
+            <div>
+              <h2 id="titulo-privacidade-dispositivo">Privacidade neste dispositivo</h2>
+              <small>Entenda como suas alterações são protegidas quando a conexão falha.</small>
+            </div>
+          </header>
+          <p className={u.nota}>
+            Os cadastros confirmados ficam no Supabase. Quando uma edição ainda não foi
+            sincronizada, o Workspace guarda uma cópia de recuperação neste navegador.
+            Depois da confirmação do servidor, o sistema tenta remover essa cópia local.
+          </p>
+          <p className={u.nota} style={{ marginTop: 12 }}>
+            <strong>Importante:</strong> rascunhos locais podem conter informações de clientes
+            e não são criptografados pelo próprio Workspace. Evite usar dispositivos compartilhados.
+            Se precisar remover todos os dados guardados neste navegador, faça isso nas
+            configurações de dados do site no navegador, <strong>somente depois de confirmar
+            que não há edições pendentes</strong>; essa limpeza pode excluir rascunhos ainda não salvos.
+            Não confunda a cópia de recuperação com o backup do servidor.
+          </p>
+        </section>
+
         <Importar />
         <Auditoria />
       </div>

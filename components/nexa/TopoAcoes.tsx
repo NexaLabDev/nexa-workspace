@@ -153,7 +153,8 @@ export default function TopoAcoes({ compacto, iniciais }: { compacto: boolean; i
             </ul>
             <h4>Onde ficam os dados</h4>
             <p className={s.menuNota}>
-              Por enquanto, tudo é salvo neste navegador. Em outro computador ou navegador, os dados não aparecem.
+              Os registros confirmados ficam no Supabase e aparecem nos outros dispositivos autorizados.
+              Alterações ainda não enviadas podem ficar temporariamente neste navegador para recuperação.
             </p>
           </div>
         )}

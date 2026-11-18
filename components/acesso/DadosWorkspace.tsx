@@ -52,6 +52,7 @@ export default function DadosWorkspace({ perfil, children }: { perfil: remoto.Id
   const conflito = remoto.emConflito();
 
   const exportar = () => {
+    if (!window.confirm('Este arquivo contém informações de clientes e não é criptografado. Exporte apenas para um dispositivo seguro e não compartilhe. Continuar?')) return;
     const url = URL.createObjectURL(new Blob([remoto.copiaPendente()], { type: 'application/json' }));
     const link = document.createElement('a');
     link.href = url;

@@ -14,6 +14,7 @@
 // Performance: poll sem mudança de versão não rematerializa nem acorda o React.
 // ============================================
 import {supabaseNavegador} from '@/lib/supabase/navegador';
+import { lerEdicoesLocais, gravarEdicoesLocais } from './pendenciasLocais';
 export type Identidade={id:string;workspace_id:string;papel:string;nome:string|null;email:string};
 export type Registro={colecao:string;id:string;ordem:number;versao:number;conteudo:unknown};
 type Item={id:string};
@@ -28,6 +29,28 @@ const objVazio={};
 let pessoa:Identidade|null=null,base=new Map<string,Registro>(),dados:Record<string,unknown>={},pendentes=new Map<string,Registro>();
 let ocupado=false,geracao=0,mudanca=0,estado='Carregando…',pronto=false,bloqueado=false;
 let assinaturaBase='';
+// Vincula a leitura à geração da sessão para que um login antigo não bloqueie um novo.
+let carregandoGeracao:number|null=null;
+// Operações locais serializadas: uma gravação antiga não pode apagar uma edição nova.
+let ultimaGravacaoLocal: Promise<void> = Promise.resolve();
+function protegerPendentes(){
+ const usuario=pessoa, rascunho=[...pendentes.values()], g=geracao;
+ if(!usuario)return Promise.resolve();
+ const gravacao=ultimaGravacaoLocal.catch(()=>{}).then(()=>gravarEdicoesLocais(usuario,rascunho));
+ ultimaGravacaoLocal=gravacao;
+ void gravacao.catch((e)=>{
+  if(g===geracao){
+   if(e instanceof Error&&e.message.startsWith('Conflito local:')){
+    bloqueado=true;
+    estado='Conflito: outra aba alterou o mesmo registro. Exporte sua edição antes de continuar.';
+   }else{
+    estado='Falha ao proteger edições no navegador. Exporte a edição e confira o espaço disponível.';
+   }
+   avisar();
+  }
+ });
+ return gravacao;
+}
 const ouvintes=new Set<()=>void>();
 function avisar(){for(const f of ouvintes)f();}
 export function assinar(f:()=>void){ouvintes.add(f);return ()=>{ouvintes.delete(f);};}
@@ -70,7 +93,9 @@ export function normalizar(valor:unknown):string {
 }
 export function iniciar(p:Identidade){
  if(pessoa?.id===p.id && pessoa.workspace_id===p.workspace_id){pessoa=p;return;}
- geracao++;pessoa=p;pronto=false;ocupado=false;bloqueado=false;base=new Map();pendentes=new Map();dados={};assinaturaBase='';estado='Carregando…';mudanca++;avisar();
+ geracao++;pessoa=p;pronto=false;ocupado=false;bloqueado=false;base=new Map();pendentes=new Map();dados={};comLinhas=new Set();assinaturaBase='';estado='Carregando…';mudanca++;
+ if(timerEnvio){clearTimeout(timerEnvio);timerEnvio=null;}
+ avisar();
 }
 export function ler<T>(c:string,inicial:T):T{
  if(c==='perfil')return (pessoa?perfil:objVazio) as T;
@@ -92,22 +117,55 @@ function materializar(){
  dados=novo;
 }
 export async function atualizar(){
- if(!pessoa||ocupado||pendentes.size)return;
- const g=geracao,m=mudanca;
+ if(!pessoa||ocupado||pendentes.size||carregandoGeracao===geracao)return;
+ const g=geracao,m=mudanca,usuario=pessoa,primeira=!pronto;
+ carregandoGeracao=g;
  try{
- const {data,error}=await supabaseNavegador().rpc('ler_registros');
- if(g!==geracao||m!==mudanca||pendentes.size)return;
- if(error||!Array.isArray(data))throw Error();
- const proximo=new Map((data as Registro[]).map(r=>[mapa(r),r]));
- const proxAssinatura=assinarMapa(proximo);
- // Sem mudança no servidor: não rematerializa nem acorda assinantes (exceto status)
- if(pronto && proxAssinatura===assinaturaBase){
-  if(estado!=='Salvo'){estado='Salvo';avisar();}
-  return;
- }
- base=proximo;assinaturaBase=proxAssinatura;materializar();
- perfil={nome:pessoa.nome??pessoa.email,usuarioId:pessoa.id};pronto=true;estado='Salvo';avisar();
- }catch{if(g===geracao){estado='Falha ao atualizar. Tente novamente.';avisar();}}
+  // Recuperar ANTES de publicar as telas: evita exibir uma versão antiga sem aviso.
+  // Se o armazenamento estiver ilegível, não sobrescreve o diário com um estado vazio.
+  const salvas=primeira?await lerEdicoesLocais(usuario):[];
+  if(g!==geracao||m!==mudanca||pendentes.size)return;
+  const {data,error}=await supabaseNavegador().rpc('ler_registros');
+  if(g!==geracao||m!==mudanca||pendentes.size)return;
+  if(error||!Array.isArray(data))throw Error('Não foi possível consultar o Supabase.');
+  const proximo=new Map((data as Registro[]).map(r=>[mapa(r),r]));
+  const proxAssinatura=assinarMapa(proximo);
+  if(pronto&&proxAssinatura===assinaturaBase){
+   if(estado!=='Salvo'){estado='Salvo';avisar();}
+   return;
+  }
+  let conflitantes=false;
+  if(primeira&&salvas.length){
+   for(const r of salvas){
+    const k=mapa(r),remoto=proximo.get(k);
+    // Uma resposta foi salva no servidor antes da interrupção: não duplica.
+    if(remoto&&remoto.ordem===r.ordem&&mesmoValor(remoto.conteudo,r.conteudo))continue;
+    // Não força uma edição antiga sobre a versão mais nova de outro dispositivo.
+    if((remoto?.versao??0)!==r.versao)conflitantes=true;
+    pendentes.set(k,r);
+   }
+   bloqueado=conflitantes||usuario.papel==='visualizador'&&pendentes.size>0;
+  }
+  base=proximo;assinaturaBase=proxAssinatura;materializar();
+  perfil={nome:usuario.nome??usuario.email,usuarioId:usuario.id};
+  pronto=true;
+  estado=bloqueado
+   ?'Conflito: edições locais recuperadas. Exporte ou descarte antes de continuar.'
+   :pendentes.size?'Edições recuperadas. Salvando…':'Salvo';
+  avisar();
+  if(primeira&&salvas.length){
+   // Apaga apenas as alterações já aplicadas no servidor; preserva as demais.
+   if(pendentes.size!==salvas.length)void protegerPendentes();
+   if(pendentes.size&&!bloqueado)agendarEnvio();
+  }
+ }catch(e){
+  if(g===geracao){
+   estado=e instanceof Error&&/edições locais|armazenamento local|navegador/i.test(e.message)
+    ?'Falha ao recuperar edições locais. Nada foi apagado. Tente novamente.'
+    :'Falha ao atualizar. Confira a conexão e tente novamente.';
+   avisar();
+  }
+ }finally{if(carregandoGeracao===g)carregandoGeracao=null;}
 }
 function linhas(c:string,valor:unknown):Registro[]{
  const items=listas.has(c)?valor:[valor];if(!Array.isArray(items))throw Error('Lista inválida: '+c);
@@ -151,58 +209,120 @@ export function alterar(c:string,valor:unknown){
  }
  if(!pendentes.size)return true;
  dados={...dados,[c]:valor};mudanca++;estado='Salvando…';avisar();
+ void protegerPendentes();
  agendarEnvio();return true;
  }catch(e){estado=(e as Error).message;avisar();return false;}
 }
 export async function enviar(){
- if(!pessoa||ocupado||bloqueado||!pendentes.size)return;
- ocupado=true;const g=geracao,lote=new Map(pendentes);
+ if(!pessoa||ocupado||bloqueado||!pendentes.size||carregandoGeracao===geracao)return;
+ ocupado=true;const g=geracao,usuario=pessoa;
  try{
- const {error}=await supabaseNavegador().rpc('gravar_registros',{p_workspace:pessoa.workspace_id,p_usuario:pessoa.id,p_mudancas:[...lote.values()]});
- if(g!==geracao)return;
- if(error&&error.code==='40001'){
-  // Outra sessão gravou antes. Se gravou exatamente o mesmo conteúdo, não há o que resolver.
-  const {data}=await supabaseNavegador().rpc('ler_registros');
+  // Nunca inicia a chamada remota antes de o diário local concluir a escrita.
+  // Sem IndexedDB, ainda tenta salvar online: a falha offline fica visível.
+  await ultimaGravacaoLocal.catch(()=>{});
+  // Se houve conflito no diário local, não enviar ao Supabase antes de resolver.
+  if(bloqueado)return;
+  if(g!==geracao||!pessoa||usuario.id!==pessoa.id||usuario.workspace_id!==pessoa.workspace_id)return;
+  const lote=new Map(pendentes);
+  if(!lote.size)return;
+  const {error}=await supabaseNavegador().rpc('gravar_registros',{
+   p_workspace:usuario.workspace_id,p_usuario:usuario.id,p_mudancas:[...lote.values()]
+  });
   if(g!==geracao)return;
-  if(Array.isArray(data)){
-   base=new Map((data as Registro[]).map(r=>[mapa(r),r]));
-   assinaturaBase=assinarMapa(base);
-   for(const [k,r] of [...pendentes]){const a=base.get(k);if(a&&mesmoValor(a.conteudo,r.conteudo))pendentes.delete(k);}
-   if(!pendentes.size){materializar();estado='Salvo';return;}
+  if(error&&error.code==='40001'){
+   const {data}=await supabaseNavegador().rpc('ler_registros');
+   if(g!==geracao)return;
+   if(Array.isArray(data)){
+    base=new Map((data as Registro[]).map(r=>[mapa(r),r]));
+    assinaturaBase=assinarMapa(base);
+    for(const [k,r] of [...pendentes]){
+     const a=base.get(k);
+     if(a&&a.ordem===r.ordem&&mesmoValor(a.conteudo,r.conteudo))pendentes.delete(k);
+    }
+    if(!pendentes.size){
+     materializar();estado='Salvo';void protegerPendentes();return;
+    }
+    materializar();
+   }
+   bloqueado=true;
+   void protegerPendentes();
+   throw Error('Conflito: outra sessão alterou o mesmo registro. Nada foi sobrescrito. Exporte sua edição ou descarte-a para recarregar.');
   }
-  bloqueado=true;
-  throw Error('Conflito: outra sessão alterou o mesmo registro. Nada foi sobrescrito. Exporte sua edição ou descarte-a para recarregar.');
- }
- if(error)throw Error(error.code==='42501'?'Seu perfil de acesso não permite salvar esta alteração.':'Falha ao salvar. Confira a conexão e tente novamente.');
- for(const [k,r] of lote){
+  if(error)throw Error(error.code==='42501'
+   ?'Falha: seu perfil não permite salvar esta alteração. Exporte sua edição.'
+   :'Falha ao salvar. Confira a conexão e tente novamente.');
+  for(const [k,r] of lote){
    const a=base.get(k),igual=a&&a.ordem===r.ordem&&mesmoValor(a.conteudo,r.conteudo);
-   const versao=r.versao+(igual?0:1);base.set(k,{...r,versao});
+   const versao=r.versao+(igual?0:1);
+   base.set(k,{...r,versao});
    const proximo=pendentes.get(k);
-   if(proximo===r)pendentes.delete(k);else if(proximo)pendentes.set(k,{...proximo,versao});
- }
- assinaturaBase=assinarMapa(base);
- estado=pendentes.size?'Salvando…':'Salvo';ocupado=false;if(pendentes.size)agendarEnvio();
- }catch(e){if(g===geracao)estado=(e as Error).message;}finally{if(g===geracao){ocupado=false;avisar();}}
+   if(proximo===r)pendentes.delete(k);
+   else if(proximo)pendentes.set(k,{...proximo,versao});
+  }
+  assinaturaBase=assinarMapa(base);
+  // Limpa o diário após confirmação remota (uma queda anterior é idempotente).
+  void protegerPendentes();
+  estado=pendentes.size?'Salvando…':'Salvo';
+  if(pendentes.size)agendarEnvio();
+ }catch(e){if(g===geracao)estado=(e as Error).message;}
+ finally{if(g===geracao){ocupado=false;avisar();}}
 }
 /** Abandona as edições não salvas deste navegador e recarrega o que está no banco. */
 export async function descartarPendentes(){
- if(ocupado)return;
+ if(ocupado||carregandoGeracao===geracao)return;
+ const anterior=pendentes,emBloqueio=bloqueado;
  pendentes=new Map();bloqueado=false;mudanca++;estado='Carregando…';avisar();
+ try{await protegerPendentes();}
+ catch{
+  pendentes=anterior;bloqueado=emBloqueio;
+  estado='Falha ao descartar o rascunho local. Exporte a edição e tente novamente.';
+  avisar();return;
+ }
  await atualizar();
 }
-export async function importar(d:Record<string,unknown>){
- if(!pessoa||pessoa.papel!=='administrador'||!pronto||ocupado||pendentes.size)throw Error('Aguarde a sincronização e use uma conta administradora.');
+// Confere conflitos com o estado mais recente ANTES de enviar anexos privados.
+// Registros excluídos (tombstones) podem ser recuperados com sua versão atual;
+// registros vivos diferentes NUNCA são sobrescritos.
+function loteDeImportacao(d:Record<string,unknown>, existentes:Map<string,Registro>):Registro[]{
  const lote:Registro[]=[];
  for(const [c,v] of Object.entries(d)){
- if(c==='perfil')continue;
- for(const r of linhas(c,v)){
- const a=base.get(mapa(r));
- if(a){if(!mesmoValor(a.conteudo,r.conteudo))throw Error('ID já existente com conteúdo diferente: '+c+'/'+r.id);continue;}
- lote.push(r);
- }}
- const {error}=await supabaseNavegador().rpc('gravar_registros',{p_workspace:pessoa.workspace_id,p_usuario:pessoa.id,p_mudancas:lote});
- if(error)throw Error(error.message);
+  if(c==='perfil')continue;
+  for(const r of linhas(c,v)){
+   const antigo=existentes.get(mapa(r));
+   if(antigo?.conteudo!==null&&antigo){
+    if(!mesmoValor(antigo.conteudo,r.conteudo))throw Error('ID já existente com conteúdo diferente: '+c+'/'+r.id);
+    continue;
+   }
+   lote.push({...r,versao:antigo?.versao??0});
+  }
+ }
+ return lote;
+}
+async function lerEstadoImportacao():Promise<Map<string,Registro>>{
+ if(!pessoa||pessoa.papel!=='administrador'||!pronto||ocupado||bloqueado||pendentes.size)
+  throw Error('Aguarde a sincronização e use uma conta administradora.');
+ const {data,error}=await supabaseNavegador().rpc('ler_registros');
+ if(error||!Array.isArray(data))throw Error('Não foi possível conferir os registros antes da importação.');
+ return new Map((data as Registro[]).map(r=>[mapa(r),r]));
+}
+/** Preflight: aborta conflitos antes de subir qualquer anexo; não grava nada. */
+export async function conferirImportacao(d:Record<string,unknown>):Promise<number>{
+ return loteDeImportacao(d,await lerEstadoImportacao()).length;
+}
+export async function importar(d:Record<string,unknown>){
+ const usuario=pessoa;
+ const registros=await lerEstadoImportacao();
+ if(!usuario||usuario!==pessoa)throw Error('Sessão mudou. Importação interrompida.');
+ const lote=loteDeImportacao(d,registros);
+ if(!lote.length)return 0;
+ const {error}=await supabaseNavegador().rpc('gravar_registros',{
+  p_workspace:usuario.workspace_id,p_usuario:usuario.id,p_mudancas:lote
+ });
+ if(error)throw Error(error.code==='40001'
+  ?'Conflito: os dados mudaram durante a importação. Confira novamente e tente outra vez.'
+  :'Importação recusada pelo banco: '+error.message);
  await atualizar();
- for(const r of lote)if(!mesmoValor(base.get(mapa(r))?.conteudo,r.conteudo))throw Error('Não foi possível conferir '+r.id+'. Preserve o backup e tente novamente.');
+ for(const r of lote)if(!mesmoValor(base.get(mapa(r))?.conteudo,r.conteudo))
+  throw Error('Não foi possível conferir '+r.id+'. Preserve o backup e tente novamente.');
  return lote.length;
 }
