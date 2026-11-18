@@ -161,7 +161,7 @@ test('IndexedDB indisponível: falha claramente sem simular gravação concluíd
       }
     } finally {
       if (descritorOriginal) Object.defineProperty(window, 'indexedDB', descritorOriginal);
-      else delete (window as typeof window & { indexedDB?: IDBFactory }).indexedDB;
+      else Reflect.deleteProperty(window, 'indexedDB');
       URL.revokeObjectURL(url);
     }
   }, fonte);
