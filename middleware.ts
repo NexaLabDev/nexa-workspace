@@ -5,6 +5,8 @@ import { configPublica } from '@/lib/supabase/config';
 export async function middleware(req: NextRequest) {
   const caminho = req.nextUrl.pathname;
   const api = caminho.startsWith('/api/');
+  // O Supabase entrega o evento sem cookie nem Origin: a rota valida HMAC e horário.
+  if (caminho === '/api/push/entregar' && req.method === 'POST') return NextResponse.next();
   // /api/supabase/status já se restringe a localhost em lib/servidor/guarda.ts
   if (
     caminho === '/login' ||
@@ -72,4 +74,4 @@ export async function middleware(req: NextRequest) {
   return resp;
 }
 
-export const config={ matcher:['/((?!_next/static|_next/image|dashboard/|favicon.ico|icon.png|sw.js).*)'] };
+export const config={ matcher:['/((?!_next/static|_next/image|dashboard/|branding/|favicon.ico|icon.png|sw.js).*)'] };

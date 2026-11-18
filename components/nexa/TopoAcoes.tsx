@@ -80,6 +80,17 @@ export default function TopoAcoes({ compacto, iniciais }: { compacto: boolean; i
     }));
   }, [central.servidorOk, central.lista, leads]);
   const naoLidas = useMemo(() => cobrancas.filter((c) => !c.lida), [cobrancas]);
+  // Contador no ícone do PWA onde o sistema suporta Badging API.
+  const contagemNaoLidas = naoLidas.length + eventos.naoLidas.length;
+  useEffect(() => {
+    const app = navigator as Navigator & {
+      setAppBadge?: (quantidade?: number) => Promise<void>;
+      clearAppBadge?: () => Promise<void>;
+    };
+    const pedido = contagemNaoLidas > 0 ? app.setAppBadge?.(contagemNaoLidas) : app.clearAppBadge?.();
+    void pedido?.catch(() => {});
+  }, [contagemNaoLidas]);
+
   const diasPrazo = diasPrazoProximo(prefs);
   const tarefasAlerta = useMemo(() => alertasTarefas(projetos, undefined, diasPrazo), [projetos, diasPrazo]);
   const temAvisos = eventos.lista.length > 0 || contatosHoje.length > 0 || resumo.metaDiaria != null || cobrancas.length > 0 || tarefasAlerta.length > 0;
