@@ -12,6 +12,7 @@ on:
       - 'components/nexa/backup.ts'
       - 'components/nexa/backupValidacao.ts'
       - 'components/acesso/Importar.tsx'
+      - 'e2e/importacao-backup.spec.ts'
   workflow_dispatch:
 
 permissions:
@@ -64,6 +65,7 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 "$DB_URL" -f supabase/tests/seed_local_perfis.sql
           node supabase/tests/fluxos_auth_local.mjs
           node supabase/tests/modulos_operacionais_local.mjs
+          node supabase/tests/backup_restore_local.mjs
       - name: Instalar navegador Chromium
         run: npx playwright install --with-deps chromium
       - name: Iniciar aplicação com Supabase LOCAL, sem secrets remotos
@@ -100,7 +102,7 @@ jobs:
           export E2E_PERMITIR_GRAVACOES_LOCAIS="SIM"
           export E2E_EMAIL="admin@teste.local"
           export E2E_SENHA="TesteAdmin!123"
-          npx playwright test e2e/recuperacao-pendentes.spec.ts --project=desktop
+          npx playwright test e2e/recuperacao-pendentes.spec.ts e2e/importacao-backup.spec.ts --project=desktop
       - name: Anexar imagens e traces apenas dos dados fictícios, em falhas
         if: failure()
         uses: actions/upload-artifact@v4
