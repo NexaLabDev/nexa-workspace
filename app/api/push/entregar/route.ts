@@ -70,20 +70,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ erro: 'Assinatura inválida.' }, { status: 401 });
   }
 
-  const url = typeof dados.url === 'string' && new RegExp('^/(?!/)[a-zA-Z0-9/?&=_-]{0,315}
-    ? dados.url : '/';
-  const resultado = await enviarPush({ endpoint, keys: { p256dh: keys.p256dh, auth: keys.auth }, filtro: null, criadaEm: '' }, {
-    titulo: typeof dados.titulo === 'string' ? dados.titulo.slice(0, 160) : 'Nexa Workspace',
-    corpo: typeof dados.corpo === 'string' ? dados.corpo.slice(0, 300) : '',
-    url,
-    tag: typeof dados.tag === 'string' ? dados.tag.slice(0, 240) : id,
-  });
-  if (resultado === 'erro') return NextResponse.json({ ok: false }, { status: 502 });
-  return NextResponse.json({ ok: true, resultado });
-}
-).test(dados.url)
-    ? dados.url : '/';
-  const resultado = await enviarPush({ endpoint, keys: { p256dh: keys.p256dh, auth: keys.auth }, filtro: null, criadaEm: '' }, {
+  const url = typeof dados.url === 'string' && dados.url.startsWith('/') &&
+    !dados.url.startsWith('//') && !dados.url.includes('\\') &&
+    dados.url.length <= 315 ? dados.url : '/';
+  const resultado = await enviarPush({
+    endpoint,
+    keys: { p256dh: keys.p256dh, auth: keys.auth },
+    filtro: null,
+    criadaEm: '',
+  }, {
     titulo: typeof dados.titulo === 'string' ? dados.titulo.slice(0, 160) : 'Nexa Workspace',
     corpo: typeof dados.corpo === 'string' ? dados.corpo.slice(0, 300) : '',
     url,
