@@ -168,7 +168,7 @@ declare conf record; disp record; tstamp bigint; sig text;
 begin
  select webhook_url,segredo into conf from nexa_privado.config_push where unica;
  if conf.webhook_url is null then return new; end if;
- tstamp:=pg_catalog.extract(epoch from pg_catalog.clock_timestamp())::bigint;
+ tstamp:=extract(epoch from clock_timestamp())::bigint;
  for disp in
    select endpoint,chaves from public.dispositivos_push
    where workspace_id=new.workspace_id and perfil_id=new.perfil_id
