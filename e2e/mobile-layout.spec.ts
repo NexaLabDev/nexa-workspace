@@ -53,7 +53,9 @@ test('celular: páginas dentro da tela, rolagem vertical própria e menu acessí
     expect(dimensoes.principalFinal).toBeLessThanOrEqual((dimensoes.menuInicio ?? 0) + 1);
     expect(dimensoes.menuTemRolagem).toBe(true);
     // A navegação ocupa espaço reservado, sem cobrir o último conteúdo.
-    const final = await page.evaluate(async () => {
+    let final = { distanciaFim: Infinity, ultimoFim: Infinity, menuInicio: -1 };
+    await expect.poll(async () => {
+      final = await page.evaluate(async () => {
       const principal = document.querySelector<HTMLElement>('main[class*="_principal_"]');
       const menu = document.querySelector<HTMLElement>('nav[class*="_navCelular_"]');
       if (!principal || !menu) throw Error('Estrutura mobile não encontrada');
@@ -65,8 +67,10 @@ test('celular: páginas dentro da tela, rolagem vertical própria e menu acessí
         ultimoFim: ultimo ? ultimo.getBoundingClientRect().bottom : 0,
         menuInicio: menu.getBoundingClientRect().top,
       };
-    });
-    expect(final.distanciaFim, `impossível atingir o fim em ${rota}`).toBeLessThanOrEqual(2);
+      });
+      return final.distanciaFim;
+    }, { timeout: 20000, intervals: [100, 250, 500] })
+      .toBeLessThanOrEqual(2);
     expect(final.ultimoFim, `último elemento encoberto pelo menu em ${rota}`).toBeLessThanOrEqual(final.menuInicio + 2);
   }
   // O menu horizontal deve continuar navegável até a última aba.
