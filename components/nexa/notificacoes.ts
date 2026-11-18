@@ -37,6 +37,16 @@ export type NotificacaoCentral = {
   lida?: boolean;
 };
 
+export type EventoNotificacao = {
+  id: string;
+  tipo: string;
+  titulo: string;
+  detalhe: string;
+  rota: string;
+  criado_em: string;
+  lida_em: string | null;
+};
+
 const EVENTO = 'nexa-workspace:notificacoes';
 const CONFIG_VAZIA: Partial<ConfigAvisos> = {};
 
@@ -52,21 +62,26 @@ export function useNotificacoes() {
   const { config } = useConfigAvisos();
   const [lidas, setLidas] = useState<Set<string>>(() => new Set());
   const [servidorOk, setServidorOk] = useState(false);
+  const [eventos, setEventos] = useState<EventoNotificacao[]>([]);
 
   const carregar = useCallback(async () => {
-    try {
-      const { data, error } = await supabaseNavegador().from('avisos_usuario').select('chave');
-      if (error) throw error;
-      setLidas(new Set((data ?? []).map((x: { chave: string }) => x.chave)));
+    const banco = supabaseNavegador();
+    const [cobrancas, novos] = await Promise.all([
+      banco.from('avisos_usuario').select('chave'),
+      banco.from('eventos_notificacao')
+        .select('id,tipo,titulo,detalhe,rota,criado_em,lida_em')
+        .order('criado_em', { ascending: false }).limit(80),
+    ]);
+    if (!cobrancas.error) {
+      setLidas(new Set((cobrancas.data ?? []).map((x: { chave: string }) => x.chave)));
       setServidorOk(true);
-    } catch {
-      setServidorOk(false);
-    }
+    } else setServidorOk(false);
+    if (!novos.error) setEventos((novos.data ?? []) as EventoNotificacao[]);
   }, []);
 
   useEffect(() => {
     carregar();
-    const t = window.setInterval(() => !document.hidden && carregar(), 60_000);
+    const t = window.setInterval(() => { if (!document.hidden) void carregar(); }, 30_000);
     const foco = () => carregar();
     window.addEventListener('focus', foco);
     window.addEventListener(EVENTO, foco);
@@ -115,5 +130,17 @@ export function useNotificacoes() {
     window.dispatchEvent(new Event(EVENTO));
   }, []);
 
-  return { lista, servidorOk, marcarLidas, recarregar: carregar };
+  const marcarEventosLidos = useCallback(async (ids: string[]) => {
+    if (!ids.length) return;
+    const agora = new Date().toISOString();
+    setEventos((atual) => atual.map((e) => ids.includes(e.id) ? { ...e, lida_em: agora } : e));
+    const { error } = await supabaseNavegador().from('eventos_notificacao')
+      .update({ lida_em: agora }).in('id', ids).is('lida_em', null);
+    if (error) {
+      void carregar();
+      return;
+    }
+  }, [carregar]);
+
+  return { lista, eventos, servidorOk, marcarLidas, marcarEventosLidos, recarregar: carregar };
 }

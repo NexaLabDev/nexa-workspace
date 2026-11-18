@@ -78,10 +78,17 @@ export default function TopoAcoes({ compacto, iniciais }: { compacto: boolean; i
     }));
   }, [central.servidorOk, central.lista, leads]);
   const naoLidas = useMemo(() => cobrancas.filter((c) => !c.lida), [cobrancas]);
+  const eventosNaoLidos = useMemo(() => central.eventos.filter((e) => !e.lida_em), [central.eventos]);
+  const totalNaoLidas = naoLidas.length + eventosNaoLidos.length;
   const diasPrazo = diasPrazoProximo(prefs);
   const tarefasAlerta = useMemo(() => alertasTarefas(projetos, undefined, diasPrazo), [projetos, diasPrazo]);
   const temAvisos = contatosHoje.length > 0 || resumo.metaDiaria != null || cobrancas.length > 0 || tarefasAlerta.length > 0;
   const linkLead = (id: string) => (conversas.some((cv) => cv.leadId === id) ? `/conversas?lead=${id}` : `/crm?lead=${id}`);
+  useEffect(() => {
+    const n = navigator as Navigator & { setAppBadge?: (count?: number) => Promise<void>; clearAppBadge?: () => Promise<void> };
+    const operacao = totalNaoLidas > 0 ? n.setAppBadge?.(totalNaoLidas) : n.clearAppBadge?.();
+    void operacao?.catch(() => {});
+  }, [totalNaoLidas]);
 
   const alternar = (m: Menu) => setAberto((a) => (a === m ? null : m));
   const tam = compacto ? 24 : 26;
@@ -165,9 +172,9 @@ export default function TopoAcoes({ compacto, iniciais }: { compacto: boolean; i
           'avisos',
           'Notificações',
           <Bell size={tam} {...ICONE} />,
-          naoLidas.length ? (
-            <span className={s.contadorAviso} aria-label={`${naoLidas.length} notificação(ões) de cobrança não lida(s)`}>
-              {naoLidas.length}
+          totalNaoLidas ? (
+            <span className={s.contadorAviso} aria-label={`${totalNaoLidas} notificações não lidas`}>
+              {totalNaoLidas > 99 ? '99+' : totalNaoLidas}
             </span>
           ) : temAvisos ? (
             <span className={s.pontoAviso} aria-hidden />
@@ -176,6 +183,41 @@ export default function TopoAcoes({ compacto, iniciais }: { compacto: boolean; i
         {aberto === 'avisos' && (
           <div className={s.menuFlutuante} role="dialog" aria-label="Notificações">
             <h3>Notificações</h3>
+            {central.eventos.length > 0 && (
+              <>
+                <div className={s.tituloLinha}>
+                  <h4>Atividade da equipe</h4>
+                  {eventosNaoLidos.length > 0 && (
+                    <button type="button" className={s.linkPequeno} onClick={() => void central.marcarEventosLidos(eventosNaoLidos.map((e) => e.id))}>
+                      Marcar como lidas
+                    </button>
+                  )}
+                </div>
+                <ul className={s.menuLista}>
+                  {central.eventos.slice(0, 14).map((evento) => (
+                    <li key={evento.id} className={evento.lida_em ? s.lida : undefined}>
+                      <Link href={evento.rota.startsWith('/') && !evento.rota.startsWith('//') ? evento.rota : '/'}
+                        className={s.menuLink}
+                        onClick={() => {
+                          if (!evento.lida_em) void central.marcarEventosLidos([evento.id]);
+                          setAberto(null);
+                        }}>
+                        {evento.tipo === 'mensagem' ? <Bell size={16} {...ICONE} /> :
+                          evento.tipo === 'tarefa' ? <CheckSquare size={16} {...ICONE} /> :
+                          evento.tipo === 'financeiro' ? <CalendarClock size={16} {...ICONE} /> :
+                          <CircleAlert size={16} {...ICONE} />}
+                        <span>
+                          <strong>{evento.titulo}</strong>
+                          <small>{evento.detalhe} · {new Date(evento.criado_em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</small>
+                        </span>
+                        {!evento.lida_em && <span className={s.naoLida} aria-label="não lida" />}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                {central.eventos.length > 14 && <p className={s.menuNota}>Mostrando os 14 eventos mais recentes. Os demais continuam salvos no histórico de notificações.</p>}
+              </>
+            )}
             {cobrancas.length > 0 && (
               <>
                 <div className={s.tituloLinha}>
@@ -269,7 +311,7 @@ export default function TopoAcoes({ compacto, iniciais }: { compacto: boolean; i
                   </Link>
                 </li>
               ))}
-              {!temAvisos && <li>Nenhuma notificação.</li>}
+              {!temAvisos && central.eventos.length === 0 && <li>Nenhuma notificação.</li>}
             </ul>
           </div>
         )}
