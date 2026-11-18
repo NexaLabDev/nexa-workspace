@@ -1,0 +1,109 @@
+name: Integração — Supabase descartável
+
+on:
+  pull_request:
+    paths:
+      - 'components/nexa/remoto.ts'
+      - 'components/nexa/pendenciasLocais.ts'
+      - 'e2e/recuperacao-pendentes.spec.ts'
+      - '.github/workflows/integracao-isolada.yml'
+      - 'supabase/migrations/**'
+      - 'supabase/tests/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  supabase-isolado:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      CI: 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Instalar Supabase CLI v2 fixada
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.119.0
+      - name: Preparar stack Docker exclusivamente local
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase --version
+          supabase init
+          supabase start -x studio,realtime,edge-runtime,logflare,vector,imgproxy,supavisor
+          supabase status -o env > /tmp/nexa-supabase-local.env
+          chmod 600 /tmp/nexa-supabase-local.env
+          # As credenciais locais permanecem no runner e nunca vão para artefatos/logs.
+      - name: Cadastrar contas e perfis FICTÍCIOS no banco descartável
+        shell: bash
+        run: |
+          set -euo pipefail
+          set -a
+          source /tmp/nexa-supabase-local.env
+          set +a
+          export SUPABASE_URL="$API_URL"
+          export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="$ANON_KEY"
+          export SUPABASE_SECRET_KEY="$SERVICE_ROLE_KEY"
+          node supabase/tests/seed_local_users.mjs
+          psql -X -v ON_ERROR_STOP=1 "$DB_URL" <<'SQL'
+          insert into nexa_privado.autorizacao_inicial(email) values ('admin@teste.local');
+          select nexa_privado.ativar_inicial((select id from auth.users where email='admin@teste.local'));
+          SQL
+          psql -X -v ON_ERROR_STOP=1 "$DB_URL" -f supabase/tests/seed_local_perfis.sql
+          node supabase/tests/fluxos_auth_local.mjs
+          node supabase/tests/modulos_operacionais_local.mjs
+      - name: Instalar navegador Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Iniciar aplicação com Supabase LOCAL, sem secrets remotos
+        shell: bash
+        run: |
+          set -euo pipefail
+          set -a
+          source /tmp/nexa-supabase-local.env
+          set +a
+          export NEXT_PUBLIC_SUPABASE_URL="$API_URL"
+          export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="$ANON_KEY"
+          npm run dev > /tmp/nexa-integracao-next.log 2>&1 &
+          echo $! > /tmp/nexa-integracao-next.pid
+      - name: Verificar login local
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:3000/login > /dev/null; then exit 0; fi
+            sleep 2
+          done
+          tail -70 /tmp/nexa-integracao-next.log
+          exit 1
+      - name: Testar recuperação de lead com Supabase realmente isolado
+        shell: bash
+        run: |
+          set -euo pipefail
+          set -a
+          source /tmp/nexa-supabase-local.env
+          set +a
+          export NEXT_PUBLIC_SUPABASE_URL="$API_URL"
+          export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="$ANON_KEY"
+          export PLAYWRIGHT_BASE_URL="http://127.0.0.1:3000"
+          export E2E_PERMITIR_GRAVACOES_LOCAIS="SIM"
+          export E2E_EMAIL="admin@teste.local"
+          export E2E_SENHA="TesteAdmin!123"
+          npx playwright test e2e/recuperacao-pendentes.spec.ts --project=desktop
+      - name: Anexar imagens e traces apenas dos dados fictícios, em falhas
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostico-integracao-isolada
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore
