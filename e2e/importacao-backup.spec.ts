@@ -96,7 +96,7 @@ test('backup: importa lead/anexo, recupera arquivo ausente e recusa sobrescrita'
   const baixando = page.waitForEvent('download');
   await page.getByRole('button', { name: /Baixar backup do workspace/i }).click();
   const download = await baixando;
-  expect(download.suggestedFilename()).toMatch(/^nexa-workspace-nuvem-.*\\.json$/);
+  expect(download.suggestedFilename()).toMatch(/^nexa-workspace-nuvem-.*\.json$/);
   const stream = await download.createReadStream();
   const partes: Buffer[] = [];
   for await (const parte of stream) partes.push(Buffer.isBuffer(parte) ? parte : Buffer.from(parte));
