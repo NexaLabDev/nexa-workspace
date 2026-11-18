@@ -10,10 +10,10 @@
 // ============================================
 
 import { lerTudoSalvo, gravarTudoSalvo } from './store';
-import { guardarComId, listarArquivos, idsDeArquivoEmUso } from './arquivos';
+import { guardarComId, listarArquivos, idsDeArquivoEmUso, hashDoConteudo } from './arquivos';
 import { supabaseNavegador } from '@/lib/supabase/navegador';
 import { identidade, disponivel, temPendentes } from './remoto';
-import { FORMATO_BACKUP, validarBackup, LIMITE_JSON_BACKUP, type ArquivoBackup, type Backup } from './backupValidacao';
+import { FORMATO_BACKUP, validarBackup, verificarHashesBackup, LIMITE_JSON_BACKUP, type ArquivoBackup, type Backup } from './backupValidacao';
 export { FORMATO_BACKUP };
 export type { ArquivoBackup, Backup };
 
@@ -59,6 +59,7 @@ export async function montarBackup(): Promise<Backup> {
         tipo: arquivo.type,
         nome: arquivo instanceof File ? arquivo.name : undefined,
         base64: await blobParaBase64(arquivo),
+        sha256: await hashDoConteudo(arquivo),
       }))
     ),
   });
@@ -124,7 +125,7 @@ export async function montarBackupNuvem(): Promise<Backup> {
     if (bytesTotais > 50 * 1024 * 1024) {
       throw new Error('Os anexos excedem 50 MB. O backup único foi interrompido para não sobrecarregar o navegador.');
     }
-    arquivos.push({ id, tipo: arquivo.type, base64: await blobParaBase64(arquivo) });
+    arquivos.push({ id, tipo: arquivo.type, base64: await blobParaBase64(arquivo), sha256: await hashDoConteudo(arquivo) });
   }
   return validarBackup({ formato: FORMATO_BACKUP, versao: 1, criadoEm: new Date().toISOString(), dados, arquivos });
 }
@@ -173,7 +174,9 @@ export async function lerBackup(arquivo: File): Promise<Backup> {
   } catch {
     throw Error('O arquivo não é um backup do Nexa Workspace (JSON inválido).');
   }
-  return validarBackup(b);
+  const valido = validarBackup(b);
+  await verificarHashesBackup(valido);
+  return valido;
 }
 
 /**

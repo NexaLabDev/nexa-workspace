@@ -4,7 +4,7 @@ import { defineConfig, devices } from '@playwright/test';
 // WebKit no Linux ajuda na compatibilidade Safari, mas não substitui um iPhone real.
 export default defineConfig({
   testDir: '.',
-  testMatch: 'diario-local.spec.ts',
+  testMatch: ['diario-local.spec.ts', 'backup-validacao.spec.ts'],
   timeout: 90_000,
   expect: { timeout: 15_000 },
   fullyParallel: false,

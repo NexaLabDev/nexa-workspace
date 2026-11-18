@@ -7,7 +7,7 @@ export const LIMITE_ANEXO_BACKUP = 25 * 1024 * 1024;
 export const LIMITE_TOTAL_ANEXOS = 50 * 1024 * 1024;
 export const LIMITE_JSON_BACKUP = 85 * 1024 * 1024;
 
-export type ArquivoBackup = { id: string; tipo: string; nome?: string; base64: string };
+export type ArquivoBackup = { id: string; tipo: string; nome?: string; base64: string; sha256?: string };
 export type Backup = {
   formato: typeof FORMATO_BACKUP;
   versao: 1;
@@ -83,7 +83,9 @@ export function validarBackup(valor: unknown): Backup {
         !ID_VALIDO.test(arquivo.id) || anexos.has(arquivo.id) ||
         typeof arquivo.tipo !== 'string' || arquivo.tipo.length > 160 ||
         (arquivo.nome !== undefined && (typeof arquivo.nome !== 'string' || arquivo.nome.length > 255)) ||
-        typeof arquivo.base64 !== 'string' || !BASE64_VALIDO.test(arquivo.base64)) {
+        typeof arquivo.base64 !== 'string' || !BASE64_VALIDO.test(arquivo.base64) ||
+        (arquivo.sha256 !== undefined && (typeof arquivo.sha256 !== 'string' ||
+          !/^[a-f0-9]{64}$/.test(arquivo.sha256)))) {
       throw Error('Backup inválido: anexo duplicado, incompleto ou com conteúdo corrompido.');
     }
     anexos.add(arquivo.id);
@@ -100,4 +102,18 @@ export function validarBackup(valor: unknown): Backup {
     if (!anexos.has(id)) throw Error('Backup incompleto: falta o anexo ' + id + '.');
   }
   return valor as Backup;
+}
+
+/** Backups antigos não têm SHA; os novos verificam integridade antes de importar. */
+export async function verificarHashesBackup(b: Backup): Promise<void> {
+  for (const arquivo of b.arquivos) {
+    if (!arquivo.sha256) continue;
+    const bin = atob(arquivo.base64);
+    const bytes = Uint8Array.from(bin, ch => ch.charCodeAt(0));
+    const digest = await crypto.subtle.digest('SHA-256', bytes);
+    const hex = Array.from(new Uint8Array(digest), x => x.toString(16).padStart(2, '0')).join('');
+    if (hex !== arquivo.sha256) {
+      throw Error('Backup corrompido: a verificação do anexo ' + arquivo.id + ' falhou.');
+    }
+  }
 }

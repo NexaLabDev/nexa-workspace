@@ -9,6 +9,9 @@ on:
       - '.github/workflows/integracao-isolada.yml'
       - 'supabase/migrations/**'
       - 'supabase/tests/**'
+      - 'components/nexa/backup.ts'
+      - 'components/nexa/backupValidacao.ts'
+      - 'components/acesso/Importar.tsx'
   workflow_dispatch:
 
 permissions:
