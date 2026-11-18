@@ -9,6 +9,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
+import NavegacaoRapida from './NavegacaoRapida';
 import {
   Box,
   Calculator,
@@ -136,15 +137,14 @@ export default function NexaShell({
     >
       {/* ===== Barra de ícones ===== */}
       <nav className={s.trilho} aria-label="Navegação">
-        <Link href="/" scroll={false} aria-label="Nexa Lab — início">
+        <NavegacaoRapida href="/" aria-label="Nexa Lab — início">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/dashboard/simbolo-nexa.png" alt="" className={s.simbolo} />
-        </Link>
+        </NavegacaoRapida>
         {TRILHO.map(({ aba: a, nome, href, icone: Icone }) => (
-          <Link
+          <NavegacaoRapida
             key={a}
             href={href}
-            scroll={false}
             className={`${s.trilhoBtn} ${aba === a ? s.trilhoAtivo : ''}`}
             aria-label={nome}
             title={nome}
@@ -152,19 +152,18 @@ export default function NexaShell({
           >
             <Icone size={24} {...ICONE} />
             {a === 'recebimentos' && alertas > 0 && <span className={s.pontoTrilho} aria-label={`${alertas} cobrança(s) vencida(s) ou perto do vencimento`} />}
-          </Link>
+          </NavegacaoRapida>
         ))}
         <span className={s.trilhoDivisor} aria-hidden />
-        <Link
+        <NavegacaoRapida
           href="/configuracoes"
-          scroll={false}
           className={`${s.trilhoBtn} ${s.trilhoRodape} ${configAtiva ? s.trilhoAtivo : ''}`}
           aria-label="Configurações"
           title="Configurações"
           aria-current={configAtiva ? 'page' : undefined}
         >
           <Settings size={24} {...ICONE} />
-        </Link>
+        </NavegacaoRapida>
       </nav>
 
       {/* ===== Área principal ===== */}
@@ -219,16 +218,15 @@ export default function NexaShell({
       <nav ref={navCelularRef} className={s.navCelular} aria-label="Navegação">
         {[...TRILHO, { aba: 'configuracoes' as AbaNexa, nome: 'Configurações', curto: 'Ajustes', href: '/configuracoes', icone: Settings }].map(
           ({ aba: a, curto, href, icone: Icone }) => (
-            <Link
+            <NavegacaoRapida
               key={a}
               href={href}
-              scroll={false}
               className={`${s.navCelularItem} ${aba === a ? s.navCelularAtivo : ''}`}
               aria-current={aba === a ? 'page' : undefined}
             >
               <Icone size={22} {...ICONE} />
               <span>{curto}</span>
-            </Link>
+            </NavegacaoRapida>
           )
         )}
       </nav>
