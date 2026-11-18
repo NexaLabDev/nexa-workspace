@@ -9,6 +9,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import NavegacaoRapida from './NavegacaoRapida';
 import {
   Box,
@@ -103,7 +104,12 @@ export default function NexaShell({
   marcaTitulo,
 }: Props) {
   const escala = useEscala();
-  const { raizRef, principalRef, navCelularRef } = useRolagemNavegacao();
+  // Destaca a aba de destino imediatamente, mas associa o scroll ao
+  // componente ainda renderizado durante o carregamento de outro módulo.
+  const pathname = usePathname();
+  const ativo = (href: string) => pathname === href ||
+    (href === '/clientes' && pathname.startsWith('/clientes/'));
+  const { raizRef, principalRef, navCelularRef } = useRolagemNavegacao(aba);
   const inicio = aba === 'dashboard';
   const [buscaAberta, setBuscaAberta] = useState(false);
   const [leads] = useLeads();
@@ -127,7 +133,7 @@ export default function NexaShell({
     </>
   );
 
-  const configAtiva = aba === 'configuracoes';
+  const configAtiva = ativo('/configuracoes');
 
   return (
     <div
@@ -145,10 +151,10 @@ export default function NexaShell({
           <NavegacaoRapida
             key={a}
             href={href}
-            className={`${s.trilhoBtn} ${aba === a ? s.trilhoAtivo : ''}`}
+            className={`${s.trilhoBtn} ${ativo(href) ? s.trilhoAtivo : ''}`}
             aria-label={nome}
             title={nome}
-            aria-current={aba === a ? 'page' : undefined}
+            aria-current={ativo(href) ? 'page' : undefined}
           >
             <Icone size={24} {...ICONE} />
             {a === 'recebimentos' && alertas > 0 && <span className={s.pontoTrilho} aria-label={`${alertas} cobrança(s) vencida(s) ou perto do vencimento`} />}
@@ -221,8 +227,8 @@ export default function NexaShell({
             <NavegacaoRapida
               key={a}
               href={href}
-              className={`${s.navCelularItem} ${aba === a ? s.navCelularAtivo : ''}`}
-              aria-current={aba === a ? 'page' : undefined}
+              className={`${s.navCelularItem} ${ativo(href) ? s.navCelularAtivo : ''}`}
+              aria-current={ativo(href) ? 'page' : undefined}
             >
               <Icone size={22} {...ICONE} />
               <span>{curto}</span>
