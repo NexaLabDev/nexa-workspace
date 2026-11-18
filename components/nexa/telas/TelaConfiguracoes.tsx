@@ -12,6 +12,7 @@ import Importar from '@/components/acesso/Importar';
 import Equipe from '@/components/acesso/Equipe';
 import Auditoria from '@/components/acesso/Auditoria';
 import AvisosPush from './AvisosPush';
+import AlertasDispositivo from '../AlertasDispositivo';
 import InstalarApp from '../InstalarApp';
 
 export default function TelaConfiguracoes() {
@@ -71,6 +72,7 @@ export default function TelaConfiguracoes() {
         </section>
 
         <AvisosPush />
+        <AlertasDispositivo />
 
         <section className={u.painel} id="prazos-tarefas">
           <header className={u.painelTopo}>

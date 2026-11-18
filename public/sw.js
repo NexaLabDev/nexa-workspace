@@ -5,7 +5,7 @@ const CACHE_OFFLINE = 'nexa-offline-v1';
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_OFFLINE)
-      .then((cache) => cache.add('/offline.html'))
+      .then((cache) => cache.addAll(['/offline.html','/nexa-app.webp']))
       .catch(() => {})
       .then(() => self.skipWaiting())
   );
@@ -36,8 +36,8 @@ self.addEventListener('push', (e) => {
     self.registration.showNotification(d.titulo || 'Nexa Workspace', {
       body: d.corpo || '',
       tag: d.tag || undefined,
-      icon: '/icon.png',
-      badge: '/icon.png',
+      icon: '/pwa-icons/icon-192.png',
+      badge: '/pwa-icons/icon-192.png',
       lang: 'pt-BR',
       data: { url },
     })

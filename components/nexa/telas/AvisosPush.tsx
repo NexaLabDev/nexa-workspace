@@ -5,7 +5,7 @@
 // sincronizados. A notificação push (com o Workspace fechado) depende de um serviço
 // agendado no servidor e ainda não está disponível nesta versão.
 
-import { BellPlus, Info } from 'lucide-react';
+import { BellPlus } from 'lucide-react';
 import u from '../ui.module.css';
 import { OPCOES_DIAS_ANTES, useConfigAvisos, type ConfigAvisos } from '../notificacoes';
 
@@ -62,8 +62,7 @@ export default function AvisosPush() {
         </fieldset>
         {!podeEditar && <p className={u.nota}>Só o administrador altera quando avisar.</p>}
         <p className={u.nota}>
-          <Info size={16} /> Notificação push com o Workspace fechado: indisponível nesta versão. Ela depende de um serviço
-          agendado no servidor, que ainda será configurado. Por enquanto os avisos aparecem ao abrir o Workspace.
+          Os lembretes continuam no sininho; os alertas do Workspace podem chegar como push após ativação no aparelho.
         </p>
       </div>
     </section>

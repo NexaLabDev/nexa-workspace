@@ -4,6 +4,11 @@ on:
   pull_request:
     paths:
       - 'components/nexa/remoto.ts'
+      - 'components/nexa/eventosNotificacao.ts'
+      - 'components/nexa/push.ts'
+      - 'components/nexa/AlertasDispositivo.tsx'
+      - 'app/api/push/**'
+      - 'lib/servidor/push.ts'
       - 'components/nexa/pendenciasLocais.ts'
       - 'e2e/recuperacao-pendentes.spec.ts'
       - '.github/workflows/integracao-isolada.yml'
@@ -76,6 +81,7 @@ jobs:
           node supabase/tests/fluxos_auth_local.mjs
           node supabase/tests/modulos_operacionais_local.mjs
           node supabase/tests/backup_restore_local.mjs
+          node supabase/tests/notificacoes_eventos_local.mjs
       - name: Instalar navegador Chromium
         run: npx playwright install --with-deps chromium webkit
       - name: Iniciar aplicação com Supabase LOCAL, sem secrets remotos

@@ -10,9 +10,14 @@ export async function middleware(req: NextRequest) {
     caminho === '/login' ||
     caminho === '/conta' ||
     caminho === '/manifest.webmanifest' ||
+    caminho === '/nexa-app.webp' ||
+    caminho === '/nexa-logo.webp' ||
+    caminho === '/api/push/chave' ||
+    caminho === '/api/push/entregar' ||
+    caminho === '/api/push/teste' ||
     caminho === '/offline.html' ||
     caminho === '/icon.png' ||
-    /^\/pwa\/icon\/(180|192|512)$/.test(caminho) ||
+    /^\/pwa-icons\/icon-(180|192|512)\.png$/.test(caminho) ||
     caminho === '/api/supabase/status' ||
     /^\/acompanhamento(?:\/[a-zA-Z0-9_-]{22})?$/.test(caminho)
   ) {
