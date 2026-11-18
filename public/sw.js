@@ -31,7 +31,7 @@ self.addEventListener('push', (e) => {
   } catch {
     d = { corpo: e.data ? e.data.text() : '' };
   }
-  const url = typeof d.url === 'string' && /^\\/(?!\\/)[a-zA-Z0-9/?&=_-]{0,315}$/.test(d.url) ? d.url : '/';
+  const url = typeof d.url === 'string' && new RegExp('^/(?!/)[a-zA-Z0-9/?&=_-]{0,315}$').test(d.url) ? d.url : '/';
   e.waitUntil(
     self.registration.showNotification(d.titulo || 'Nexa Workspace', {
       body: d.corpo || '',
