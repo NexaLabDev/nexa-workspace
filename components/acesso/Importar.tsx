@@ -170,19 +170,24 @@ export default function Importar() {
                     if (faltam.size) throw Error('Backup incompleto: falta o anexo ' + [...faltam][0] + '. Nada foi importado.');
                     // Confere IDs existentes/conflitos antes de criar arquivos órfãos.
                     const possiveis = await conferirImportacao(dados);
-                    if (!possiveis) {
-                      setAviso({ texto: 'Todos os registros já estão presentes. Nenhum anexo foi enviado.' });
+                    const arquivosEmUso = idsDeArquivoEmUso(dados);
+                    if (!possiveis && !arquivosEmUso.size) {
+                      setAviso({ texto: 'Todos os registros já estão presentes. Não há anexos a recuperar.' });
                       setB(null);
                       return;
                     }
-                    const arquivosEmUso = idsDeArquivoEmUso(dados);
+                    // Mesmo com registros já presentes, um anexo pode ter sumido
+                    // do Storage. Reenvia SOMENTE os referenciados, sem upsert.
+                    // Arquivos existentes precisam ter bytes idênticos.
+                    let conferidos = 0;
                     for (const arq of b.arquivos) {
                       if (!arquivosEmUso.has(arq.id)) continue;
                       const bytes = Uint8Array.from(atob(arq.base64), (ch) => ch.charCodeAt(0));
                       await subirPrivado(arq.id, new Blob([bytes]), true);
+                      conferidos++;
                     }
-                    const n = await importar(dados);
-                    setAviso({ texto: `${n} registro(s) novo(s) importado(s) e conferido(s).` });
+                    const n = possiveis ? await importar(dados) : 0;
+                    setAviso({ texto: `${n} registro(s) recuperado(s) ou importado(s); ${conferidos} anexo(s) verificado(s).` });
                     setB(null);
                   })
                 }
