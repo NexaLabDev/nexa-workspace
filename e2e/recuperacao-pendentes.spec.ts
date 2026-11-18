@@ -12,8 +12,11 @@ async function entrar(page: Page) {
 test('recupera edição após falha de rede e recarregamento, sem duplicar ao sincronizar', async ({ page }, info) => {
   // Nunca criar leads de teste em um Preview/produção por engano.
   const baseURL = String(info.project.use.baseURL ?? '');
-  test.skip(!/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/?$/i.test(baseURL),
-    'Teste com gravação permitido somente em Next/Supabase locais isolados.');
+  const urlSupabase = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+  const bancoLocal = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/?$/i.test(urlSupabase);
+  const confirmou = process.env.E2E_PERMITIR_GRAVACOES_LOCAIS === 'SIM';
+  test.skip(!/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/?$/i.test(baseURL) || !bancoLocal || !confirmou,
+    'Requer app e Supabase locais e E2E_PERMITIR_GRAVACOES_LOCAIS=SIM; nunca testar com banco real.');
 
   test.skip(info.project.name === 'mobile', 'Fluxo validado inicialmente no desktop local');
   test.setTimeout(120_000);
