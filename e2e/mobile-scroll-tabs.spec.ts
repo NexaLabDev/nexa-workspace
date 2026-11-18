@@ -74,6 +74,8 @@ test('viewport mobile curto: barra e rodapé continuam acessíveis sem sobreposi
   await page.setViewportSize({ width: 375, height: 540 });
   await login(page);
   await page.goto('/configuracoes');
+  await expect(page.locator('main[class*="_principal_"]')).toBeVisible();
+  await expect(page.locator('nav[class*="_navCelular_"]')).toBeVisible();
   const final = await page.evaluate(async () => {
     const main = document.querySelector<HTMLElement>('main[class*="_principal_"]');
     const menu = document.querySelector<HTMLElement>('nav[class*="_navCelular_"]');
