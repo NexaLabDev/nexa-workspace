@@ -87,3 +87,54 @@ test('IndexedDB: diário corrompido é recusado sem apagar o conteúdo original'
   expect(r.recusou).toBe(true);
   expect(r.original).toEqual({ versao: 999, registros: [{ id: 'sem colecao' }] });
 });
+
+
+// Duas abas compartilham IndexedDB, mas não devem apagar registros diferentes.
+// O teste usa duas páginas do MESMO contexto, sem Supabase/credenciais.
+test('IndexedDB: duas abas preservam rascunhos distintos e impedem sobrescrita do mesmo registro', async ({ page, context }) => {
+  const outra = await context.newPage();
+  await Promise.all([page.goto('/login'), outra.goto('/login')]);
+  async function carregar(p: typeof page) {
+    await p.evaluate(async (codigo) => {
+      const url = URL.createObjectURL(new Blob([codigo], { type: 'text/javascript' }));
+      try {
+        (window as typeof window & { __diarioE2E?: unknown }).__diarioE2E =
+          await import(/* webpackIgnore: true */ url);
+      } finally { URL.revokeObjectURL(url); }
+    }, fonte);
+  }
+  await Promise.all([carregar(page), carregar(outra)]);
+  const id = crypto.randomUUID();
+  const usuario = { id: `${id}-u`, workspace_id: `${id}-w` };
+  const a = { colecao: 'leads', id: `${id}-a`, versao: 0, ordem: 0, conteudo: { id: `${id}-a`, empresa: 'A' } };
+  const b = { colecao: 'leads', id: `${id}-b`, versao: 0, ordem: 1, conteudo: { id: `${id}-b`, empresa: 'B' } };
+  const exec = async (p: typeof page, action: 'ler' | 'gravar', registros?: typeof a[]) =>
+    p.evaluate(async ({ usuario, action, registros }) => {
+      const diario = (window as typeof window & {
+        __diarioE2E: { lerEdicoesLocais: (u: typeof usuario) => Promise<typeof registros>; gravarEdicoesLocais: (u: typeof usuario, r: typeof registros) => Promise<void> }
+      }).__diarioE2E;
+      if (action === 'ler') return diario.lerEdicoesLocais(usuario);
+      await diario.gravarEdicoesLocais(usuario, registros ?? []);
+      return null;
+    }, { usuario, action, registros });
+
+  await Promise.all([exec(page, 'ler'), exec(outra, 'ler')]);
+  await exec(page, 'gravar', [a]);
+  await exec(outra, 'gravar', [b]);
+  // A primeira aba confirma somente a edição A; a B continua segura.
+  await exec(page, 'gravar', []);
+  const recuperado = await exec(outra, 'ler');
+  expect(recuperado).toEqual([b]);
+
+  // As duas abas leem o mesmo registro, mas tentam escrever versões distintas.
+  await Promise.all([exec(page, 'ler'), exec(outra, 'ler')]);
+  const b1 = { ...b, conteudo: { ...b.conteudo, empresa: 'A mudou B' } };
+  const b2 = { ...b, conteudo: { ...b.conteudo, empresa: 'B mudou B' } };
+  await exec(page, 'gravar', [b1]);
+  let conflito = false;
+  try { await exec(outra, 'gravar', [b2]); }
+  catch { conflito = true; }
+  expect(conflito).toBe(true);
+  expect(await exec(page, 'ler')).toEqual([b1]);
+  await outra.close();
+});

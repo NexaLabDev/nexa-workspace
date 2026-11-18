@@ -10,6 +10,33 @@ const BANCO = 'nexa-workspace-edicoes-pendentes';
 const TABELA = 'pendencias';
 const VERSAO = 1;
 
+// Cada aba acompanha quais registros alterou. Uma aba não apaga pendências
+// distintas deixadas por outra janela do mesmo usuário e workspace.
+const fotografias = new Map<string, Registro[]>();
+const identidadeRegistro = (r: Registro) => JSON.stringify([r.colecao, r.id]);
+const igualRegistro = (a: Registro | undefined, b: Registro | undefined) =>
+  a === b || (!!a && !!b && JSON.stringify(a) === JSON.stringify(b));
+
+function conferirRegistros(registros: unknown): asserts registros is Registro[] {
+  if (!Array.isArray(registros) || registros.length > 10000 || !registros.every(registroValido)) {
+    throw new Error('As edições locais não puderam ser interpretadas; não foram apagadas.');
+  }
+  const ids = new Set(registros.map(identidadeRegistro));
+  if (ids.size !== registros.length) {
+    throw new Error('Diário local com registros duplicados; nenhuma edição foi apagada.');
+  }
+}
+
+function registrosDoDiario(salvo: unknown): Registro[] {
+  if (!salvo) return [];
+  const s = salvo as { versao?: number; registros?: unknown };
+  if (s.versao !== VERSAO) {
+    throw new Error('Diário local de formato desconhecido; nenhuma edição foi apagada.');
+  }
+  conferirRegistros(s.registros);
+  return s.registros;
+}
+
 function chave({ workspace_id, id }: Pick<Identidade, 'workspace_id' | 'id'>) {
   return JSON.stringify([workspace_id, id]);
 }
@@ -46,23 +73,20 @@ function registroValido(r: unknown): r is Registro {
 
 export async function lerEdicoesLocais(perfil: Pick<Identidade, 'workspace_id' | 'id'>): Promise<Registro[]> {
   const banco = await abrir();
+  const id = chave(perfil);
   try {
-    return await new Promise<Registro[]>((resolve, reject) => {
+    const resultado = await new Promise<Registro[]>((resolve, reject) => {
       const tx = banco.transaction(TABELA, 'readonly');
-      const pedido = tx.objectStore(TABELA).get(chave(perfil));
+      const pedido = tx.objectStore(TABELA).get(id);
       tx.oncomplete = () => {
-        const salvo = pedido.result as { versao?: number; registros?: unknown } | undefined;
-        if (!salvo) { resolve([]); return; }
-        if (salvo.versao !== VERSAO || !Array.isArray(salvo.registros) ||
-            salvo.registros.length > 10000 || !salvo.registros.every(registroValido)) {
-          reject(new Error('As edições locais não puderam ser interpretadas; não foram apagadas.'));
-          return;
-        }
-        resolve(salvo.registros);
+        try { resolve(registrosDoDiario(pedido.result)); }
+        catch (erro) { reject(erro); }
       };
       tx.onerror = () => reject(tx.error ?? new Error('Falha ao ler as edições locais.'));
       tx.onabort = () => reject(tx.error ?? new Error('Leitura das edições locais interrompida.'));
     });
+    fotografias.set(id, [...resultado]);
+    return resultado;
   } finally {
     banco.close();
   }
@@ -72,20 +96,63 @@ export async function gravarEdicoesLocais(
   perfil: Pick<Identidade, 'workspace_id' | 'id'>,
   registros: Registro[]
 ): Promise<void> {
+  conferirRegistros(registros);
+  const id = chave(perfil);
+  const anterior = new Map((fotografias.get(id) ?? []).map((r) => [identidadeRegistro(r), r]));
+  const desejado = new Map(registros.map((r) => [identidadeRegistro(r), r]));
   const banco = await abrir();
   try {
     await new Promise<void>((resolve, reject) => {
       const tx = banco.transaction(TABELA, 'readwrite');
       const store = tx.objectStore(TABELA);
-      if (registros.length) {
-        store.put({ versao: VERSAO, registros, atualizadoEm: new Date().toISOString() }, chave(perfil));
-      } else {
-        store.delete(chave(perfil));
-      }
-      // Confirma somente após o COMMIT completo da transação IndexedDB.
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error ?? new Error('Falha ao proteger edições locais.'));
-      tx.onabort = () => reject(tx.error ?? new Error('Gravação das edições locais interrompida.'));
+      const pedido = store.get(id);
+      let falha: unknown = null;
+      pedido.onsuccess = () => {
+        try {
+          const existente = registrosDoDiario(pedido.result);
+          const combinado = new Map(existente.map((r) => [identidadeRegistro(r), r]));
+          // Remove só o que ESTA aba havia mantido e agora confirmou ou descartou.
+          // Se outra aba mudou o registro desde a nossa última leitura, preserva.
+          for (const [k, antigo] of anterior) {
+            if (!desejado.has(k) && igualRegistro(combinado.get(k), antigo)) combinado.delete(k);
+          }
+          for (const [k, novo] of desejado) {
+            const atual = combinado.get(k);
+            const vistoAntes = anterior.get(k);
+            // Outra aba gravou o MESMO registro depois da nossa última leitura:
+            // não substitui silenciosamente a edição mais recente no diário.
+            if (atual && !igualRegistro(atual, novo) &&
+                !igualRegistro(atual, vistoAntes)) {
+              throw new Error('Conflito local: outra aba alterou o mesmo registro. Exporte sua edição antes de resolver.');
+            }
+            combinado.set(k, novo);
+          }
+          if (combinado.size > 10000) throw new Error('O diário local excedeu o limite de registros.');
+          if (combinado.size) {
+            store.put({
+              versao: VERSAO,
+              registros: [...combinado.values()],
+              atualizadoEm: new Date().toISOString(),
+            }, id);
+          } else {
+            store.delete(id);
+          }
+        } catch (erro) {
+          falha = erro;
+          tx.abort();
+        }
+      };
+      pedido.onerror = () => {
+        falha = pedido.error;
+      };
+      tx.oncomplete = () => {
+        // Salva a fotografia DESTA aba, não a junção com alterações de outras abas.
+        // Assim confirmar um lote não apaga pendências de outra janela.
+        fotografias.set(id, [...registros]);
+        resolve();
+      };
+      tx.onerror = () => reject(falha ?? tx.error ?? new Error('Falha ao proteger edições locais.'));
+      tx.onabort = () => reject(falha ?? tx.error ?? new Error('Gravação das edições locais interrompida.'));
     });
   } finally {
     banco.close();

@@ -38,9 +38,14 @@ function protegerPendentes(){
  if(!usuario)return Promise.resolve();
  const gravacao=ultimaGravacaoLocal.catch(()=>{}).then(()=>gravarEdicoesLocais(usuario,rascunho));
  ultimaGravacaoLocal=gravacao;
- void gravacao.catch(()=>{
+ void gravacao.catch((e)=>{
   if(g===geracao){
-   estado='Falha ao proteger edições no navegador. Exporte a edição e confira o espaço disponível.';
+   if(e instanceof Error&&e.message.startsWith('Conflito local:')){
+    bloqueado=true;
+    estado='Conflito: outra aba alterou o mesmo registro. Exporte sua edição antes de continuar.';
+   }else{
+    estado='Falha ao proteger edições no navegador. Exporte a edição e confira o espaço disponível.';
+   }
    avisar();
   }
  });
@@ -215,6 +220,8 @@ export async function enviar(){
   // Nunca inicia a chamada remota antes de o diário local concluir a escrita.
   // Sem IndexedDB, ainda tenta salvar online: a falha offline fica visível.
   await ultimaGravacaoLocal.catch(()=>{});
+  // Se houve conflito no diário local, não enviar ao Supabase antes de resolver.
+  if(bloqueado)return;
   if(g!==geracao||!pessoa||usuario.id!==pessoa.id||usuario.workspace_id!==pessoa.workspace_id)return;
   const lote=new Map(pendentes);
   if(!lote.size)return;
