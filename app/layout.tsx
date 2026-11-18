@@ -6,7 +6,8 @@
 // a cada visita: funciona sem internet e não envia o IP do visitante).
 // ============================================
 
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
+import RegistrarPWA from '@/components/nexa/RegistrarPWA';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 
@@ -19,13 +20,30 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: 'Nexa Workspace',
-  description: 'Painel de gestão da Nexa Lab',
+  description: 'Gestão de clientes, projetos, documentos e financeiro da Nexa Lab.',
+  applicationName: 'Nexa Workspace',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    title: 'Nexa Workspace',
+    statusBarStyle: 'black-translucent',
+  },
+  icons: {
+    apple: [{ url: '/pwa/icon/180', sizes: '180x180', type: 'image/png' }],
+  },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#141516',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={jakarta.variable}>
-      <body>{children}</body>
+      <body><RegistrarPWA />{children}</body>
     </html>
   );
 }

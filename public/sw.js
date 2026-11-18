@@ -1,6 +1,28 @@
 // Service worker do Nexa Workspace: recebe os avisos push e abre a tela certa ao clicar.
-self.addEventListener('install', () => self.skipWaiting());
+// Offline: apenas um aviso público é armazenado; NUNCA cachear páginas
+// autenticadas, APIs, documentos, respostas do Supabase ou dados de clientes.
+const CACHE_OFFLINE = 'nexa-offline-v1';
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open(CACHE_OFFLINE)
+      .then((cache) => cache.add('/offline.html'))
+      .catch(() => {})
+      .then(() => self.skipWaiting())
+  );
+});
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
+
+self.addEventListener('fetch', (e) => {
+  if (e.request.method !== 'GET' || e.request.mode !== 'navigate') return;
+  if (new URL(e.request.url).origin !== self.location.origin) return;
+  // Sempre busca a página online; nunca salva HTML privado.
+  e.respondWith(
+    fetch(e.request).catch(async () => {
+      const cache = await caches.open(CACHE_OFFLINE);
+      return (await cache.match('/offline.html')) || Response.error();
+    })
+  );
+});
 
 self.addEventListener('push', (e) => {
   let d = {};

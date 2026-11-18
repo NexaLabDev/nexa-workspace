@@ -9,6 +9,10 @@ export async function middleware(req: NextRequest) {
   if (
     caminho === '/login' ||
     caminho === '/conta' ||
+    caminho === '/manifest.webmanifest' ||
+    caminho === '/offline.html' ||
+    caminho === '/icon.png' ||
+    /^\/pwa\/icon\/(180|192|512)$/.test(caminho) ||
     caminho === '/api/supabase/status' ||
     /^\/acompanhamento(?:\/[a-zA-Z0-9_-]{22})?$/.test(caminho)
   ) {

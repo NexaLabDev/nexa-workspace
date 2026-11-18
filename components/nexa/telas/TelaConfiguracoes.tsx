@@ -12,6 +12,7 @@ import Importar from '@/components/acesso/Importar';
 import Equipe from '@/components/acesso/Equipe';
 import Auditoria from '@/components/acesso/Auditoria';
 import AvisosPush from './AvisosPush';
+import InstalarApp from '../InstalarApp';
 
 export default function TelaConfiguracoes() {
   const [prefs, setPrefs] = usePreferencias();
@@ -30,6 +31,7 @@ export default function TelaConfiguracoes() {
           </div>
         </div>
 
+        <InstalarApp />
         <Equipe />
 
         {/* ----- Dados da prestadora: usados nos documentos (nunca ficam no código) ----- */}
