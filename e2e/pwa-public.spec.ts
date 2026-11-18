@@ -23,7 +23,15 @@ test('PWA: manifesto, PNGs reais e tela offline pública', async ({ request, pag
   expect(await offline.text()).toContain('Sem conexão com a internet');
   await page.goto('/login');
   await expect(page.locator('link[rel="manifest"]')).toHaveAttribute('href', '/manifest.webmanifest');
-  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('href', '/pwa/icon/180');
+  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('href', '/pwa-icons/icon-180.png');
+  // Os arquivos usados são os dois visuais oficiais enviados pela proprietária.
+  const logo=await request.get('/nexa-logo.webp');
+  const origem=await request.get('/nexa-app.webp');
+  expect(logo.ok()).toBe(true);
+  expect(origem.ok()).toBe(true);
+  expect((await logo.body()).toString('ascii',8,12)).toBe('WEBP');
+  expect((await origem.body()).toString('ascii',8,12)).toBe('WEBP');
+  await expect(page.locator('img[alt="Nexa Lab"]').first()).toHaveAttribute('src','/nexa-logo.webp');
 });
 
 test('PWA: service worker funciona offline sem armazenar conteúdo privado', async ({ page, context }) => {
