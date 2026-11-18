@@ -166,7 +166,7 @@ export default function Conta({ retorno = false }: { retorno?: boolean }) {
   return (
     <main className="conta">
       <form onSubmit={enviar}>
-        <img src="/dashboard/simbolo-nexa.png" alt="Nexa Lab" width="42" />
+        <img src="/nexa/logo.svg" alt="Nexa Lab" style={{ width: 186, maxWidth: "80%", height: "auto", display: "block" }} />
         <h1>
           {
             {

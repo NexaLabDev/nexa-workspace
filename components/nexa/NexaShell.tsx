@@ -181,8 +181,7 @@ export default function NexaShell({
             <>
               <Link href="/" scroll={false} className={s.marca}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/nexa/simbolo.svg" alt="" />
-                <span>Nexa Lab</span>
+                <img src="/nexa/logo.svg" alt="Nexa Lab" style={{ width: 116, maxWidth: "100%", height: "auto" }} />
               </Link>
               <span className={s.marcaSep} aria-hidden />
               <h1 className={s.marcaTitulo}>{marcaTitulo}</h1>

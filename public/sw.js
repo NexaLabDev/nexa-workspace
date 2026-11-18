@@ -31,7 +31,7 @@ self.addEventListener('push', (e) => {
   } catch {
     d = { corpo: e.data ? e.data.text() : '' };
   }
-  const url = typeof d.url === 'string' && d.url.startsWith('/') ? d.url : '/recebimentos';
+  const url = typeof d.url === 'string' && d.url.startsWith('/') && !d.url.startsWith('//') ? d.url : '/';
   e.waitUntil(
     self.registration.showNotification(d.titulo || 'Nexa Workspace', {
       body: d.corpo || '',
@@ -46,15 +46,17 @@ self.addEventListener('push', (e) => {
 
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();
-  const alvo = new URL((e.notification.data && e.notification.data.url) || '/', self.location.origin).href;
+  const caminho = (e.notification.data && e.notification.data.url) || '/';
+  const alvo = new URL(caminho, self.location.origin);
+  if (alvo.origin !== self.location.origin) return;
   e.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((janelas) => {
       for (const j of janelas) {
         if (new URL(j.url).origin === self.location.origin && 'focus' in j) {
-          return j.navigate(alvo).then((w) => (w || j).focus());
+          return j.navigate(alvo.href).then((w) => (w || j).focus());
         }
       }
-      return self.clients.openWindow(alvo);
+      return self.clients.openWindow(alvo.href);
     })
   );
 });

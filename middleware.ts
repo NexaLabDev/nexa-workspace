@@ -5,6 +5,8 @@ import { configPublica } from '@/lib/supabase/config';
 export async function middleware(req: NextRequest) {
   const caminho = req.nextUrl.pathname;
   const api = caminho.startsWith('/api/');
+  // O banco envia este webhook assinado; não possui sessão de navegador.
+  if (caminho === '/api/push/entregar' && req.method === 'POST') return NextResponse.next();
   // /api/supabase/status já se restringe a localhost em lib/servidor/guarda.ts
   if (
     caminho === '/login' ||

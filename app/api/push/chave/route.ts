@@ -1,14 +1,10 @@
-// Chave pública VAPID: o navegador precisa dela para se inscrever nos avisos.
+// Chave VAPID pública: inscrição do dispositivo autenticado no navegador.
 import { NextResponse } from 'next/server';
-import { recusar } from '@/lib/servidor/guarda';
 import { chavePublica } from '@/lib/servidor/push';
 
 export const dynamic = 'force-dynamic';
-
-export function GET(req: Request) {
-  const bloqueio = recusar(req);
-  if (bloqueio) return bloqueio;
+export function GET() {
   const chave = chavePublica();
-  if (!chave) return NextResponse.json({ erro: 'Chaves de push não configuradas no servidor (.env.local).' }, { status: 503 });
-  return NextResponse.json({ chave });
+  if (!chave) return NextResponse.json({ erro: 'Notificações indisponíveis no servidor.' }, { status: 503 });
+  return NextResponse.json({ chave }, { headers: { 'Cache-Control': 'private, no-store' } });
 }
