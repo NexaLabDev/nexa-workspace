@@ -138,3 +138,33 @@ test('IndexedDB: duas abas preservam rascunhos distintos e impedem sobrescrita d
   expect(await exec(page, 'ler')).toEqual([b1]);
   await outra.close();
 });
+
+
+// Simula um navegador que não fornece IndexedDB (modo restrito, bloqueio
+// corporativo ou falha do armazenamento). Não deve fingir que o backup existe.
+test('IndexedDB indisponível: falha claramente sem simular gravação concluída', async ({ page }) => {
+  await page.goto('/login');
+  const resultado = await page.evaluate(async (codigo) => {
+    const uid = crypto.randomUUID();
+    const perfil = { id: uid, workspace_id: crypto.randomUUID() };
+    const registro = { colecao: 'leads', id: uid, ordem: 0, versao: 0, conteudo: { id: uid } };
+    const descritorOriginal = Object.getOwnPropertyDescriptor(window, 'indexedDB');
+    const url = URL.createObjectURL(new Blob([codigo], { type: 'text/javascript' }));
+    try {
+      Object.defineProperty(window, 'indexedDB', { configurable: true, value: undefined });
+      const modulo = await import(/* webpackIgnore: true */ url);
+      try {
+        await modulo.gravarEdicoesLocais(perfil, [registro]);
+        return { falhou: false, mensagem: '' };
+      } catch (e) {
+        return { falhou: true, mensagem: e instanceof Error ? e.message : String(e) };
+      }
+    } finally {
+      if (descritorOriginal) Object.defineProperty(window, 'indexedDB', descritorOriginal);
+      else delete (window as typeof window & { indexedDB?: IDBFactory }).indexedDB;
+      URL.revokeObjectURL(url);
+    }
+  }, fonte);
+  expect(resultado.falhou).toBe(true);
+  expect(resultado.mensagem).toMatch(/armazenamento persistente/i);
+});

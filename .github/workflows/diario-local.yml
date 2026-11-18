@@ -5,6 +5,7 @@ on:
       - 'components/nexa/remoto.ts'
       - 'components/nexa/pendenciasLocais.ts'
       - 'e2e/diario-local.spec.ts'
+      - 'e2e/diario-webkit.config.ts'
       - 'e2e/recuperacao-pendentes.spec.ts'
       - '.github/workflows/diario-local.yml'
   workflow_dispatch:
@@ -24,7 +25,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx tsc --noEmit
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium webkit
       - name: Iniciar Next.js local com credenciais fictícias
         shell: bash
         run: |
@@ -44,6 +45,8 @@ jobs:
           exit 1
       - name: Verificar diário real no IndexedDB (sem acesso ao banco)
         run: npx playwright test e2e/diario-local.spec.ts --project=desktop
+      - name: Verificar WebKit móvel (motor do Safari, sem dados remotos)
+        run: npx playwright test --config=e2e/diario-webkit.config.ts
       - name: Anexar diagnósticos em caso de falha
         if: failure()
         uses: actions/upload-artifact@v4
