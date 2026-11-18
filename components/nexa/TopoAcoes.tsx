@@ -13,6 +13,7 @@ import { pedirAberturaProjeto } from './util';
 import { calcularResumoMeta, reaisCentavos } from './metas';
 import { alertasCobranca, dataBr, diasAte, dinheiro as dinheiroFin, textoDias } from './financeiro';
 import { useNotificacoes } from './notificacoes';
+import { useEventosNotificacao } from './eventosNotificacao';
 import { reais } from './util';
 
 export const EVENTO_ABRIR = 'nexa:abrir-menu';
@@ -52,6 +53,7 @@ export default function TopoAcoes({ compacto, iniciais }: { compacto: boolean; i
 
   // Central de notificações: vem do servidor; se ele não responder, calcula aqui mesmo
   const central = useNotificacoes();
+  const eventos = useEventosNotificacao();
   const [conversas] = useConversas();
   const [projetos] = useProjetos();
   const [prefs] = usePreferencias();
@@ -78,6 +80,7 @@ export default function TopoAcoes({ compacto, iniciais }: { compacto: boolean; i
     }));
   }, [central.servidorOk, central.lista, leads]);
   const naoLidas = useMemo(() => cobrancas.filter((c) => !c.lida), [cobrancas]);
+  const totalPendentes=naoLidas.length+eventos.naoLidas.length;
   const diasPrazo = diasPrazoProximo(prefs);
   const tarefasAlerta = useMemo(() => alertasTarefas(projetos, undefined, diasPrazo), [projetos, diasPrazo]);
   const temAvisos = contatosHoje.length > 0 || resumo.metaDiaria != null || cobrancas.length > 0 || tarefasAlerta.length > 0;
@@ -165,9 +168,9 @@ export default function TopoAcoes({ compacto, iniciais }: { compacto: boolean; i
           'avisos',
           'Notificações',
           <Bell size={tam} {...ICONE} />,
-          naoLidas.length ? (
-            <span className={s.contadorAviso} aria-label={`${naoLidas.length} notificação(ões) de cobrança não lida(s)`}>
-              {naoLidas.length}
+          totalPendentes ? (
+            <span className={s.contadorAviso} aria-label={`${totalPendentes} notificações não lidas`}>
+              {totalPendentes>99?'99+':totalPendentes}
             </span>
           ) : temAvisos ? (
             <span className={s.pontoAviso} aria-hidden />
@@ -176,6 +179,36 @@ export default function TopoAcoes({ compacto, iniciais }: { compacto: boolean; i
         {aberto === 'avisos' && (
           <div className={s.menuFlutuante} role="dialog" aria-label="Notificações">
             <h3>Notificações</h3>
+            {eventos.lista.length>0 && (
+              <>
+                <div className={s.tituloLinha}>
+                  <h4>Atividade da equipe</h4>
+                  {eventos.naoLidas.length>0 && (
+                    <button type="button" className={s.linkPequeno}
+                      onClick={()=>void eventos.marcarLida(eventos.naoLidas.map(x=>x.id))}>
+                      Marcar como lidas
+                    </button>
+                  )}
+                </div>
+                <ul className={s.menuLista}>
+                  {eventos.lista.slice(0,12).map((e)=>(
+                    <li key={e.id} className={e.lida_em?s.lida:undefined}>
+                      <Link href={e.rota} className={s.menuLink}
+                        onClick={()=>{if(!e.lida_em)void eventos.marcarLida([e.id]);setAberto(null)}}>
+                        {e.tipo==='mensagem'?<Bell size={16} {...ICONE}/>:
+                          e.tipo==='tarefa'?<CheckSquare size={16} {...ICONE}/>:
+                            <CircleAlert size={16} {...ICONE}/>}
+                        <span>
+                          <strong>{e.titulo}</strong>
+                          <small>{e.detalhe}</small>
+                        </span>
+                        {!e.lida_em && <span className={s.naoLida} aria-label="não lida" />}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
             {cobrancas.length > 0 && (
               <>
                 <div className={s.tituloLinha}>
@@ -269,7 +302,7 @@ export default function TopoAcoes({ compacto, iniciais }: { compacto: boolean; i
                   </Link>
                 </li>
               ))}
-              {!temAvisos && <li>Nenhuma notificação.</li>}
+              {!temAvisos && !eventos.lista.length && <li>Nenhuma notificação.</li>}
             </ul>
           </div>
         )}
