@@ -58,7 +58,10 @@ export default function useRolagemNavegacao(escopo: string) {
         const destino = new URL(link.href);
         if (destino.origin === window.location.origin &&
             (destino.pathname !== window.location.pathname || destino.search !== window.location.search)) {
-          salvar();
+          // Se a aba ainda estava recuperando uma posição antiga, não
+          // sobrescrever essa posição com o 0 temporário do novo main.
+          if (!restaurando) salvar();
+          else memorizarMenu();
           navegando = true;
         }
       } catch { /* Link inválido não altera a navegação. */ }
@@ -125,7 +128,9 @@ export default function useRolagemNavegacao(escopo: string) {
     return () => {
       window.cancelAnimationFrame(frameRestauracao);
       if (frameGravacao) window.cancelAnimationFrame(frameGravacao);
-      if (!navegando) salvar();
+      // React StrictMode executa uma limpeza de teste antes do primeiro
+      // requestAnimationFrame. Não trocar o scroll antigo por 0 nessa fase.
+      if (!navegando && !restaurando) salvar();
       raiz.removeEventListener('scroll', aoRolar, true);
       window.removeEventListener('scroll', aoRolar);
       menu?.removeEventListener('scroll', memorizarMenu);
