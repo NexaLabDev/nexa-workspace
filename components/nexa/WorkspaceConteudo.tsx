@@ -37,7 +37,7 @@ const titulos: Record<string, string> = {
 // Não persiste nem copia dados comerciais. A transição apenas escolhe a tela.
 export default function WorkspaceConteudo() {
   const pathname = usePathname();
-  const rota = pathname.replace(/\\/+$/, '') || '/';
+  const rota = pathname !== '/' && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
   const detalheCliente = rota.startsWith('/clientes/') && rota.length > '/clientes/'.length;
   useEffect(() => {
     document.title = `${detalheCliente ? 'Cliente' : (titulos[rota] ?? 'Nexa Workspace')} — Nexa Workspace`;
