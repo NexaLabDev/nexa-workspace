@@ -51,11 +51,20 @@ test('menu mobile: após mudar aba, posição vertical de Configurações é rec
   await page.goto('/configuracoes');
   const main = page.locator('main[class*="_principal_"]');
   await expect(main).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Configurações' }).first()).toBeVisible();
+  // O Safari pode alterar a altura quando fontes, dados e elementos são
+  // montados. Esperar dois frames evita medir a tela ainda incompleta.
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+  });
   const anterior = await main.evaluate(e => {
-    e.scrollTop = Math.min(e.scrollHeight, 520);
+    e.scrollTop = Math.min(Math.max(0, e.scrollHeight - e.clientHeight), 520);
     return e.scrollTop;
   });
-  expect(anterior).toBeGreaterThan(100);
+  await expect.poll(() => main.evaluate(e => e.scrollTop), { timeout: 12000 })
+    .toBeGreaterThan(490);
+  expect(anterior).toBeGreaterThan(490);
 
   const nav = page.locator('nav[class*="_navCelular_"]');
   await nav.locator('a[href="/documentos"]').click();
