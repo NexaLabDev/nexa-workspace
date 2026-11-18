@@ -29,7 +29,8 @@ const objVazio={};
 let pessoa:Identidade|null=null,base=new Map<string,Registro>(),dados:Record<string,unknown>={},pendentes=new Map<string,Registro>();
 let ocupado=false,geracao=0,mudanca=0,estado='Carregando…',pronto=false,bloqueado=false;
 let assinaturaBase='';
-let carregando=false;
+// Vincula a leitura à geração da sessão para que um login antigo não bloqueie um novo.
+let carregandoGeracao:number|null=null;
 // Operações locais serializadas: uma gravação antiga não pode apagar uma edição nova.
 let ultimaGravacaoLocal: Promise<void> = Promise.resolve();
 function protegerPendentes(){
@@ -111,9 +112,9 @@ function materializar(){
  dados=novo;
 }
 export async function atualizar(){
- if(!pessoa||ocupado||pendentes.size||carregando)return;
- carregando=true;
+ if(!pessoa||ocupado||pendentes.size||carregandoGeracao===geracao)return;
  const g=geracao,m=mudanca,usuario=pessoa,primeira=!pronto;
+ carregandoGeracao=g;
  try{
   // Recuperar ANTES de publicar as telas: evita exibir uma versão antiga sem aviso.
   // Se o armazenamento estiver ilegível, não sobrescreve o diário com um estado vazio.
@@ -159,7 +160,7 @@ export async function atualizar(){
     :'Falha ao atualizar. Confira a conexão e tente novamente.';
    avisar();
   }
- }finally{carregando=false;}
+ }finally{if(carregandoGeracao===g)carregandoGeracao=null;}
 }
 function linhas(c:string,valor:unknown):Registro[]{
  const items=listas.has(c)?valor:[valor];if(!Array.isArray(items))throw Error('Lista inválida: '+c);
@@ -208,7 +209,7 @@ export function alterar(c:string,valor:unknown){
  }catch(e){estado=(e as Error).message;avisar();return false;}
 }
 export async function enviar(){
- if(!pessoa||ocupado||bloqueado||!pendentes.size||carregando)return;
+ if(!pessoa||ocupado||bloqueado||!pendentes.size||carregandoGeracao===geracao)return;
  ocupado=true;const g=geracao,usuario=pessoa;
  try{
   // Nunca inicia a chamada remota antes de o diário local concluir a escrita.
@@ -261,7 +262,7 @@ export async function enviar(){
 }
 /** Abandona as edições não salvas deste navegador e recarrega o que está no banco. */
 export async function descartarPendentes(){
- if(ocupado||carregando)return;
+ if(ocupado||carregandoGeracao===geracao)return;
  const anterior=pendentes,emBloqueio=bloqueado;
  pendentes=new Map();bloqueado=false;mudanca++;estado='Carregando…';avisar();
  try{await protegerPendentes();}

@@ -10,6 +10,11 @@ async function entrar(page: Page) {
 }
 
 test('recupera edição após falha de rede e recarregamento, sem duplicar ao sincronizar', async ({ page }, info) => {
+  // Nunca criar leads de teste em um Preview/produção por engano.
+  const baseURL = String(info.project.use.baseURL ?? '');
+  test.skip(!/^https?:\\/\\/(localhost|127\\.0\\.0\\.1)(:\\d+)?\\/?$/i.test(baseURL),
+    'Teste com gravação permitido somente em Next/Supabase locais isolados.');
+
   test.skip(info.project.name === 'mobile', 'Fluxo validado inicialmente no desktop local');
   test.setTimeout(120_000);
   const empresa = `RECUP-${Date.now()} Local`;

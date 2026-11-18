@@ -1,0 +1,55 @@
+name: Integridade do diário local
+on:
+  pull_request:
+    paths:
+      - 'components/nexa/remoto.ts'
+      - 'components/nexa/pendenciasLocais.ts'
+      - 'e2e/diario-local.spec.ts'
+      - 'e2e/recuperacao-pendentes.spec.ts'
+      - '.github/workflows/diario-local.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diario-local:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx playwright install --with-deps chromium
+      - name: Iniciar Next.js local com credenciais fictícias
+        shell: bash
+        run: |
+          npm run dev > /tmp/nexa-dev.log 2>&1 &
+          echo $! > /tmp/nexa-dev.pid
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_public
+      - name: Aguardar login público carregar
+        shell: bash
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:3000/login > /dev/null; then exit 0; fi
+            sleep 2
+          done
+          cat /tmp/nexa-dev.log
+          exit 1
+      - name: Verificar diário real no IndexedDB (sem acesso ao banco)
+        run: npx playwright test e2e/diario-local.spec.ts --project=desktop
+      - name: Anexar diagnósticos em caso de falha
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnosticos-diario-local
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
