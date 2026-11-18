@@ -305,7 +305,7 @@ export default function TelaCrm() {
 
             {aba === 'funil' ? (
               <DragDropContext onDragEnd={aoSoltar}>
-                <div className={c.quadro}>
+                <div className={c.quadro} data-nexa-scroll="crm-funil">
                   {etapasLead.map((etapa) => {
                     const daEtapa = visiveis.filter((l) => l.etapa === etapa.id);
                     const total = daEtapa.reduce((s, l) => s + (l.valor ?? 0), 0);
