@@ -1,7 +1,7 @@
 // Envio de notificações push (Web Push com chaves VAPID do .env.local).
 
 import webpush from 'web-push';
-import type { InscricaoPush } from './armazem';
+type InscricaoPush={endpoint:string;keys:{p256dh:string;auth:string}};
 
 export type AvisoPush = { titulo: string; corpo: string; url: string; tag: string };
 
@@ -16,9 +16,9 @@ function configurar(): boolean {
   const priv = process.env.VAPID_PRIVATE_KEY?.trim();
   if (!pub || !priv) return false;
   // O "subject" precisa ser mailto: ou https:. Enquanto o e-mail real não for definido, usa um contato local.
-  const sujeito = process.env.VAPID_SUBJECT?.trim() ?? '';
+  const sujeito=process.env.VAPID_SUBJECT?.trim()??'mailto:suportenexalab@gmail.com';
   const valido = /^(mailto:[^\s[\]]+@[^\s[\]]+|https:\/\/\S+)$/.test(sujeito);
-  webpush.setVapidDetails(valido ? sujeito : 'mailto:nexa-workspace@localhost', pub, priv);
+  webpush.setVapidDetails(valido?sujeito:'mailto:suportenexalab@gmail.com', pub, priv);
   configurado = true;
   return true;
 }
