@@ -13,6 +13,12 @@ on:
       - 'components/nexa/backupValidacao.ts'
       - 'components/acesso/Importar.tsx'
       - 'e2e/importacao-backup.spec.ts'
+      - 'e2e/mobile-layout.spec.ts'
+      - 'components/nexa/shell.module.css'
+      - 'components/nexa/ui.module.css'
+      - 'components/nexa/telas/**'
+      - 'components/nexa/projeto/**'
+      - 'app/globals.css'
   workflow_dispatch:
 
 permissions:
@@ -103,6 +109,7 @@ jobs:
           export E2E_EMAIL="admin@teste.local"
           export E2E_SENHA="TesteAdmin!123"
           npx playwright test e2e/recuperacao-pendentes.spec.ts e2e/importacao-backup.spec.ts --project=desktop
+          npx playwright test e2e/mobile-layout.spec.ts --project=mobile
       - name: Anexar imagens e traces apenas dos dados fictícios, em falhas
         if: failure()
         uses: actions/upload-artifact@v4

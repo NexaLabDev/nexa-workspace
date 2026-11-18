@@ -1378,3 +1378,30 @@
   color: #9a9a9a;
   font-size: 12px;
 }
+
+/* Conversas: lista/chat/painel ocupam uma coluna e textos não escapam do balão. */
+@media (max-width: 700px) {
+  .pagina {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    min-height: max(440px, calc(100dvh - 236px));
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .coluna, .lista, .chat, .painel { min-width: 0; max-width: 100%; }
+  .msg {
+    min-width: 0;
+    max-width: 88%;
+    padding: 12px 13px;
+    overflow-wrap: anywhere;
+    font-size: 15px;
+  }
+  .msgCliente { margin-left: 4px; }
+  .msgEquipe { margin-right: 4px; }
+  .arquivo { min-width: 0; max-width: 100%; gap: 8px; }
+  .arquivo strong, .arquivo small { overflow-wrap: anywhere; }
+  .camposGrade { grid-template-columns: minmax(0, 1fr); }
+  .docs li { min-width: 0; max-width: 100%; }
+  .docTexto strong { white-space: normal; overflow-wrap: anywhere; }
+}

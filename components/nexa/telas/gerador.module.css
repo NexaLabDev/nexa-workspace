@@ -247,3 +247,8 @@
   border: 0;
   background: #fff;
 }
+
+@media (max-width: 700px) {
+  .pagina, .cartao, .conteudo { min-width: 0; max-width: 100%; }
+  .pagina :is(p,strong,small,h1,h2,h3) { overflow-wrap: anywhere; }
+}

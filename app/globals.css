@@ -25,3 +25,11 @@ body {
     font-size: 16px !important;
   }
 }
+
+/* Mobile: evitar que um texto longo aumente a largura de toda a página.
+   Rolagens horizontais intencionais (tabelas e quadros) continuam internas. */
+html, body { width: 100%; max-width: 100%; }
+html { overflow-x: clip; }
+body { overflow-x: clip; }
+img, video, canvas, svg { max-width: 100%; }
+input, textarea, select { min-width: 0; max-width: 100%; }
