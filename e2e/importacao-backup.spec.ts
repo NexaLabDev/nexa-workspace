@@ -78,6 +78,11 @@ test('backup: importa lead/anexo, recupera arquivo ausente e recusa sobrescrita'
   const removeu = await storage.remove([`${workspace}/${anexoId}`]);
   expect(removeu.error).toBeNull();
   expect((await lerAnexo(anexoId)).error).toBeTruthy();
+  // O exportador não pode entregar um JSON aparentemente completo se um anexo
+  // referenciado estiver ausente no Storage. Só vale no Supabase descartável.
+  await page.getByRole('button', { name: /Baixar backup do workspace/i }).click();
+  await expect(page.getByRole('status').filter({ hasText: /Backup incompleto/i }))
+    .toBeVisible({ timeout: 30_000 });
   await selecionar(lead, [montarAnexo(anexoId)]);
   await page.getByRole('button', { name: /Confirmar importação/i }).click();
   await expect(page.getByRole('status').filter({ hasText: /0 registro\(s\) recuperado\(s\) ou importado\(s\); 1 anexo/i }))
@@ -85,6 +90,30 @@ test('backup: importa lead/anexo, recupera arquivo ausente e recusa sobrescrita'
   const recuperado = await lerAnexo(anexoId);
   expect(recuperado.error).toBeNull();
   expect(Buffer.from(await recuperado.data!.arrayBuffer())).toEqual(bytes);
+
+  // Download real do backup da nuvem pela interface. Verifica o arquivo .json
+  // exportado, o lead, a inclusão do anexo e a integridade SHA-256 dos bytes.
+  const baixando = page.waitForEvent('download');
+  await page.getByRole('button', { name: /Baixar backup do workspace/i }).click();
+  const download = await baixando;
+  expect(download.suggestedFilename()).toMatch(/^nexa-workspace-nuvem-.*\\.json$/);
+  const stream = await download.createReadStream();
+  const partes: Buffer[] = [];
+  for await (const parte of stream) partes.push(Buffer.isBuffer(parte) ? parte : Buffer.from(parte));
+  const exportado = JSON.parse(Buffer.concat(partes).toString('utf8')) as {
+    formato: string;
+    versao: number;
+    dados: { leads?: Array<{ id: string; empresa?: string }> };
+    arquivos: Array<{ id: string; base64: string; sha256?: string }>;
+  };
+  expect(exportado.formato).toBe('nexa-workspace-backup');
+  expect(exportado.versao).toBe(1);
+  expect(exportado.dados.leads?.filter(r => r.id === id)).toHaveLength(1);
+  expect(exportado.dados.leads?.find(r => r.id === id)?.empresa).toBe(empresa);
+  const arquivoExportado = exportado.arquivos.find(a => a.id === anexoId);
+  expect(arquivoExportado).toBeTruthy();
+  expect(Buffer.from(arquivoExportado!.base64, 'base64')).toEqual(bytes);
+  expect(arquivoExportado!.sha256).toBe(createHash('sha256').update(bytes).digest('hex'));
 
   // A prévia deve detectar o conflito antes de enviar novo anexo ao Storage.
   const outroAnexoId = `arq-${Date.now()}-bloqueado`;
