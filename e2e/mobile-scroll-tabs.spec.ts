@@ -85,7 +85,9 @@ test('viewport mobile curto: barra e rodapé continuam acessíveis sem sobreposi
   await page.goto('/configuracoes');
   await expect(page.locator('main[class*="_principal_"]')).toBeVisible();
   await expect(page.locator('nav[class*="_navCelular_"]')).toBeVisible();
-  const final = await page.evaluate(async () => {
+  let final = { restante: Infinity, fim: Infinity, menuInicio: -1, menuFinal: Infinity, altura: 0 };
+  await expect.poll(async () => {
+    final = await page.evaluate(async () => {
     const main = document.querySelector<HTMLElement>('main[class*="_principal_"]');
     const menu = document.querySelector<HTMLElement>('nav[class*="_navCelular_"]');
     if (!main || !menu) throw Error('NexaShell mobile indisponível');
@@ -99,8 +101,10 @@ test('viewport mobile curto: barra e rodapé continuam acessíveis sem sobreposi
       menuFinal: menu.getBoundingClientRect().bottom,
       altura: innerHeight,
     };
-  });
-  expect(final.restante).toBeLessThanOrEqual(2);
+    });
+    return final.restante;
+  }, { timeout: 20000, intervals: [100, 250, 500] }).toBeLessThanOrEqual(2);
+  // O conteúdo deve terminar antes do menu, mesmo após crescer no Safari.
   expect(final.fim).toBeLessThanOrEqual(final.menuInicio + 2);
   expect(final.menuFinal).toBeLessThanOrEqual(final.altura + 2);
 });
