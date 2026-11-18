@@ -14,13 +14,13 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: 'pt-BR',
     orientation: 'any',
     icons: [
-      { src: '/pwa/icon/192', sizes: '192x192', type: 'image/png', purpose: 'any' },
-      { src: '/pwa/icon/512', sizes: '512x512', type: 'image/png', purpose: 'any' },
-      { src: '/pwa/icon/512', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      { src: '/pwa/icon/192?v=nexa-oficial-20261118-v3', sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: '/pwa/icon/512?v=nexa-oficial-20261118-v3', sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: '/pwa/icon/512?v=nexa-oficial-20261118-v3', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
     shortcuts: [
-      { name: 'CRM', short_name: 'CRM', url: '/crm', icons: [{ src: '/pwa/icon/192', sizes: '192x192' }] },
-      { name: 'Projetos', short_name: 'Kanban', url: '/kanban', icons: [{ src: '/pwa/icon/192', sizes: '192x192' }] },
+      { name: 'CRM', short_name: 'CRM', url: '/crm', icons: [{ src: '/pwa/icon/192?v=nexa-oficial-20261118-v3', sizes: '192x192' }] },
+      { name: 'Projetos', short_name: 'Kanban', url: '/kanban', icons: [{ src: '/pwa/icon/192?v=nexa-oficial-20261118-v3', sizes: '192x192' }] },
     ],
   };
 }

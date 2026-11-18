@@ -29,7 +29,9 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
   },
   icons: {
-    apple: [{ url: '/pwa/icon/180', sizes: '180x180', type: 'image/png' }],
+    icon: [{ url: '/pwa/icon/192?v=nexa-oficial-20261118-v3', sizes: '192x192', type: 'image/png' }],
+    shortcut: [{ url: '/pwa/icon/192?v=nexa-oficial-20261118-v3', sizes: '192x192', type: 'image/png' }],
+    apple: [{ url: '/pwa/icon/180?v=nexa-oficial-20261118-v3', sizes: '180x180', type: 'image/png' }],
   },
 };
 
