@@ -17,11 +17,9 @@ function modoInstalado() {
 export default function InstalarApp() {
   const [evento, setEvento] = useState<EventoInstalacao | null>(null);
   const [instalado, setInstalado] = useState(false);
-  const [ios, setIos] = useState(false);
 
   useEffect(() => {
     setInstalado(modoInstalado());
-    setIos(/iPhone|iPad|iPod/i.test(navigator.userAgent));
     const aoPrompt = (e: Event) => {
       e.preventDefault();
       setEvento(e as EventoInstalacao);
@@ -71,11 +69,9 @@ export default function InstalarApp() {
           <p style={{ lineHeight: 1.55, overflowWrap: 'anywhere' }}>
             {instalado
               ? 'O Nexa já está aberto em modo aplicativo neste dispositivo.'
-              : ios
-                ? 'No iPhone: abra este endereço no Safari, toque em Compartilhar e depois em Adicionar à Tela de Início.'
-                : evento
-                  ? 'Seu navegador permite instalar o Nexa diretamente.'
-                  : 'No Chrome ou Edge, abra o menu do navegador e escolha Instalar aplicativo ou Adicionar à tela inicial.'}
+              : evento
+                ? 'Este dispositivo permite instalar o Nexa diretamente.'
+                : 'Use o Nexa Workspace pelo ícone do aplicativo para aproveitar as notificações e alertas.'}
           </p>
           {evento && !instalado && (
             <button type="button" className={u.btnPrimario} style={{ marginTop: 12 }} onClick={() => void instalar()}>

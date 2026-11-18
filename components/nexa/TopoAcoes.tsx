@@ -13,6 +13,7 @@ import { pedirAberturaProjeto } from './util';
 import { calcularResumoMeta, reaisCentavos } from './metas';
 import { alertasCobranca, dataBr, diasAte, dinheiro as dinheiroFin, textoDias } from './financeiro';
 import { useNotificacoes } from './notificacoes';
+import { useEventosNexa } from './eventos';
 import { reais } from './util';
 
 export const EVENTO_ABRIR = 'nexa:abrir-menu';
@@ -52,6 +53,7 @@ export default function TopoAcoes({ compacto, iniciais }: { compacto: boolean; i
 
   // Central de notificações: vem do servidor; se ele não responder, calcula aqui mesmo
   const central = useNotificacoes();
+  const eventos = useEventosNexa();
   const [conversas] = useConversas();
   const [projetos] = useProjetos();
   const [prefs] = usePreferencias();
@@ -80,7 +82,7 @@ export default function TopoAcoes({ compacto, iniciais }: { compacto: boolean; i
   const naoLidas = useMemo(() => cobrancas.filter((c) => !c.lida), [cobrancas]);
   const diasPrazo = diasPrazoProximo(prefs);
   const tarefasAlerta = useMemo(() => alertasTarefas(projetos, undefined, diasPrazo), [projetos, diasPrazo]);
-  const temAvisos = contatosHoje.length > 0 || resumo.metaDiaria != null || cobrancas.length > 0 || tarefasAlerta.length > 0;
+  const temAvisos = eventos.lista.length > 0 || contatosHoje.length > 0 || resumo.metaDiaria != null || cobrancas.length > 0 || tarefasAlerta.length > 0;
   const linkLead = (id: string) => (conversas.some((cv) => cv.leadId === id) ? `/conversas?lead=${id}` : `/crm?lead=${id}`);
 
   const alternar = (m: Menu) => setAberto((a) => (a === m ? null : m));
@@ -165,9 +167,10 @@ export default function TopoAcoes({ compacto, iniciais }: { compacto: boolean; i
           'avisos',
           'Notificações',
           <Bell size={tam} {...ICONE} />,
-          naoLidas.length ? (
-            <span className={s.contadorAviso} aria-label={`${naoLidas.length} notificação(ões) de cobrança não lida(s)`}>
-              {naoLidas.length}
+          (naoLidas.length + eventos.naoLidas.length) ? (
+            <span className={s.contadorAviso}
+              aria-label={`${naoLidas.length + eventos.naoLidas.length} notificação(ões) não lida(s)`}>
+              {Math.min(99, naoLidas.length + eventos.naoLidas.length)}
             </span>
           ) : temAvisos ? (
             <span className={s.pontoAviso} aria-hidden />
@@ -176,6 +179,40 @@ export default function TopoAcoes({ compacto, iniciais }: { compacto: boolean; i
         {aberto === 'avisos' && (
           <div className={s.menuFlutuante} role="dialog" aria-label="Notificações">
             <h3>Notificações</h3>
+            {eventos.lista.length > 0 && (
+              <>
+                <div className={s.tituloLinha}>
+                  <h4>Atividade do Workspace</h4>
+                  {eventos.naoLidas.length > 0 && (
+                    <button type="button" className={s.linkPequeno}
+                      onClick={() => void eventos.marcarLidas(eventos.naoLidas.map((e) => e.id))}>
+                      Marcar como lidas
+                    </button>
+                  )}
+                </div>
+                <ul className={s.menuLista}>
+                  {eventos.lista.slice(0, 12).map((evento) => (
+                    <li key={evento.id} className={evento.lida_em ? s.lida : undefined}>
+                      <Link href={evento.rota.startsWith('/') && !evento.rota.startsWith('//') ? evento.rota : '/'}
+                        className={s.menuLink}
+                        onClick={() => {
+                          if (!evento.lida_em) void eventos.marcarLidas([evento.id]);
+                          setAberto(null);
+                        }}>
+                        {evento.tipo === 'mensagem' ? <Bell size={16} {...ICONE} /> :
+                         evento.tipo === 'tarefa' ? <CheckSquare size={16} {...ICONE} /> :
+                         <CircleAlert size={16} {...ICONE} />}
+                        <span>
+                          <strong>{evento.titulo}</strong>
+                          <small>{evento.detalhe}</small>
+                        </span>
+                        {!evento.lida_em && <span className={s.naoLida} aria-label="Não lida" />}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
             {cobrancas.length > 0 && (
               <>
                 <div className={s.tituloLinha}>
