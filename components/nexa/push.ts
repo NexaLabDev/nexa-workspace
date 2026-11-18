@@ -98,3 +98,19 @@ export async function testarPushLocal() {
     tag: 'nexa-teste-local',
   });
 }
+
+/** Teste de envio REAL pelo servidor (diferente da notificação local). */
+export async function testarPushRemoto() {
+  const reg = await navigator.serviceWorker.getRegistration('/');
+  const subs = await reg?.pushManager.getSubscription();
+  if (!subs) throw Error('Ative as notificações primeiro.');
+  const resposta = await fetch('/api/push/teste', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ endpoint: subs.endpoint }),
+  });
+  if (!resposta.ok) {
+    const dados = await resposta.json().catch(() => null) as { erro?: string } | null;
+    throw Error(dados?.erro || 'O servidor não conseguiu enviar a notificação.');
+  }
+}

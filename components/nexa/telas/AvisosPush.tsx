@@ -7,7 +7,7 @@
 
 import { BellPlus, Info, BellRing, ShieldCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { ativarPush, desativarPush, lerEstadoPush, testarPushLocal, type EstadoPush } from '../push';
+import { ativarPush, desativarPush, lerEstadoPush, testarPushRemoto, type EstadoPush } from '../push';
 import u from '../ui.module.css';
 import { OPCOES_DIAS_ANTES, useConfigAvisos, type ConfigAvisos } from '../notificacoes';
 
@@ -32,8 +32,8 @@ export default function AvisosPush() {
     try {
       if (acao === 'ativar') await ativarPush();
       else if (acao === 'desativar') await desativarPush();
-      else await testarPushLocal();
-      if (acao === 'teste') setMensagem('Aviso local exibido. O envio remoto acontece pelos eventos do Workspace.');
+      else await testarPushRemoto();
+      if (acao === 'teste') setMensagem('Push de teste enviado pelo servidor. Confira as notificações deste aparelho.');
       else setMensagem(acao === 'ativar'
         ? 'Notificações ativadas para mensagens, leads, tarefas, prazos e alertas importantes.'
         : 'Notificações desativadas neste aparelho.');
@@ -113,7 +113,7 @@ export default function AvisosPush() {
             ) : (
               <>
                 <button type="button" className={u.btnSecundario} disabled={executando}
-                  onClick={() => void executar('teste')}>Testar aviso neste aparelho</button>
+                  onClick={() => void executar('teste')}>Testar push real</button>
                 <button type="button" className={u.btnFantasma} disabled={executando}
                   onClick={() => void executar('desativar')}>Desativar neste aparelho</button>
               </>
