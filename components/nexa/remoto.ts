@@ -280,19 +280,49 @@ export async function descartarPendentes(){
  }
  await atualizar();
 }
-export async function importar(d:Record<string,unknown>){
- if(!pessoa||pessoa.papel!=='administrador'||!pronto||ocupado||pendentes.size)throw Error('Aguarde a sincronização e use uma conta administradora.');
+// Confere conflitos com o estado mais recente ANTES de enviar anexos privados.
+// Registros excluídos (tombstones) podem ser recuperados com sua versão atual;
+// registros vivos diferentes NUNCA são sobrescritos.
+function loteDeImportacao(d:Record<string,unknown>, existentes:Map<string,Registro>):Registro[]{
  const lote:Registro[]=[];
  for(const [c,v] of Object.entries(d)){
- if(c==='perfil')continue;
- for(const r of linhas(c,v)){
- const a=base.get(mapa(r));
- if(a){if(!mesmoValor(a.conteudo,r.conteudo))throw Error('ID já existente com conteúdo diferente: '+c+'/'+r.id);continue;}
- lote.push(r);
- }}
- const {error}=await supabaseNavegador().rpc('gravar_registros',{p_workspace:pessoa.workspace_id,p_usuario:pessoa.id,p_mudancas:lote});
- if(error)throw Error(error.message);
+  if(c==='perfil')continue;
+  for(const r of linhas(c,v)){
+   const antigo=existentes.get(mapa(r));
+   if(antigo?.conteudo!==null&&antigo){
+    if(!mesmoValor(antigo.conteudo,r.conteudo))throw Error('ID já existente com conteúdo diferente: '+c+'/'+r.id);
+    continue;
+   }
+   lote.push({...r,versao:antigo?.versao??0});
+  }
+ }
+ return lote;
+}
+async function lerEstadoImportacao():Promise<Map<string,Registro>>{
+ if(!pessoa||pessoa.papel!=='administrador'||!pronto||ocupado||bloqueado||pendentes.size)
+  throw Error('Aguarde a sincronização e use uma conta administradora.');
+ const {data,error}=await supabaseNavegador().rpc('ler_registros');
+ if(error||!Array.isArray(data))throw Error('Não foi possível conferir os registros antes da importação.');
+ return new Map((data as Registro[]).map(r=>[mapa(r),r]));
+}
+/** Preflight: aborta conflitos antes de subir qualquer anexo; não grava nada. */
+export async function conferirImportacao(d:Record<string,unknown>):Promise<number>{
+ return loteDeImportacao(d,await lerEstadoImportacao()).length;
+}
+export async function importar(d:Record<string,unknown>){
+ const usuario=pessoa;
+ const registros=await lerEstadoImportacao();
+ if(!usuario||usuario!==pessoa)throw Error('Sessão mudou. Importação interrompida.');
+ const lote=loteDeImportacao(d,registros);
+ if(!lote.length)return 0;
+ const {error}=await supabaseNavegador().rpc('gravar_registros',{
+  p_workspace:usuario.workspace_id,p_usuario:usuario.id,p_mudancas:lote
+ });
+ if(error)throw Error(error.code==='40001'
+  ?'Conflito: os dados mudaram durante a importação. Confira novamente e tente outra vez.'
+  :'Importação recusada pelo banco: '+error.message);
  await atualizar();
- for(const r of lote)if(!mesmoValor(base.get(mapa(r))?.conteudo,r.conteudo))throw Error('Não foi possível conferir '+r.id+'. Preserve o backup e tente novamente.');
+ for(const r of lote)if(!mesmoValor(base.get(mapa(r))?.conteudo,r.conteudo))
+  throw Error('Não foi possível conferir '+r.id+'. Preserve o backup e tente novamente.');
  return lote.length;
 }

@@ -13,17 +13,9 @@ import { lerTudoSalvo, gravarTudoSalvo } from './store';
 import { guardarComId, listarArquivos, idsDeArquivoEmUso } from './arquivos';
 import { supabaseNavegador } from '@/lib/supabase/navegador';
 import { identidade, disponivel, temPendentes } from './remoto';
-
-export const FORMATO_BACKUP = 'nexa-workspace-backup';
-
-export type ArquivoBackup = { id: string; tipo: string; nome?: string; base64: string };
-export type Backup = {
-  formato: typeof FORMATO_BACKUP;
-  versao: 1;
-  criadoEm: string;
-  dados: Record<string, unknown>;
-  arquivos: ArquivoBackup[];
-};
+import { FORMATO_BACKUP, validarBackup, LIMITE_JSON_BACKUP, type ArquivoBackup, type Backup } from './backupValidacao';
+export { FORMATO_BACKUP };
+export type { ArquivoBackup, Backup };
 
 function blobParaBase64(b: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -56,7 +48,7 @@ export async function montarBackup(): Promise<Backup> {
       'Nenhum backup foi gerado. Confira o dispositivo original antes de importar.'
     );
   }
-  return {
+  return validarBackup({
     formato: FORMATO_BACKUP,
     versao: 1,
     criadoEm: new Date().toISOString(),
@@ -69,7 +61,7 @@ export async function montarBackup(): Promise<Backup> {
         base64: await blobParaBase64(arquivo),
       }))
     ),
-  };
+  });
 }
 
 /** Backup dos dados já sincronizados no Supabase, sem alterar nada no servidor. */
@@ -134,7 +126,7 @@ export async function montarBackupNuvem(): Promise<Backup> {
     }
     arquivos.push({ id, tipo: arquivo.type, base64: await blobParaBase64(arquivo) });
   }
-  return { formato: FORMATO_BACKUP, versao: 1, criadoEm: new Date().toISOString(), dados, arquivos };
+  return validarBackup({ formato: FORMATO_BACKUP, versao: 1, criadoEm: new Date().toISOString(), dados, arquivos });
 }
 
 function nomeArquivo(d = new Date()): string {
@@ -172,16 +164,16 @@ export async function baixarBackupNuvem(): Promise<{ listas: number; arquivos: n
 
 /** Confere se o arquivo é um backup válido, sem gravar nada. */
 export async function lerBackup(arquivo: File): Promise<Backup> {
-  let b: Partial<Backup>;
+  if (arquivo.size > LIMITE_JSON_BACKUP) {
+    throw Error('Backup acima de 85 MB: use um arquivo menor ou divida a importação.');
+  }
+  let b: unknown;
   try {
-    b = JSON.parse(await arquivo.text()) as Partial<Backup>;
+    b = JSON.parse(await arquivo.text());
   } catch {
-    throw new Error('O arquivo não é um backup do Nexa Workspace (JSON inválido).');
+    throw Error('O arquivo não é um backup do Nexa Workspace (JSON inválido).');
   }
-  if (b.formato !== FORMATO_BACKUP || b.versao !== 1 || !b.dados || typeof b.dados !== 'object' || Array.isArray(b.dados) || !Array.isArray(b.arquivos)) {
-    throw new Error('O arquivo não é um backup do Nexa Workspace.');
-  }
-  return b as Backup;
+  return validarBackup(b);
 }
 
 /**

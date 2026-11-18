@@ -12,7 +12,7 @@ import { DatabaseBackup, Download, Search, Upload } from 'lucide-react';
 import { montarBackup, baixarBackup, baixarBackupNuvem, lerBackup, type Backup } from '@/components/nexa/backup';
 import { subirPrivado } from '@/components/nexa/storage';
 import { idsDeArquivoEmUso } from '@/components/nexa/arquivos';
-import { identidade, importar } from '@/components/nexa/remoto';
+import { identidade, importar, conferirImportacao } from '@/components/nexa/remoto';
 import { clientes, leads, projetos, documentos, conversasExemplo, vendasExemplo } from '@/components/nexa/dados-exemplo';
 import u from '@/components/nexa/ui.module.css';
 import a from './acesso.module.css';
@@ -168,7 +168,16 @@ export default function Importar() {
                     const faltam = idsDeArquivoEmUso(dados);
                     for (const arq of b.arquivos) faltam.delete(arq.id);
                     if (faltam.size) throw Error('Backup incompleto: falta o anexo ' + [...faltam][0] + '. Nada foi importado.');
+                    // Confere IDs existentes/conflitos antes de criar arquivos órfãos.
+                    const possiveis = await conferirImportacao(dados);
+                    if (!possiveis) {
+                      setAviso({ texto: 'Todos os registros já estão presentes. Nenhum anexo foi enviado.' });
+                      setB(null);
+                      return;
+                    }
+                    const arquivosEmUso = idsDeArquivoEmUso(dados);
                     for (const arq of b.arquivos) {
+                      if (!arquivosEmUso.has(arq.id)) continue;
                       const bytes = Uint8Array.from(atob(arq.base64), (ch) => ch.charCodeAt(0));
                       await subirPrivado(arq.id, new Blob([bytes]), true);
                     }
