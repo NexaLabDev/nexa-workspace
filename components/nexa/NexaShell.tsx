@@ -9,6 +9,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
+import NavegacaoRapida from './NavegacaoRapida';
 import {
   Box,
   Calculator,
@@ -31,7 +32,7 @@ import PaletaBusca from './PaletaBusca';
 import { useLeads } from './dados';
 import { alertasCobranca } from './financeiro';
 import TopoAcoes from './TopoAcoes';
-import ReconciliarRelacoes from './ReconciliarRelacoes';
+import useRolagemNavegacao from './useRolagemNavegacao';
 
 export type AbaNexa =
   | 'dashboard'
@@ -102,6 +103,7 @@ export default function NexaShell({
   marcaTitulo,
 }: Props) {
   const escala = useEscala();
+  const { raizRef, principalRef, navCelularRef } = useRolagemNavegacao();
   const inicio = aba === 'dashboard';
   const [buscaAberta, setBuscaAberta] = useState(false);
   const [leads] = useLeads();
@@ -129,17 +131,18 @@ export default function NexaShell({
 
   return (
     <div
+      ref={raizRef}
       className={`${s.raiz} ${inicio ? '' : s.raizInterna}`}
       style={escala > 1 ? { zoom: escala } : undefined}
     >
       {/* ===== Barra de ícones ===== */}
       <nav className={s.trilho} aria-label="Navegação">
-        <Link href="/" aria-label="Nexa Lab — início">
+        <NavegacaoRapida href="/" aria-label="Nexa Lab — início">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/dashboard/simbolo-nexa.png" alt="" className={s.simbolo} />
-        </Link>
+        </NavegacaoRapida>
         {TRILHO.map(({ aba: a, nome, href, icone: Icone }) => (
-          <Link
+          <NavegacaoRapida
             key={a}
             href={href}
             className={`${s.trilhoBtn} ${aba === a ? s.trilhoAtivo : ''}`}
@@ -149,10 +152,10 @@ export default function NexaShell({
           >
             <Icone size={24} {...ICONE} />
             {a === 'recebimentos' && alertas > 0 && <span className={s.pontoTrilho} aria-label={`${alertas} cobrança(s) vencida(s) ou perto do vencimento`} />}
-          </Link>
+          </NavegacaoRapida>
         ))}
         <span className={s.trilhoDivisor} aria-hidden />
-        <Link
+        <NavegacaoRapida
           href="/configuracoes"
           className={`${s.trilhoBtn} ${s.trilhoRodape} ${configAtiva ? s.trilhoAtivo : ''}`}
           aria-label="Configurações"
@@ -160,17 +163,17 @@ export default function NexaShell({
           aria-current={configAtiva ? 'page' : undefined}
         >
           <Settings size={24} {...ICONE} />
-        </Link>
+        </NavegacaoRapida>
       </nav>
 
       {/* ===== Área principal ===== */}
-      <main className={s.principal}>
+      <main ref={principalRef} className={s.principal}>
         <header
           className={`${s.topo} ${cantoDireito ? s.topoComCanto : ''} ${topoCompacto ? s.topoCompacto : ''}`}
         >
           {marcaTitulo ? (
             <>
-              <Link href="/" className={s.marca}>
+              <Link href="/" scroll={false} className={s.marca}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/dashboard/simbolo-nexa.png" alt="" />
                 <span>Nexa Lab</span>
@@ -196,7 +199,7 @@ export default function NexaShell({
                   {conteudoNovo}
                 </button>
               ) : (
-                <Link href={botaoNovo.href ?? '/'} className={s.btnNovo}>
+                <Link href={botaoNovo.href ?? '/'} scroll={false} className={s.btnNovo}>
                   {conteudoNovo}
                 </Link>
               )}
@@ -212,10 +215,10 @@ export default function NexaShell({
       </main>
 
       {/* ===== Navegação no celular ===== */}
-      <nav className={s.navCelular} aria-label="Navegação">
+      <nav ref={navCelularRef} className={s.navCelular} aria-label="Navegação">
         {[...TRILHO, { aba: 'configuracoes' as AbaNexa, nome: 'Configurações', curto: 'Ajustes', href: '/configuracoes', icone: Settings }].map(
           ({ aba: a, curto, href, icone: Icone }) => (
-            <Link
+            <NavegacaoRapida
               key={a}
               href={href}
               className={`${s.navCelularItem} ${aba === a ? s.navCelularAtivo : ''}`}
@@ -223,13 +226,12 @@ export default function NexaShell({
             >
               <Icone size={22} {...ICONE} />
               <span>{curto}</span>
-            </Link>
+            </NavegacaoRapida>
           )
         )}
       </nav>
 
       {buscaAberta && <PaletaBusca onFechar={() => setBuscaAberta(false)} />}
-      <ReconciliarRelacoes />
     </div>
   );
 }

@@ -83,7 +83,7 @@ function Conteudo({ projeto, responsaveis, abaInicial, onFechar, onExcluir }: Pr
   }, [fechar]);
 
   useEffect(() => {
-    janela.current?.focus();
+    janela.current?.focus({ preventScroll: true });
     const antes = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
@@ -97,7 +97,7 @@ function Conteudo({ projeto, responsaveis, abaInicial, onFechar, onExcluir }: Pr
     e.preventDefault();
     const n = (destino + ABAS.length) % ABAS.length;
     setAba(ABAS[n].id);
-    abasRef.current[n]?.focus();
+    abasRef.current[n]?.focus({ preventScroll: true });
   };
 
   // "Adicionar responsável" do cabeçalho leva ao campo do painel ao lado (sempre visível)

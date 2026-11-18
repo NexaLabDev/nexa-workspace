@@ -44,7 +44,7 @@ export default function Quadro<T extends ItemQuadro>({
 
   return (
     <DragDropContext onDragEnd={aoSoltar}>
-      <div className={u.quadro}>
+      <div className={u.quadro} data-nexa-scroll="kanban-board">
         {etapas.map((etapa) => {
           const daEtapa = itens.filter((i) => i.etapa === etapa.id);
           return (
