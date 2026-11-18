@@ -36,8 +36,8 @@ self.addEventListener('push', (e) => {
     self.registration.showNotification(d.titulo || 'Nexa Workspace', {
       body: d.corpo || '',
       tag: d.tag || undefined,
-      icon: '/icon.png',
-      badge: '/icon.png',
+      icon: '/pwa/icon/192',
+      badge: '/pwa/icon/192',
       lang: 'pt-BR',
       data: { url },
     })

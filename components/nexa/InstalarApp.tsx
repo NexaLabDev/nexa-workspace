@@ -72,10 +72,10 @@ export default function InstalarApp() {
             {instalado
               ? 'O Nexa já está aberto em modo aplicativo neste dispositivo.'
               : ios
-                ? 'No iPhone: abra este endereço no Safari, toque em Compartilhar e depois em Adicionar à Tela de Início.'
+                ? 'O app instalado no iPhone pode receber notificações, inclusive quando estiver fechado.'
                 : evento
                   ? 'Seu navegador permite instalar o Nexa diretamente.'
-                  : 'No Chrome ou Edge, abra o menu do navegador e escolha Instalar aplicativo ou Adicionar à tela inicial.'}
+                  : 'Você pode usar o Nexa como aplicativo no computador ou no celular.'}
           </p>
           {evento && !instalado && (
             <button type="button" className={u.btnPrimario} style={{ marginTop: 12 }} onClick={() => void instalar()}>

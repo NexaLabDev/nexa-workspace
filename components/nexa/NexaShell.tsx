@@ -145,7 +145,7 @@ export default function NexaShell({
       <nav className={s.trilho} aria-label="Navegação">
         <NavegacaoRapida href="/" aria-label="Nexa Lab — início">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/dashboard/simbolo-nexa.png" alt="" className={s.simbolo} />
+          <img src="/nexa/simbolo.svg" alt="" className={s.simbolo} />
         </NavegacaoRapida>
         {TRILHO.map(({ aba: a, nome, href, icone: Icone }) => (
           <NavegacaoRapida
@@ -181,7 +181,7 @@ export default function NexaShell({
             <>
               <Link href="/" scroll={false} className={s.marca}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/dashboard/simbolo-nexa.png" alt="" />
+                <img src="/nexa/simbolo.svg" alt="" />
                 <span>Nexa Lab</span>
               </Link>
               <span className={s.marcaSep} aria-hidden />
