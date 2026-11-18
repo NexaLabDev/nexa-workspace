@@ -432,3 +432,10 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 700px) {
+  .pagina, .numeros, .corpo, .item { min-width: 0; max-width: 100%; }
+  .numero { min-width: 0; }
+  .item { gap: 8px; overflow-wrap: anywhere; }
+  .item :is(span,strong,small,p) { min-width: 0; overflow-wrap: anywhere; }
+}

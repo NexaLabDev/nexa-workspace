@@ -977,3 +977,66 @@ select.entrada option {
   outline: 2px solid #c4f03a;
   outline-offset: 2px;
 }
+
+/* Componentes compartilhados: textos não podem ampliar o card no mobile. */
+.pagina, .grade2, .painel, .docItem, .docTexto, .formGrade,
+.gradeCartoes, .tabelaCaixa, .quadro { min-width: 0; max-width: 100%; }
+.painelTopo > div { min-width: 0; }
+.painelTopo h2 { max-width: 100%; overflow-wrap: anywhere; }
+.docTexto strong, .docTexto span { overflow-wrap: anywhere; }
+.tabelaCaixa { overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+
+@media (max-width: 700px) {
+  .pagina { gap: 16px; }
+  .painel { padding: 16px; border-radius: 16px; }
+  .painelTopo { align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+  .painelTopo > div { flex: 1 1 160px; }
+  .painelTopo h2 {
+    font-size: 17px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .painelTopo small { overflow-wrap: anywhere; }
+  .cabecalho > div { min-width: 0; max-width: 100%; }
+  .cabecalho p { overflow-wrap: anywhere; }
+  .docItem { align-items: flex-start; flex-wrap: wrap; gap: 10px; }
+  .docTexto { flex: 1 1 calc(100% - 60px); }
+  .docItem .menuAcoes { margin-left: auto; }
+  .btnPrimario, .btnSecundario, .btnFantasma {
+    max-width: 100%;
+    min-height: 42px;
+    height: auto;
+    padding: 10px 14px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+  .campo, .entrada, .buscaPagina { min-width: 0; max-width: 100%; }
+  .modalRodape { flex-wrap: wrap; }
+  .quadro {
+    width: 100%;
+    max-width: 100%;
+    gap: 10px;
+    scroll-padding-inline: 4px;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .quadro .coluna {
+    flex: 0 0 min(82vw, 312px);
+    min-width: min(82vw, 312px);
+    padding: 14px;
+  }
+  .colunaTopo h3 {
+    flex: 1;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .cartaoQuadro { min-width: 0; max-width: 100%; }
+  .cartaoQuadro > * { min-width: 0; }
+}
+@media (max-width: 360px) {
+  .painel { padding: 13px; }
+  .painelTopo h2 { font-size: 16px; }
+  .cabecalho h1 { font-size: 25px; }
+}
