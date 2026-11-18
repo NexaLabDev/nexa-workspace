@@ -5,7 +5,7 @@ const CACHE_OFFLINE = 'nexa-offline-v1';
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_OFFLINE)
-      .then((cache) => cache.add('/offline.html'))
+      .then((cache) => cache.addAll(['/offline.html','/nexa-app.webp']))
       .catch(() => {})
       .then(() => self.skipWaiting())
   );

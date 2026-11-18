@@ -10,6 +10,11 @@ export async function middleware(req: NextRequest) {
     caminho === '/login' ||
     caminho === '/conta' ||
     caminho === '/manifest.webmanifest' ||
+    caminho === '/nexa-app.webp' ||
+    caminho === '/nexa-logo.webp' ||
+    caminho === '/api/push/chave' ||
+    caminho === '/api/push/entregar' ||
+    caminho === '/api/push/teste' ||
     caminho === '/offline.html' ||
     caminho === '/icon.png' ||
     /^\/pwa\/icon\/(180|192|512)$/.test(caminho) ||
