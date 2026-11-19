@@ -11,11 +11,11 @@ export async function GET() {
   if (!(await autorizadoParaConversas('ler'))) {
     return NextResponse.json({ erro: 'Acesso não autorizado.' }, { status: 403, headers });
   }
-  const config = configuracaoZapclaw();
+  const config = await configuracaoZapclaw();
   if (!config) {
     return NextResponse.json({
       configurado: false,
-      erro: 'Configure ZAPCLAW_API_KEY e ZAPCLAW_FROM na Vercel para ativar o WhatsApp ao vivo.'
+      erro: 'Configure ZAPCLAW_API_KEY na Vercel. Se houver vários números na ZapClaw, defina também ZAPCLAW_FROM.'
     }, { status: 503, headers });
   }
 
