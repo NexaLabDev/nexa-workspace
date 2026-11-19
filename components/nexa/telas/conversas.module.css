@@ -1427,3 +1427,47 @@
 .dadoContato small{color:#a4b7a4;font-size:12px}.dadoContato b{font-size:15px}
 .atalhoCrm{background:#c4f454;color:#17220c;display:inline-flex;justify-content:center;align-items:center;padding:12px;border-radius:10px;font-size:13px;font-weight:800;text-decoration:none}
 @media(max-width:600px){.statusIntegracao{font-size:11px;padding:7px}.contatoRealPainel{gap:10px}.contatoRealPainel>strong{font-size:16px}}
+
+/* Caixa de entrada compacta e confortável — mantém os 3 canais no mesmo lugar. */
+.paginaConversa{
+  grid-template-columns:minmax(265px,310px) minmax(0,1fr) minmax(260px,300px);
+  gap:12px;margin-top:15px;min-height:0;
+}
+.paginaConversa .lista{
+  background:#1a2320;border-color:rgba(190,227,170,.12);
+  padding:13px 10px 12px;
+}
+.paginaConversa .canais{
+  flex-wrap:nowrap;gap:5px;padding:3px 3px 13px;
+}
+.paginaConversa .canal{
+  height:38px;gap:6px;padding:0 9px;border-radius:11px;font-size:13px;
+}
+.paginaConversa .contador{
+  min-width:22px;height:22px;font-size:11px;padding:0 5px;
+}
+.paginaConversa .buscaLinha{padding:13px 2px 12px;gap:7px}
+.paginaConversa .busca{height:42px;border-radius:12px;padding:0 12px;background:#121a16;border-color:#314139}
+.paginaConversa .busca input{font-size:13px}
+.paginaConversa .filtro{height:42px;width:42px;border-radius:12px;background:#19281e}
+.paginaConversa .itens{gap:5px}
+.paginaConversa .item{padding:12px 10px;gap:10px;border-radius:12px;background:transparent}
+.paginaConversa .itemAtivo{background:#2a4030;border-color:#5e8c57;box-shadow:none}
+.paginaConversa .avatar{width:40px;height:40px;border-radius:12px;font-size:15px}
+.paginaConversa .avatarCanal{width:19px;height:19px}
+.paginaConversa .itemTopo strong{font-size:13px;letter-spacing:-.01em}
+.paginaConversa .itemTopo small{font-size:10px;color:#93a895}
+.paginaConversa .itemBaixo{margin-top:5px}
+.paginaConversa .previa{font-size:12px;color:#acbcb0}
+.paginaConversa .painel{background:#1a2320}
+.paginaConversa .statusIntegracao{background:none;border:none;border-bottom:1px solid #354238;border-radius:0;padding:4px 3px 12px;margin:0 3px 10px}
+.paginaConversa .statusIntegracao button{padding:5px 7px;font-size:11px}
+.paginaConversa .marcaReal{font-size:9px;padding:2px 5px}
+@media(max-width:1280px){
+  .paginaConversa{grid-template-columns:minmax(250px,290px) minmax(0,1fr)}
+}
+@media(max-width:900px){
+  .paginaConversa{grid-template-columns:minmax(0,1fr);min-height:0;height:calc(100dvh - 114px);margin-top:8px}
+  .paginaConversa .lista,.paginaConversa .chat,.paginaConversa .painel{min-height:0;max-height:100%}
+  .paginaConversa .itens{min-height:0}
+}
