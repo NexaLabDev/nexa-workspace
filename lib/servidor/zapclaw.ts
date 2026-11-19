@@ -31,11 +31,20 @@ export async function autorizadoParaConversas(acao: Acao): Promise<boolean> {
   }
 }
 
-export function configuracaoZapclaw(): { chave: string; numero: string } | null {
+export async function configuracaoZapclaw(): Promise<{ chave: string; numero: string } | null> {
   const chave = process.env.ZAPCLAW_API_KEY?.trim() ?? '';
-  const numero = process.env.ZAPCLAW_FROM?.replace(/\D/g, '') ?? '';
-  if (!chave || !/^\d{10,15}$/.test(numero)) return null;
-  return { chave, numero };
+  if (!chave) return null;
+  const preferido = process.env.ZAPCLAW_FROM?.replace(/\D/g, '') ?? '';
+  if (/^\d{10,15}$/.test(preferido)) return { chave, numero: preferido };
+
+  // Uma única conexão: descobre o número na ZapClaw; nunca o hardcode no repositório.
+  // Com vários números, exija ZAPCLAW_FROM para não enviar pelo remetente errado.
+  const resposta = await requisicaoZapclaw('/send/numbers', chave);
+  const numeros = Array.isArray(resposta.dados.numbers) ? resposta.dados.numbers : [];
+  if (!resposta.ok || numeros.length !== 1 || !numeros[0] || typeof numeros[0] !== 'object') return null;
+  const n = numeros[0] as Record<string, unknown>;
+  const numero = typeof n.from === 'string' ? n.from.replace(/\D/g, '') : '';
+  return /^\d{10,15}$/.test(numero) ? { chave, numero } : null;
 }
 
 export type MensagemZapclaw = {
@@ -76,7 +85,7 @@ export function normalizarMensagem(m: MensagemDaApi): MensagemZapclaw | null {
 }
 
 export async function requisicaoZapclaw(
-  caminho: '/send/messages' | '/send/text',
+  caminho: '/send/messages' | '/send/text' | '/send/numbers',
   chave: string,
   opcoes: { params?: URLSearchParams; corpo?: object; idempotencyKey?: string } = {}
 ): Promise<{ ok: boolean; status: number; dados: Record<string, unknown> }> {
