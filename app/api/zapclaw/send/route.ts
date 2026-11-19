@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   if (!(await autorizadoParaConversas('criar'))) {
     return NextResponse.json({ erro: 'Sua conta não tem permissão para enviar mensagens.' }, { status: 403, headers });
   }
-  const config = configuracaoZapclaw();
+  const config = await configuracaoZapclaw();
   if (!config) {
     return NextResponse.json({ erro: 'Configure a chave da ZapClaw na Vercel primeiro.' }, { status: 503, headers });
   }
