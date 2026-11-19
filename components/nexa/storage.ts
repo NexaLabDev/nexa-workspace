@@ -22,7 +22,7 @@ export async function subirMediaWhatsApp(id: string, arquivo: File): Promise<voi
  const mime=arquivo.type.split(';')[0].trim().toLowerCase();
  if(!tipos.includes(mime))throw Error('Formato não aceito pelo WhatsApp. Use JPG, PNG, MP4, MP3, M4A ou OGG.');
  const {bucket,path}=objeto(id);
- const {error}=await bucket.upload(path,arquivo,{contentType:arquivo.type||mime,upsert:false});
+ const {error}=await bucket.upload(path,arquivo,{contentType:mime,upsert:false});
  if(error)throw Error(error.message||'Não foi possível enviar o arquivo para o Storage.');
 }
 
