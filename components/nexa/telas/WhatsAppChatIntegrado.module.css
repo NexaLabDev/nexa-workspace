@@ -128,3 +128,42 @@
   .enviar,.acao,.areaEscrita{transition:none}
   .carregando{animation:none}
 }
+
+/* Anexos e gravação: controles discretos, sem alterar o layout aprovado */
+.acaoAnexo{
+  display:grid;place-items:center;flex:0 0 38px;width:38px;height:41px;
+  background:transparent;border:0;border-radius:11px;color:#b9cfbd;
+  cursor:pointer;transition:background .12s,color .12s;
+}
+.acaoAnexo:not(:disabled):hover{background:#2a3d30;color:#d8faad}
+.acaoAnexo:disabled{opacity:.35;cursor:not-allowed}
+.anexoPrevia{
+  display:flex;align-items:center;gap:12px;min-width:0;
+  background:#26352b;border:1px solid #496448;border-radius:13px;
+  padding:9px 11px;color:#c8e4c2;
+}
+.anexoPrevia>span{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.anexoPrevia strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:#ecf9e8}
+.anexoPrevia small{font-size:10px;color:#a7bba9}
+.miniatura{display:block;width:46px;height:46px;border-radius:8px;object-fit:cover;flex-shrink:0}
+.anexoPrevia button,.gravacao button{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  border:1px solid transparent;background:transparent;color:#dfecdb;
+  border-radius:10px;min-width:31px;min-height:31px;cursor:pointer;
+}
+.anexoPrevia button:hover,.gravacao button:hover{background:#3c5240}
+.gravacao{
+  display:flex;align-items:center;gap:9px;padding:8px 11px;
+  background:#352722;border:1px solid #705b4d;border-radius:11px;
+  color:#f9cfca;font-size:12px;font-weight:600;
+}
+.gravacao button:first-of-type{margin-left:auto}
+.gravacao button:last-of-type{background:#e5eac2;color:#1d291c;font-weight:750;padding:5px 11px}
+.pulsoVermelho{flex:0 0 9px;width:9px;height:9px;border-radius:50%;background:#e46a58;animation:pulsar 1.2s infinite}
+@keyframes pulsar{50%{opacity:.3}}
+@media(max-width:600px){
+  .acaoAnexo{flex-basis:33px;width:33px}
+  .areaEscrita{gap:4px}
+  .anexoPrevia{gap:9px}
+}
+@media(prefers-reduced-motion:reduce){.pulsoVermelho{animation:none}}
