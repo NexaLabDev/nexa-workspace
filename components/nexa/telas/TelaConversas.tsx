@@ -49,6 +49,7 @@ import {
 } from '../dados';
 import { baixarArquivo, guardarArquivo, tamanhoLegivel } from '../arquivos';
 import PainelLead from './PainelLead';
+import WhatsAppAoVivo from './WhatsAppAoVivo';
 import { iniciais, useParametro } from '../util';
 
 const ICONE = { strokeWidth: 1.7 } as const;
@@ -118,6 +119,7 @@ export default function TelaConversas() {
   const [soNaoLidas, setSoNaoLidas] = useState(false);
   const [selecionadaId, setSelecionadaId] = useState<string | null>(null);
   const [vista, setVista] = useState<Vista>('lista');
+  const [modoZapclaw, setModoZapclaw] = useState(false);
   const leadUrl = useParametro('lead');
 
   const leadDe = (conv: Conversa) => leads.find((l) => l.id === conv.leadId);
@@ -210,6 +212,15 @@ export default function TelaConversas() {
 
   const contagem = (cn: CanalConversa) => conversas.filter((x) => x.canal === cn).length;
 
+  // Modo ao vivo usa a API REST da ZapClaw; conversas de demonstração ficam intactas.
+  if (modoZapclaw) {
+    return (
+      <NexaShell aba="conversas" marcaTitulo="CRM – Conversas" buscaTexto="Buscar lead, cliente, projeto ou proposta..." topoCompacto={{ iniciais: iniciaisUsuario }}>
+        <WhatsAppAoVivo onVoltar={() => setModoZapclaw(false)} />
+      </NexaShell>
+    );
+  }
+
   return (
     <NexaShell
       aba="conversas"
@@ -220,6 +231,14 @@ export default function TelaConversas() {
       <div className={`${c.pagina} ${c['vista-' + vista]}`}>
         {/* ===== Lista ===== */}
         <aside className={`${c.coluna} ${c.lista}`} aria-label="Conversas">
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+            <button
+              type="button" onClick={() => setModoZapclaw(true)}
+              style={{ border: '1px solid #7ca444', background: '#22331f', color: '#d3ffa0', borderRadius: 18, padding: '9px 15px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+            >
+              ● WhatsApp ao vivo
+            </button>
+          </div>
           <div className={c.canais} role="tablist" aria-label="Canal">
             <button
               type="button"
