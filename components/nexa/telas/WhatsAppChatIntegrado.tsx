@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { ArrowLeft, Check, LoaderCircle, RefreshCw, SendHorizontal, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Check, LoaderCircle, RefreshCw, SendHorizontal, UserRound, Paperclip, Mic, Square, X, Image as ImageIcon, Video as VideoIcon, Music2 } from 'lucide-react';
 import type { Conversa } from '../dados-exemplo';
+import { subirMediaWhatsApp } from '../storage';
 import c from './conversas.module.css';
 import s from './WhatsAppChatIntegrado.module.css';
 
@@ -14,6 +15,28 @@ type Props = {
   limitado: boolean;
 };
 type AvisoEnvio = { texto: string; tipo: 'erro' | 'ok' | 'alerta' } | null;
+type TipoAnexo = 'image' | 'video' | 'audio';
+type Anexo = { arquivo: File; tipo: TipoAnexo; url: string };
+const TIPOS: Record<TipoAnexo, string[]> = {
+  image:['image/jpeg','image/png'],
+  video:['video/mp4'],
+  audio:['audio/mpeg','audio/mp4','audio/ogg','audio/aac','audio/amr'],
+};
+const EXTENSAO: Record<string,string> = {
+  jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',
+  mp4:'video/mp4',mp3:'audio/mpeg',m4a:'audio/mp4',
+  ogg:'audio/ogg',oga:'audio/ogg',aac:'audio/aac',amr:'audio/amr',
+};
+function validarAnexo(original: File): { arquivo: File; tipo: TipoAnexo } {
+  const extensao = original.name.split('.').pop()?.toLowerCase() || '';
+  const mime = original.type.split(';')[0].toLowerCase() || EXTENSAO[extensao] || '';
+  const tipo = (Object.keys(TIPOS) as TipoAnexo[]).find((t) => TIPOS[t].includes(mime));
+  if(!tipo)throw Error('Formato não suportado. Use JPG, PNG, MP4, MP3, M4A ou OGG.');
+  const maximo = (tipo==='image'?5:16)*1024*1024;
+  if(original.size===0 || original.size>maximo)throw Error(tipo==='image'?'Imagem acima de 5 MB.':'Arquivo acima de 16 MB.');
+  const arquivo = original.type ? original : new File([original],original.name,{type:mime});
+  return { arquivo, tipo };
+}
 
 function horario(iso: string) {
   const d = new Date(iso);
@@ -42,9 +65,85 @@ export default function WhatsAppChatIntegrado({ conversa, onVoltar, onVerLead, o
   const [texto, setTexto] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [aviso, setAviso] = useState<AvisoEnvio>(null);
+  const [anexo, setAnexo] = useState<Anexo|null>(null);
+  const [gravando, setGravando] = useState(false);
+  const [duracao, setDuracao] = useState(0);
+  const seletorArquivo = useRef<HTMLInputElement>(null);
+  const gravador = useRef<MediaRecorder|null>(null);
+  const microfone = useRef<MediaStream|null>(null);
+  const pedacos = useRef<Blob[]>([]);
+  const descartarGravacao = useRef(false);
   const campo = useRef<HTMLTextAreaElement>(null);
   const historico = useRef<HTMLDivElement>(null);
   const contato = conversa.id.replace(/^zapclaw:/, '');
+
+  function anexar(arquivo: File) {
+    try {
+      const validado = validarAnexo(arquivo);
+      setAnexo({ ...validado, url: URL.createObjectURL(validado.arquivo) });
+      setAviso(null);
+    } catch (e) {
+      setAviso({ tipo:'erro', texto: e instanceof Error ? e.message : 'Arquivo inválido.' });
+    }
+  }
+  useEffect(() => {
+    return () => { if(anexo) URL.revokeObjectURL(anexo.url); };
+  }, [anexo]);
+  useEffect(() => {
+    if(!gravando)return;
+    const intervalo=window.setInterval(()=>setDuracao(v=>v+1),1000);
+    return()=>window.clearInterval(intervalo);
+  },[gravando]);
+  useEffect(() => () => {
+    descartarGravacao.current=true;
+    if(gravador.current?.state === 'recording')gravador.current.stop();
+    microfone.current?.getTracks().forEach(t=>t.stop());
+  }, []);
+
+  async function iniciarAudio() {
+    if(!podeResponder || enviando || gravando)return;
+    if(!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      setAviso({ tipo:'erro', texto:'Seu navegador não permite gravação. Você ainda pode anexar um arquivo de áudio.' });
+      return;
+    }
+    const formatos=['audio/mp4','audio/mp4;codecs=mp4a.40.2','audio/ogg;codecs=opus'];
+    const formato=formatos.find(x=>MediaRecorder.isTypeSupported(x));
+    if(!formato){
+      setAviso({ tipo:'erro', texto:'Este navegador grava em formato incompatível com o WhatsApp. Anexe um áudio MP3, M4A ou OGG.' });
+      return;
+    }
+    try {
+      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      microfone.current=stream;
+      pedacos.current=[];
+      descartarGravacao.current=false;
+      const rec=new MediaRecorder(stream,{mimeType:formato});
+      gravador.current=rec;
+      const extensao=formato.startsWith('audio/ogg')?'ogg':'m4a';
+      rec.ondataavailable=(ev)=>{if(ev.data.size>0)pedacos.current.push(ev.data);};
+      rec.onstop=()=>{
+        stream.getTracks().forEach(t=>t.stop());
+        microfone.current=null;
+        setGravando(false);
+        if(descartarGravacao.current)return;
+        const blob=new Blob(pedacos.current,{type:formato});
+        if(blob.size>0)anexar(new File([blob],'audio-gravado.'+extensao,{type:formato}));
+      };
+      rec.start();
+      setGravando(true);setDuracao(0);setAviso(null);
+    }catch{
+      microfone.current?.getTracks().forEach(t=>t.stop());
+      microfone.current=null;
+      setAviso({ tipo:'erro', texto:'Não foi possível acessar o microfone. Verifique a permissão do navegador.' });
+    }
+  }
+  function finalizarAudio(descartar=false) {
+    descartarGravacao.current=descartar;
+    const rec=gravador.current;
+    if(rec?.state==='recording')rec.stop();
+    else setGravando(false);
+  }
+
 
   const recebida = [...conversa.mensagens].reverse().find((m) =>
     m.de === 'cliente' && Number.isFinite(Date.parse(m.em)));
@@ -84,16 +183,30 @@ export default function WhatsAppChatIntegrado({ conversa, onVoltar, onVerLead, o
 
   async function enviar(ev?: FormEvent<HTMLFormElement>) {
     ev?.preventDefault();
-    if (enviando || !texto.trim() || !podeResponder) return;
+    if (enviando || (!texto.trim() && !anexo) || !podeResponder || gravando) return;
     const mensagem = texto.trim();
+    const arquivoSelecionado = anexo;
     setEnviando(true);
     setAviso(null);
     try {
-      const resposta = await fetch('/api/zapclaw/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: contato, text: mensagem, idempotencyKey: crypto.randomUUID() }),
-      });
+      let resposta: Response;
+      if(arquivoSelecionado){
+        const id='wa-'+crypto.randomUUID();
+        await subirMediaWhatsApp(id,arquivoSelecionado.arquivo);
+        resposta=await fetch('/api/zapclaw/media',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            to:contato,arquivoId:id,tipo:arquivoSelecionado.tipo,
+            legenda:arquivoSelecionado.tipo==='audio'?'':mensagem.slice(0,1024),
+            idempotencyKey:crypto.randomUUID(),
+          }),
+        });
+      } else {
+        resposta=await fetch('/api/zapclaw/send',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({to:contato,text:mensagem,idempotencyKey:crypto.randomUUID()}),
+        });
+      }
       const dados = await resposta.json() as {
         enviado?: boolean; indeterminado?: boolean; erro?: string; aviso?: string;
       };
@@ -101,11 +214,13 @@ export default function WhatsAppChatIntegrado({ conversa, onVoltar, onVerLead, o
         setAviso({ tipo: 'erro', texto: dados.erro ?? 'Não foi possível enviar a mensagem.' });
       } else if (dados.indeterminado) {
         setAviso({ tipo: 'alerta', texto: dados.aviso ?? 'Entrega não confirmada; confira o histórico antes de reenviar.' });
-        setTexto('');
+        if (arquivoSelecionado) setAnexo(null);
+        if (!arquivoSelecionado || arquivoSelecionado.tipo !== 'audio') setTexto('');
         onAtualizar();
       } else if (dados.enviado) {
-        setTexto('');
-        setAviso({ tipo: 'ok', texto: 'Mensagem enviada.' });
+        if(arquivoSelecionado)setAnexo(null);
+        if (!arquivoSelecionado || arquivoSelecionado.tipo !== 'audio') setTexto('');
+        setAviso({ tipo: 'ok', texto: arquivoSelecionado ? 'Arquivo enviado.' : 'Mensagem enviada.' });
         onAtualizar();
         campo.current?.focus();
       } else {
@@ -124,7 +239,7 @@ export default function WhatsAppChatIntegrado({ conversa, onVoltar, onVerLead, o
         <button type="button" className={`${s.acao} ${c.soCelular}`} onClick={onVoltar} aria-label="Voltar às conversas">
           <ArrowLeft size={20} strokeWidth={1.8}/>
         </button>
-        <div className={s.foto} aria-hidden="true"><MessageCircle size={21} strokeWidth={1.8}/></div>
+        <div className={s.foto} aria-hidden="true"><UserRound size={21} strokeWidth={1.8}/></div>
         <button type="button" className={s.numero} onClick={onVerLead} title="Ver informações do contato">
           {numeroLegivel(contato)}
         </button>
@@ -152,11 +267,37 @@ export default function WhatsAppChatIntegrado({ conversa, onVoltar, onVerLead, o
       </div>
 
       <div className={s.rodape}>
+        {anexo && (
+          <div className={s.anexoPrevia} aria-label="Arquivo preparado para envio">
+            {anexo.tipo==='image' ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={anexo.url} alt="Prévia da foto selecionada" className={s.miniatura}/>
+            ) : anexo.tipo==='video' ? (
+              <VideoIcon size={21} aria-hidden/>
+            ) : <Music2 size={21} aria-hidden/>}
+            <span><strong>{anexo.arquivo.name}</strong><small>{(anexo.arquivo.size/1024/1024).toFixed(2)} MB · {anexo.tipo==='image'?'Foto':anexo.tipo==='video'?'Vídeo':'Áudio'}</small></span>
+            <button type="button" onClick={()=>setAnexo(null)} disabled={enviando} aria-label="Remover anexo"><X size={18}/></button>
+          </div>
+        )}
+        {gravando && (
+          <div className={s.gravacao}>
+            <span className={s.pulsoVermelho}/> Gravando áudio · {Math.floor(duracao/60)}:{String(duracao%60).padStart(2,'0')}
+            <button type="button" onClick={()=>finalizarAudio(true)} aria-label="Descartar gravação"><X size={18}/></button>
+            <button type="button" onClick={()=>finalizarAudio()} aria-label="Parar gravação"><Square size={15}/> Parar</button>
+          </div>
+        )}
         {limitado && <p className={s.info}>Mostrando as 100 mensagens mais recentes.</p>}
         {!podeResponder && <p className={s.avisoJanela}>Aguarde uma nova mensagem do contato para responder pela API.</p>}
         {aviso && <p className={`${s.avisoEnvio} ${aviso.tipo === 'erro' ? s.erro : aviso.tipo === 'ok' ? s.sucesso : s.alerta}`} role="status">{aviso.texto}</p>}
         <form className={s.formulario} onSubmit={enviar}>
           <div className={s.areaEscrita}>
+            <button type="button" className={s.acaoAnexo} onClick={()=>seletorArquivo.current?.click()}
+              disabled={!podeResponder||enviando||gravando} aria-label="Anexar foto, vídeo ou áudio" title="Anexar arquivo">
+              <Paperclip size={20}/>
+            </button>
+            <input type="file" ref={seletorArquivo} hidden
+              accept="image/jpeg,image/png,video/mp4,audio/mpeg,audio/mp4,audio/ogg,audio/aac,audio/amr,.jpg,.jpeg,.png,.mp4,.mp3,.m4a,.ogg,.aac"
+              onChange={ev=>{const f=ev.currentTarget.files?.[0];ev.currentTarget.value='';if(f)anexar(f);}}/>
             <textarea
               ref={campo}
               rows={1}
@@ -171,9 +312,13 @@ export default function WhatsAppChatIntegrado({ conversa, onVoltar, onVerLead, o
               }}
               placeholder={podeResponder ? 'Escreva uma mensagem...' : 'Aguardando mensagem do contato'}
               aria-label="Escreva sua mensagem de WhatsApp"
-              disabled={enviando || !podeResponder}
+              disabled={enviando || !podeResponder || gravando}
             />
-            <button type="submit" className={s.enviar} aria-label="Enviar mensagem" title="Enviar mensagem" disabled={!texto.trim() || enviando || !podeResponder}>
+            <button type="button" className={s.acaoAnexo} onClick={()=>void iniciarAudio()}
+              disabled={!podeResponder||enviando||gravando||!!anexo} aria-label="Gravar áudio" title="Gravar áudio">
+              <Mic size={20}/>
+            </button>
+            <button type="submit" className={s.enviar} aria-label="Enviar mensagem" title="Enviar mensagem" disabled={(!texto.trim() && !anexo) || enviando || !podeResponder || gravando}>
               {enviando ? <LoaderCircle size={19} className={s.carregando}/> : <SendHorizontal size={20} strokeWidth={2}/>}
             </button>
           </div>
