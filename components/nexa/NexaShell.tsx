@@ -18,6 +18,8 @@ import {
   FileText,
   House,
   LayoutGrid,
+  Menu,
+  X,
   MessageSquareMore,
   Plus,
   Search,
@@ -92,6 +94,10 @@ type Props = {
   topoCompacto?: { iniciais: string };
   /** Topo com a marca "Nexa Lab | título" e busca simples, sem botão verde (tela de Conversas) */
   marcaTitulo?: string;
+  /** Esconde somente as ações superiores da tela atual (calendário, sino, ajuda e perfil). */
+  ocultarAcoesTopo?: boolean;
+  /** Mantém os atalhos originais em uma navegação lateral que abre sob demanda. */
+  menuRetratil?: boolean;
 };
 
 export default function NexaShell({
@@ -102,6 +108,8 @@ export default function NexaShell({
   botaoNovo = { texto: 'Novo', href: '/clientes?novo=1' },
   topoCompacto,
   marcaTitulo,
+  ocultarAcoesTopo = false,
+  menuRetratil = false,
 }: Props) {
   const escala = useEscala();
   // Destaca a aba de destino imediatamente, mas associa o scroll ao
@@ -112,6 +120,7 @@ export default function NexaShell({
   const { raizRef, principalRef, navCelularRef } = useRolagemNavegacao(aba);
   const inicio = aba === 'dashboard';
   const [buscaAberta, setBuscaAberta] = useState(false);
+  const [menuAberto, setMenuAberto] = useState(false);
   const [leads] = useLeads();
   const alertas = useMemo(() => alertasCobranca(leads).length, [leads]);
 
@@ -127,6 +136,14 @@ export default function NexaShell({
     return () => window.removeEventListener('keydown', atalho);
   }, []);
 
+  useEffect(() => { setMenuAberto(false); }, [pathname]);
+  useEffect(() => {
+    if (!menuAberto) return;
+    const fecharEsc = (ev: KeyboardEvent) => { if (ev.key === 'Escape') setMenuAberto(false); };
+    window.addEventListener('keydown', fecharEsc);
+    return () => window.removeEventListener('keydown', fecharEsc);
+  }, [menuAberto]);
+
   const conteudoNovo = (
     <>
       <Plus size={18} strokeWidth={2.2} /> {botaoNovo.texto}
@@ -138,14 +155,28 @@ export default function NexaShell({
   return (
     <div
       ref={raizRef}
-      className={`${s.raiz} ${inicio ? '' : s.raizInterna}`}
+      className={`${s.raiz} ${inicio ? '' : s.raizInterna} ${menuRetratil ? s.raizMenuRetratil : ''}`}
       style={escala > 1 ? { zoom: escala } : undefined}
     >
-      {/* ===== Barra de ícones ===== */}
-      <nav className={s.trilho} aria-label="Navegação">
+      {/* ===== Barra de ícones / menu lateral recolhível ===== */}
+      {menuRetratil && menuAberto && (
+        <button type="button" className={s.menuFundo} aria-label="Fechar menu lateral" onClick={() => setMenuAberto(false)} />
+      )}
+      <nav
+        className={`${s.trilho} ${menuRetratil ? s.menuLateral : ''} ${menuAberto ? s.menuLateralAberto : ''}`}
+        aria-label="Navegação"
+        aria-hidden={menuRetratil && !menuAberto}
+      >
+        {menuRetratil && (
+          <div className={s.menuLateralTopo}>
+            <span>Menu Nexa</span>
+            <button type="button" aria-label="Fechar menu" onClick={() => setMenuAberto(false)}><X size={19}/></button>
+          </div>
+        )}
         <NavegacaoRapida href="/" aria-label="Nexa Lab — início">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/dashboard/simbolo-nexa.png" alt="" className={s.simbolo} />
+          {menuRetratil && <span className={s.menuNomeMarca}>Nexa Workspace</span>}
         </NavegacaoRapida>
         {TRILHO.map(({ aba: a, nome, href, icone: Icone }) => (
           <NavegacaoRapida
@@ -157,6 +188,7 @@ export default function NexaShell({
             aria-current={ativo(href) ? 'page' : undefined}
           >
             <Icone size={24} {...ICONE} />
+            {menuRetratil && <span className={s.menuLateralNome}>{nome}</span>}
             {a === 'recebimentos' && alertas > 0 && <span className={s.pontoTrilho} aria-label={`${alertas} cobrança(s) vencida(s) ou perto do vencimento`} />}
           </NavegacaoRapida>
         ))}
@@ -169,14 +201,20 @@ export default function NexaShell({
           aria-current={configAtiva ? 'page' : undefined}
         >
           <Settings size={24} {...ICONE} />
+          {menuRetratil && <span className={s.menuLateralNome}>Configurações</span>}
         </NavegacaoRapida>
       </nav>
 
       {/* ===== Área principal ===== */}
       <main ref={principalRef} className={s.principal}>
         <header
-          className={`${s.topo} ${cantoDireito ? s.topoComCanto : ''} ${topoCompacto ? s.topoCompacto : ''}`}
+          className={`${s.topo} ${cantoDireito ? s.topoComCanto : ''} ${topoCompacto ? s.topoCompacto : ''} ${menuRetratil ? s.topoMenuRetratil : ''}`}
         >
+          {menuRetratil && (
+            <button type="button" className={s.botaoAbrirMenu} aria-label="Abrir menu lateral" aria-expanded={menuAberto} onClick={() => setMenuAberto(true)}>
+              <Menu size={23} strokeWidth={2}/>
+            </button>
+          )}
           {marcaTitulo ? (
             <>
               <Link href="/" scroll={false} className={s.marca}>
@@ -211,8 +249,8 @@ export default function NexaShell({
               )}
             </div>
           )}
-          {topoCompacto && <span className={s.espaco} aria-hidden />}
-          <TopoAcoes compacto={!!topoCompacto} iniciais={topoCompacto?.iniciais} />
+          {topoCompacto && !ocultarAcoesTopo && <span className={s.espaco} aria-hidden />}
+          {!ocultarAcoesTopo && <TopoAcoes compacto={!!topoCompacto} iniciais={topoCompacto?.iniciais} />}
         </header>
 
         {cantoDireito}
@@ -221,7 +259,7 @@ export default function NexaShell({
       </main>
 
       {/* ===== Navegação no celular ===== */}
-      <nav ref={navCelularRef} className={s.navCelular} aria-label="Navegação">
+      <nav ref={navCelularRef} className={`${s.navCelular} ${menuRetratil ? s.navCelularOculta : ''}`} aria-label="Navegação">
         {[...TRILHO, { aba: 'configuracoes' as AbaNexa, nome: 'Configurações', curto: 'Ajustes', href: '/configuracoes', icone: Settings }].map(
           ({ aba: a, curto, href, icone: Icone }) => (
             <NavegacaoRapida
