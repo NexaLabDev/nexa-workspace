@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { ArrowLeft, MessageCircle, RefreshCw, Send, ShieldCheck } from 'lucide-react';
 import s from './WhatsAppAoVivo.module.css';
 
@@ -109,7 +109,7 @@ export default function WhatsAppAoVivo({ onVoltar }: { onVoltar: () => void }) {
 
   const conversa = contatos.find((c) => c.telefone === selecionado);
 
-  async function enviar(e: React.FormEvent<HTMLFormElement>) {
+  async function enviar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!conversa?.podeResponder || !rascunho.trim() || enviando) return;
     const texto = rascunho.trim();
@@ -162,7 +162,7 @@ export default function WhatsAppAoVivo({ onVoltar }: { onVoltar: () => void }) {
         <div className={s.estado}>
           <ShieldCheck size={35} />
           <h2>Conexão preparada</h2>
-          <p>Para carregar mensagens reais, cadastre <code>ZAPCLAW_API_KEY</code> e <code>ZAPCLAW_FROM</code> nas variáveis de ambiente do projeto Nexa Workspace na Vercel.</p>
+          <p>Para carregar mensagens reais, cadastre <code>ZAPCLAW_API_KEY</code> nas variáveis de ambiente do projeto Nexa Workspace na Vercel.</p>
           <p>A chave nunca deve ser colocada no código ou enviada pelo chat.</p>
         </div>
       ) : (
