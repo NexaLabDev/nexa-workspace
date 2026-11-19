@@ -456,7 +456,7 @@ export default function TelaConversas() {
             conversa={selecionada}
             lead={lead}
             onVoltar={() => setVista('lista')}
-            onVerLead={() => setVista('lead')}
+            onVerLead={alternarPainelDireito}
             onEnviar={enviar}
             onAtualizarLead={atualizarLead}
             onNaoLida={() => {
