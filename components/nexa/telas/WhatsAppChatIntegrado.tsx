@@ -188,6 +188,10 @@ export default function WhatsAppChatIntegrado({ conversa, onVoltar, onVerLead, o
     if (enviando || (!texto.trim() && !anexo) || !podeResponder || gravando) return;
     const mensagem = texto.trim();
     const arquivoSelecionado = anexo;
+    if (arquivoSelecionado && arquivoSelecionado.tipo !== 'audio' && mensagem.length > 1024) {
+      setAviso({ tipo:'erro', texto:'A legenda pode ter até 1.024 caracteres. Reduza o texto antes de enviar o arquivo.' });
+      return;
+    }
     setEnviando(true);
     setAviso(null);
     try {
@@ -199,7 +203,7 @@ export default function WhatsAppChatIntegrado({ conversa, onVoltar, onVerLead, o
           method:'POST',headers:{'Content-Type':'application/json'},
           body:JSON.stringify({
             to:contato,arquivoId:id,tipo:arquivoSelecionado.tipo,
-            legenda:arquivoSelecionado.tipo==='audio'?'':mensagem.slice(0,1024),
+            legenda:arquivoSelecionado.tipo==='audio'?'':mensagem,
             idempotencyKey:crypto.randomUUID(),
           }),
         });
