@@ -1,0 +1,130 @@
+/* WhatsApp na caixa de entrada original — visual discreto, confortável e responsivo. */
+.chat{
+  min-width:0;min-height:0;overflow:hidden;
+  display:flex;flex-direction:column;
+  background:#121a17;border:1px solid rgba(173,204,163,.15);
+  border-radius:17px;box-shadow:0 16px 35px rgba(0,0,0,.25);
+}
+.cabecalho{
+  display:flex;align-items:center;gap:12px;flex:0 0 auto;min-height:72px;
+  padding:10px 17px;
+  border-bottom:1px solid rgba(200,235,199,.09);
+  background:#1a2420;
+}
+.foto{
+  display:grid;place-items:center;flex:0 0 43px;width:43px;height:43px;
+  border:1px solid rgba(188,237,157,.2);border-radius:15px;
+  background:rgba(153,212,122,.11);color:#c5ecac;
+}
+.numero{
+  min-width:0;flex:1;border:0;background:transparent;
+  color:#f0f5ee;text-align:left;font:inherit;font-size:16px;
+  font-weight:730;letter-spacing:.005em;white-space:nowrap;text-overflow:ellipsis;
+  overflow:hidden;cursor:pointer;padding:6px 0;
+}
+.numero:hover{color:#d4f985}
+.acao{
+  display:grid;place-items:center;flex:0 0 37px;width:37px;height:37px;
+  border:1px solid transparent;border-radius:11px;color:#b0c1b1;
+  background:transparent;cursor:pointer;transition:.16s;
+}
+.acao:hover{color:#edffd9;background:#2a3b2f;border-color:#3b5740}
+.historico{
+  display:flex;flex-direction:column;gap:16px;flex:1 1 auto;min-height:0;min-width:0;
+  padding:22px 24px 24px;
+  overflow-y:auto;overscroll-behavior:contain;
+  background:
+    radial-gradient(ellipse at top right,rgba(52,82,53,.16),transparent 58%),
+    radial-gradient(ellipse at bottom left,rgba(30,54,39,.14),transparent 60%),
+    #111815;
+  scrollbar-width:thin;scrollbar-color:#334437 transparent;
+}
+.grupo{display:flex;flex-direction:column;gap:9px;min-width:0}
+.dia{display:flex;justify-content:center;align-items:center;margin:5px 0 10px}
+.dia span{
+  padding:6px 12px;border:1px solid #2f3e35;border-radius:100px;
+  background:#233128;color:#bdcabc;font-size:11px;font-weight:650;
+}
+.balao{
+  display:flex;flex-direction:column;gap:7px;
+  max-width:min(78%,560px);min-width:85px;padding:11px 14px 9px;
+  color:#ebf4ed;border:1px solid rgba(190,215,190,.09);
+  border-radius:15px;
+  overflow-wrap:anywhere;word-break:normal;
+}
+.balao p{margin:0;white-space:pre-wrap;font-size:13.5px;line-height:1.58}
+.recebida{align-self:flex-start;background:#28362e;border-bottom-left-radius:5px}
+.enviada{align-self:flex-end;background:#2f4c35;border-color:rgba(154,223,143,.13);border-bottom-right-radius:5px}
+.meta{
+  display:flex;align-items:center;justify-content:flex-end;gap:5px;
+  color:#b5c8b7;font-size:10px;line-height:1;user-select:none;
+}
+.meta svg{color:#d1dfca}
+.vazio{align-self:center;color:#a2b1a5;font-size:13px;padding:30px 10px}
+.rodape{
+  flex:0 0 auto;display:flex;flex-direction:column;gap:9px;
+  padding:15px 16px 13px;background:#1b2520;
+  border-top:1px solid rgba(185,215,186,.1);
+}
+.formulario{margin:0;min-width:0}
+.areaEscrita{
+  display:flex;align-items:flex-end;gap:10px;min-width:0;
+  padding:7px;border:1px solid #3d5142;border-radius:16px;
+  background:#101813;transition:border-color .15s,box-shadow .15s;
+}
+.areaEscrita:focus-within{
+  border-color:#8fbc66;box-shadow:0 0 0 3px rgba(191,243,108,.08);
+}
+.areaEscrita textarea{
+  flex:1;min-width:0;min-height:41px;max-height:140px;
+  resize:none;overflow-y:auto;outline:none;
+  padding:10px 8px 8px;border:0;background:transparent;
+  color:#f3f8f0;font:inherit;font-size:14px;line-height:1.5;
+  scrollbar-width:thin;scrollbar-color:#324735 transparent;
+}
+.areaEscrita textarea::placeholder{color:#819186}
+.areaEscrita textarea:disabled{opacity:.62;cursor:not-allowed}
+.enviar{
+  display:grid;place-items:center;flex:0 0 41px;width:41px;height:41px;
+  border:0;border-radius:12px;background:#c4f03a;color:#162116;
+  cursor:pointer;transition:background .16s,transform .16s;
+}
+.enviar:not(:disabled):hover{background:#d9fa75;transform:translateY(-1px)}
+.enviar:disabled{background:#354438;color:#7f8f7c;cursor:not-allowed}
+.dicas{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin:7px 4px 0;color:#899b8d;font-size:10px;letter-spacing:.005em;
+}
+.info,.avisoJanela,.avisoEnvio{
+  margin:0;border-radius:9px;padding:9px 12px;font-size:12px;line-height:1.5;
+}
+.info{padding:0 3px;color:#a5b6a6}
+.avisoJanela{border:1px solid #615944;background:#342d20;color:#e8d8b0}
+.avisoEnvio{border:1px solid rgba(164,215,152,.24);background:#233827;color:#d4e9cf}
+.erro{border-color:#72433b;background:#3e2825;color:#ffd2c8}
+.alerta{border-color:#625844;background:#3b3425;color:#f4dea9}
+.sucesso{border-color:#426549;background:#223b28;color:#c9f3c3}
+.carregando{animation:girando 1s linear infinite}
+@keyframes girando{to{transform:rotate(360deg)}}
+@media(max-width:900px){
+  .chat{min-height:0;height:100%;max-height:calc(100dvh - 134px)}
+  .historico{padding:17px 13px 20px}
+  .balao{max-width:86%}
+}
+@media(max-width:600px){
+  .chat{border-radius:14px;max-height:calc(100dvh - 116px)}
+  .cabecalho{min-height:62px;padding:7px 11px;gap:8px}
+  .foto{width:37px;height:37px;flex-basis:37px;border-radius:12px}
+  .numero{font-size:14px}
+  .historico{padding:13px 12px;gap:13px}
+  .balao{padding:10px 11px 8px;max-width:91%}
+  .balao p{font-size:13px}
+  .rodape{padding:10px}
+  .areaEscrita{border-radius:14px;padding:6px}
+  .dicas span:first-child{display:none}
+  .dicas{justify-content:flex-end}
+}
+@media(prefers-reduced-motion:reduce){
+  .enviar,.acao,.areaEscrita{transition:none}
+  .carregando{animation:none}
+}
