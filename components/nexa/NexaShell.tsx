@@ -173,7 +173,7 @@ export default function NexaShell({
             <button type="button" aria-label="Fechar menu" onClick={() => setMenuAberto(false)}><X size={19}/></button>
           </div>
         )}
-        <NavegacaoRapida href="/" aria-label="Nexa Lab — início">
+        <NavegacaoRapida href="/" aria-label="Nexa Lab — início" onClick={() => menuRetratil && setMenuAberto(false)}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/dashboard/simbolo-nexa.png" alt="" className={s.simbolo} />
           {menuRetratil && <span className={s.menuNomeMarca}>Nexa Workspace</span>}
@@ -182,6 +182,7 @@ export default function NexaShell({
           <NavegacaoRapida
             key={a}
             href={href}
+            onClick={() => menuRetratil && setMenuAberto(false)}
             className={`${s.trilhoBtn} ${ativo(href) ? s.trilhoAtivo : ''}`}
             aria-label={nome}
             title={nome}
@@ -195,6 +196,7 @@ export default function NexaShell({
         <span className={s.trilhoDivisor} aria-hidden />
         <NavegacaoRapida
           href="/configuracoes"
+          onClick={() => menuRetratil && setMenuAberto(false)}
           className={`${s.trilhoBtn} ${s.trilhoRodape} ${configAtiva ? s.trilhoAtivo : ''}`}
           aria-label="Configurações"
           title="Configurações"
