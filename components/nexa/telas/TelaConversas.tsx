@@ -321,12 +321,14 @@ export default function TelaConversas() {
       marcaTitulo="CRM – Conversas"
       buscaTexto="Buscar lead, cliente, projeto ou proposta..."
       topoCompacto={{ iniciais: iniciaisUsuario }}
+      ocultarAcoesTopo
+      menuRetratil
     >
-      <div className={`${c.pagina} ${c['vista-' + vista]}`}>
+      <div className={`${c.pagina} ${c.paginaConversa} ${c['vista-' + vista]}`}>
         {/* ===== Lista ===== */}
         <aside className={`${c.coluna} ${c.lista}`} aria-label="Conversas">
           <div className={c.statusIntegracao}>
-            <span><span className={c.sinalZapclaw} /> WhatsApp na caixa de entrada</span>
+            <span><span className={c.sinalZapclaw} /> Conversas</span>
             <button type="button" onClick={() => void atualizarWhatsApp()} disabled={carregandoApi}>
               {carregandoApi ? 'Atualizando…' : 'Atualizar'}
             </button>
@@ -428,8 +430,8 @@ export default function TelaConversas() {
         {selecionada && lead ? (
           selecionadaReal ? (
             <WhatsAppChatIntegrado
+              key={selecionada.id}
               conversa={selecionada}
-              lead={lead}
               onVoltar={() => setVista('lista')}
               onVerLead={() => setVista('lead')}
               onAtualizar={() => void atualizarWhatsApp()}
