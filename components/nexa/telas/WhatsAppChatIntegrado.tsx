@@ -29,12 +29,14 @@ const EXTENSAO: Record<string,string> = {
 };
 function validarAnexo(original: File): { arquivo: File; tipo: TipoAnexo } {
   const extensao = original.name.split('.').pop()?.toLowerCase() || '';
-  const mime = original.type.split(';')[0].toLowerCase() || EXTENSAO[extensao] || '';
+  const mimeDeclarado = original.type.split(';')[0].toLowerCase();
+  const compativel = (m: string) => (Object.keys(TIPOS) as TipoAnexo[]).some(t=>TIPOS[t].includes(m));
+  const mime = compativel(mimeDeclarado) ? mimeDeclarado : EXTENSAO[extensao] || '';
   const tipo = (Object.keys(TIPOS) as TipoAnexo[]).find((t) => TIPOS[t].includes(mime));
   if(!tipo)throw Error('Formato não suportado. Use JPG, PNG, MP4, MP3, M4A ou OGG.');
   const maximo = (tipo==='image'?5:16)*1024*1024;
   if(original.size===0 || original.size>maximo)throw Error(tipo==='image'?'Imagem acima de 5 MB.':'Arquivo acima de 16 MB.');
-  const arquivo = original.type ? original : new File([original],original.name,{type:mime});
+  const arquivo = original.type.split(';')[0].toLowerCase()===mime ? original : new File([original],original.name,{type:mime});
   return { arquivo, tipo };
 }
 
