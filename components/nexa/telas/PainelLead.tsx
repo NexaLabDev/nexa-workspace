@@ -301,8 +301,8 @@ export default function PainelLead({ lead, conversa, projetoCriado, onAtualizar,
   return (
     <aside className={`${c.coluna} ${c.painel}`} aria-label={`Ficha de ${lead.empresa}`}>
       <header className={c.painelTopo}>
-        <button type="button" className={`${c.iconeBtn} ${c.soCelular}`} onClick={onVoltar} aria-label="Voltar para a conversa">
-          <ArrowLeft size={20} />
+        <button type="button" className={c.iconeBtn} onClick={onVoltar} aria-label="Fechar painel e voltar para a conversa" title="Fechar painel">
+          <X size={20} />
         </button>
         <span className={c.avatarGrande} style={{ background: lead.cor }}>
           {lead.sigla ?? iniciais(lead.empresa)}
