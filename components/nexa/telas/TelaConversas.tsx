@@ -133,6 +133,7 @@ export default function TelaConversas() {
   const [soNaoLidas, setSoNaoLidas] = useState(false);
   const [selecionadaId, setSelecionadaId] = useState<string | null>(null);
   const [vista, setVista] = useState<Vista>('lista');
+  const [painelDireitoAberto, setPainelDireitoAberto] = useState(false);
   const [reais, setReais] = useState<MensagemReal[]>([]);
   const [erroApi, setErroApi] = useState('');
   const [limitado, setLimitado] = useState(false);
@@ -259,6 +260,7 @@ export default function TelaConversas() {
         setConversas((l) => (l.some((x) => x.leadId === leadUrl) ? l : [...l, nova]));
         setSelecionadaId(nova.id);
         setVista('lead');
+        setPainelDireitoAberto(true);
         return;
       }
       // Aguarda o lead chegar do remoto; não seleciona outra conversa no meio-tempo.
@@ -274,6 +276,7 @@ export default function TelaConversas() {
   const abrir = (id: string) => {
     setSelecionadaId(id);
     setVista('chat');
+    setPainelDireitoAberto(false);
     setConversas((l) => l.map((x) => (x.id === id && x.naoLidas ? { ...x, naoLidas: 0 } : x)));
   };
 
@@ -312,6 +315,18 @@ export default function TelaConversas() {
     );
   };
 
+  const alternarPainelDireito = () => {
+    setPainelDireitoAberto((anterior) => {
+      const novo = !anterior;
+      setVista(novo ? 'lead' : 'chat');
+      return novo;
+    });
+  };
+  const fecharPainelDireito = () => {
+    setPainelDireitoAberto(false);
+    setVista('chat');
+  };
+
   const contagem = (cn: CanalConversa) => ordenadas.filter((x) => x.canal === cn).length;
   const leadVinculado = Boolean(lead && leads.some((l) => l.id === lead.id));
 
@@ -322,9 +337,8 @@ export default function TelaConversas() {
       buscaTexto="Buscar lead, cliente, projeto ou proposta..."
       topoCompacto={{ iniciais: iniciaisUsuario }}
       ocultarAcoesTopo
-      menuRetratil
     >
-      <div className={`${c.pagina} ${c.paginaConversa} ${c['vista-' + vista]}`}>
+      <div className={`${c.pagina} ${c.paginaConversa} ${painelDireitoAberto ? c.painelExpandido : ''} ${c['vista-' + vista]}`}>
         {/* ===== Lista ===== */}
         <aside className={`${c.coluna} ${c.lista}`} aria-label="Conversas">
           <div className={c.statusIntegracao}>
@@ -433,7 +447,7 @@ export default function TelaConversas() {
               key={selecionada.id}
               conversa={selecionada}
               onVoltar={() => setVista('lista')}
-              onVerLead={() => setVista('lead')}
+              onVerLead={alternarPainelDireito}
               onAtualizar={() => void atualizarWhatsApp()}
               limitado={limitado}
             />
@@ -464,19 +478,22 @@ export default function TelaConversas() {
         )}
 
         {/* ===== Painel do lead ===== */}
-        {selecionada && lead && (!selecionadaReal || leadVinculado) && (
+        {painelDireitoAberto && selecionada && lead && (!selecionadaReal || leadVinculado) && (
           <PainelLead
             lead={lead}
             conversa={selecionada}
             projetoCriado={projetos.some((p) => p.leadId === lead.id)}
             onAtualizar={atualizarLead}
-            onVoltar={() => setVista('chat')}
+            onVoltar={fecharPainelDireito}
             onEnviarMensagem={selecionadaReal ? undefined : (texto) => enviar({ texto })}
           />
         )}
-        {selecionada && selecionadaReal && lead && !leadVinculado && (
+        {painelDireitoAberto && selecionada && selecionadaReal && lead && !leadVinculado && (
           <aside className={`${c.coluna} ${c.painel} ${c.contatoRealPainel}`} aria-label="Informações do contato">
-            <strong>Contato pelo WhatsApp</strong>
+            <div className={c.cabecalhoPainelDireito}>
+              <strong>Informações do contato</strong>
+              <button type="button" onClick={fecharPainelDireito} aria-label="Fechar painel de informações"><X size={20}/></button>
+            </div>
             <p>Este contato está conectado pela API oficial da ZapClaw.</p>
             <div className={c.dadoContato}><small>Telefone</small><b>{telefoneFormatado(selecionada.id.slice(EH_REAL.length))}</b></div>
             <p>Para exibir a ficha completa aqui, cadastre ou atualize um lead no CRM com esse número.</p>
