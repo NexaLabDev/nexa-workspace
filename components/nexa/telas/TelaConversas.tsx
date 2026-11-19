@@ -9,7 +9,7 @@
 // O painel da direita é o mesmo lead do CRM (etapa, responsável, anotações, tarefas).
 // ============================================
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   CheckCheck,
@@ -49,7 +49,7 @@ import {
 } from '../dados';
 import { baixarArquivo, guardarArquivo, tamanhoLegivel } from '../arquivos';
 import PainelLead from './PainelLead';
-import WhatsAppAoVivo from './WhatsAppAoVivo';
+import WhatsAppChatIntegrado from './WhatsAppChatIntegrado';
 import { iniciais, useParametro } from '../util';
 
 const ICONE = { strokeWidth: 1.7 } as const;
@@ -108,6 +108,20 @@ function ultima(conv: Conversa): MensagemConversa | undefined {
 }
 
 type Vista = 'lista' | 'chat' | 'lead';
+type MensagemReal = { id: string; direction: 'inbound' | 'outbound'; to: string; text: string; sentAt: string };
+type DadosDaApi = { mensagens?: MensagemReal[]; limitado?: boolean; erro?: string };
+const EH_REAL = 'zapclaw:';
+const numeroLimpo = (s?: string) => {
+  const digits = (s ?? '').replace(/\D/g, '');
+  return digits.startsWith('55') && digits.length >= 12 ? digits.slice(2) : digits;
+};
+function telefoneFormatado(numero: string) {
+  const n = numero.replace(/\D/g, '');
+  return n.startsWith('55') && (n.length === 12 || n.length === 13)
+    ? '+55 (' + n.slice(2, 4) + ') ' + n.slice(4)
+    : numero;
+}
+
 
 export default function TelaConversas() {
   const [conversas, setConversas] = useConversas();
@@ -119,14 +133,101 @@ export default function TelaConversas() {
   const [soNaoLidas, setSoNaoLidas] = useState(false);
   const [selecionadaId, setSelecionadaId] = useState<string | null>(null);
   const [vista, setVista] = useState<Vista>('lista');
-  const [modoZapclaw, setModoZapclaw] = useState(false);
+  const [reais, setReais] = useState<MensagemReal[]>([]);
+  const [erroApi, setErroApi] = useState('');
+  const [limitado, setLimitado] = useState(false);
+  const [carregandoApi, setCarregandoApi] = useState(false);
+  const buscando = useRef(false);
+
+  const atualizarWhatsApp = useCallback(async () => {
+    if (buscando.current) return;
+    buscando.current = true;
+    setCarregandoApi(true);
+    try {
+      const resposta = await fetch('/api/zapclaw/messages', { cache: 'no-store' });
+      const dados = await resposta.json() as DadosDaApi;
+      if (!resposta.ok || !Array.isArray(dados.mensagens)) {
+        setErroApi(dados.erro || 'Não foi possível consultar a ZapClaw.');
+      } else {
+        setReais(dados.mensagens);
+        setLimitado(Boolean(dados.limitado));
+        setErroApi('');
+      }
+    } catch {
+      setErroApi('WhatsApp temporariamente indisponível. Tente atualizar.');
+    } finally {
+      buscando.current = false;
+      setCarregandoApi(false);
+    }
+  }, []);
+  useEffect(() => {
+    void atualizarWhatsApp();
+    const poll = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void atualizarWhatsApp();
+    }, 25000);
+    const foco = () => { if (document.visibilityState === 'visible') void atualizarWhatsApp(); };
+    window.addEventListener('focus', foco);
+    return () => { window.clearInterval(poll); window.removeEventListener('focus', foco); };
+  }, [atualizarWhatsApp]);
   const leadUrl = useParametro('lead');
 
-  const leadDe = (conv: Conversa) => leads.find((l) => l.id === conv.leadId);
+  const leadDe = (conv: Conversa): Lead | undefined => {
+    if (!conv.id.startsWith(EH_REAL)) return leads.find((l) => l.id === conv.leadId);
+    const numero = conv.id.slice(EH_REAL.length);
+    return leads.find((l) => l.telefone && numeroLimpo(l.telefone) === numeroLimpo(numero)) ?? {
+      id: 'zap-contato-' + numero,
+      empresa: telefoneFormatado(numero),
+      descricao: 'Contato real do WhatsApp, ainda sem lead no CRM',
+      valor: null,
+      etapa: 'novo',
+      cor: '#268d57',
+      telefone: numero,
+      origem: 'WhatsApp',
+    };
+  };
+
+  // Conecta os contatos reais à mesma lista usada por WhatsApp, Instagram e Telegram.
+  // Nada da API é gravado no armazenamento das conversas simuladas.
+  const conversasReais = useMemo(() => {
+    const grupos = new Map<string, MensagemConversa[]>();
+    const ids = new Set<string>();
+    for (const m of reais) {
+      const numero = (m.to ?? '').replace(/\D/g, '');
+      if (!/^\d{10,15}$/.test(numero) || !m.id || ids.has(m.id)) continue;
+      ids.add(m.id);
+      const lista = grupos.get(numero) ?? [];
+      lista.push({
+        id: 'zap-' + m.id,
+        de: m.direction === 'inbound' ? 'cliente' : 'equipe',
+        texto: m.text,
+        em: m.sentAt,
+      });
+      grupos.set(numero, lista);
+    }
+    return Array.from(grupos.entries()).map(([numero, mensagens]): Conversa => ({
+      id: EH_REAL + numero,
+      leadId: 'zap-contato-' + numero,
+      canal: 'whatsapp',
+      naoLidas: 0,
+      mensagens: mensagens.sort((a, b) => a.em.localeCompare(b.em)),
+    }));
+  }, [reais]);
+
+  const todasConversas = useMemo(() => {
+    const telefonesReais = new Set(conversasReais.map((x) => numeroLimpo(x.id.slice(EH_REAL.length))));
+    const simuladas = conversas.filter((cv) => {
+      if (cv.canal !== 'whatsapp') return true;
+      const ld = leads.find((l) => l.id === cv.leadId);
+      // Se o contato tiver WhatsApp real, mostramos apenas a conversa real na lista.
+      // A antiga conversa de demonstração permanece armazenada, sem exclusão.
+      return !ld?.telefone || !telefonesReais.has(numeroLimpo(ld.telefone));
+    });
+    return [...conversasReais, ...simuladas];
+  }, [conversas, conversasReais, leads]);
 
   const ordenadas = useMemo(
-    () => [...conversas].sort((a, b) => (ultima(b)?.em ?? '').localeCompare(ultima(a)?.em ?? '')),
-    [conversas]
+    () => [...todasConversas].sort((a, b) => (ultima(b)?.em ?? '').localeCompare(ultima(a)?.em ?? '')),
+    [todasConversas]
   );
 
   const visiveis = ordenadas.filter((cv) => {
@@ -166,7 +267,8 @@ export default function TelaConversas() {
     if (!selecionadaId && ordenadas[0]) setSelecionadaId(ordenadas[0].id);
   }, [leadUrl, leads, conversas]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const selecionada = conversas.find((x) => x.id === selecionadaId) ?? ordenadas[0] ?? null;
+  const selecionada = ordenadas.find((x) => x.id === selecionadaId) ?? ordenadas[0] ?? null;
+  const selecionadaReal = Boolean(selecionada?.id.startsWith(EH_REAL));
   const lead = selecionada ? leadDe(selecionada) : undefined;
 
   const abrir = (id: string) => {
@@ -210,16 +312,8 @@ export default function TelaConversas() {
     );
   };
 
-  const contagem = (cn: CanalConversa) => conversas.filter((x) => x.canal === cn).length;
-
-  // Modo ao vivo usa a API REST da ZapClaw; conversas de demonstração ficam intactas.
-  if (modoZapclaw) {
-    return (
-      <NexaShell aba="conversas" marcaTitulo="CRM – Conversas" buscaTexto="Buscar lead, cliente, projeto ou proposta..." topoCompacto={{ iniciais: iniciaisUsuario }}>
-        <WhatsAppAoVivo onVoltar={() => setModoZapclaw(false)} />
-      </NexaShell>
-    );
-  }
+  const contagem = (cn: CanalConversa) => ordenadas.filter((x) => x.canal === cn).length;
+  const leadVinculado = Boolean(lead && leads.some((l) => l.id === lead.id));
 
   return (
     <NexaShell
@@ -231,14 +325,13 @@ export default function TelaConversas() {
       <div className={`${c.pagina} ${c['vista-' + vista]}`}>
         {/* ===== Lista ===== */}
         <aside className={`${c.coluna} ${c.lista}`} aria-label="Conversas">
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
-            <button
-              type="button" onClick={() => setModoZapclaw(true)}
-              style={{ border: '1px solid #7ca444', background: '#22331f', color: '#d3ffa0', borderRadius: 18, padding: '9px 15px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
-            >
-              ● WhatsApp ao vivo
+          <div className={c.statusIntegracao}>
+            <span><span className={c.sinalZapclaw} /> WhatsApp na caixa de entrada</span>
+            <button type="button" onClick={() => void atualizarWhatsApp()} disabled={carregandoApi}>
+              {carregandoApi ? 'Atualizando…' : 'Atualizar'}
             </button>
           </div>
+          {erroApi && <p className={c.erroIntegracao} role="status">{erroApi}</p>}
           <div className={c.canais} role="tablist" aria-label="Canal">
             <button
               type="button"
@@ -247,7 +340,7 @@ export default function TelaConversas() {
               className={`${c.canal} ${canal === 'todas' ? c.canalAtivo : ''}`}
               onClick={() => setCanal('todas')}
             >
-              Todas <span className={c.contador}>{conversas.length}</span>
+              Todas <span className={c.contador}>{ordenadas.length}</span>
             </button>
             {(['whatsapp', 'instagram', 'telegram'] as CanalConversa[]).map((cn) => (
               <button
@@ -319,6 +412,7 @@ export default function TelaConversas() {
                           {msg?.de === 'equipe' ? 'Você: ' : ''}
                           {msg?.texto ?? (msg?.arquivo ? `📎 ${msg.arquivo.nome}` : '')}
                         </span>
+                        {cv.id.startsWith(EH_REAL) && <span className={c.marcaReal} title="WhatsApp oficial">Real</span>}
                         {cv.naoLidas > 0 && <span className={c.naoLidas}>{cv.naoLidas}</span>}
                       </span>
                     </span>
@@ -332,6 +426,16 @@ export default function TelaConversas() {
 
         {/* ===== Chat ===== */}
         {selecionada && lead ? (
+          selecionadaReal ? (
+            <WhatsAppChatIntegrado
+              conversa={selecionada}
+              lead={lead}
+              onVoltar={() => setVista('lista')}
+              onVerLead={() => setVista('lead')}
+              onAtualizar={() => void atualizarWhatsApp()}
+              limitado={limitado}
+            />
+          ) : (
           <Chat
             conversa={selecionada}
             lead={lead}
@@ -350,6 +454,7 @@ export default function TelaConversas() {
               setVista('lista');
             }}
           />
+          )
         ) : (
           <section className={`${c.coluna} ${c.chat} ${c.chatVazio}`}>
             <p>Selecione uma conversa.</p>
@@ -357,15 +462,24 @@ export default function TelaConversas() {
         )}
 
         {/* ===== Painel do lead ===== */}
-        {selecionada && lead && (
+        {selecionada && lead && (!selecionadaReal || leadVinculado) && (
           <PainelLead
             lead={lead}
             conversa={selecionada}
             projetoCriado={projetos.some((p) => p.leadId === lead.id)}
             onAtualizar={atualizarLead}
             onVoltar={() => setVista('chat')}
-            onEnviarMensagem={(texto) => enviar({ texto })}
+            onEnviarMensagem={selecionadaReal ? undefined : (texto) => enviar({ texto })}
           />
+        )}
+        {selecionada && selecionadaReal && lead && !leadVinculado && (
+          <aside className={`${c.coluna} ${c.painel} ${c.contatoRealPainel}`} aria-label="Informações do contato">
+            <strong>Contato pelo WhatsApp</strong>
+            <p>Este contato está conectado pela API oficial da ZapClaw.</p>
+            <div className={c.dadoContato}><small>Telefone</small><b>{telefoneFormatado(selecionada.id.slice(EH_REAL.length))}</b></div>
+            <p>Para exibir a ficha completa aqui, cadastre ou atualize um lead no CRM com esse número.</p>
+            <a className={c.atalhoCrm} href="/crm">Abrir CRM</a>
+          </aside>
         )}
       </div>
     </NexaShell>
