@@ -39,12 +39,16 @@ export async function configuracaoZapclaw(): Promise<{ chave: string; numero: st
 
   // Uma única conexão: descobre o número na ZapClaw; nunca o hardcode no repositório.
   // Com vários números, exija ZAPCLAW_FROM para não enviar pelo remetente errado.
-  const resposta = await requisicaoZapclaw('/send/numbers', chave);
-  const numeros = Array.isArray(resposta.dados.numbers) ? resposta.dados.numbers : [];
-  if (!resposta.ok || numeros.length !== 1 || !numeros[0] || typeof numeros[0] !== 'object') return null;
-  const n = numeros[0] as Record<string, unknown>;
-  const numero = typeof n.from === 'string' ? n.from.replace(/\D/g, '') : '';
-  return /^\d{10,15}$/.test(numero) ? { chave, numero } : null;
+  try {
+    const resposta = await requisicaoZapclaw('/send/numbers', chave);
+    const numeros = Array.isArray(resposta.dados.numbers) ? resposta.dados.numbers : [];
+    if (!resposta.ok || numeros.length !== 1 || !numeros[0] || typeof numeros[0] !== 'object') return null;
+    const n = numeros[0] as Record<string, unknown>;
+    const numero = typeof n.from === 'string' ? n.from.replace(/\D/g, '') : '';
+    return /^\d{10,15}$/.test(numero) ? { chave, numero } : null;
+  } catch {
+    return null;
+  }
 }
 
 export type MensagemZapclaw = {
