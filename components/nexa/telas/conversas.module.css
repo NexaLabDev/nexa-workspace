@@ -1405,3 +1405,25 @@
   .docs li { min-width: 0; max-width: 100%; }
   .docTexto strong { white-space: normal; overflow-wrap: anywhere; }
 }
+
+/* Integração real do WhatsApp na mesma caixa de entrada do CRM */
+.statusIntegracao{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin:0 4px 12px;padding:8px 10px;border-radius:12px;
+  background:rgba(39,74,45,.45);border:1px solid rgba(154,218,121,.27);
+  color:#d4f0c3;font-size:12px;font-weight:650
+}
+.statusIntegracao span{display:inline-flex;align-items:center;gap:7px}
+.sinalZapclaw{height:7px;width:7px;background:#b6f257;border-radius:50%;display:inline-block;flex-shrink:0}
+.statusIntegracao button{background:transparent;border:0;cursor:pointer;color:#d4f53c;font-weight:750;padding:5px}
+.statusIntegracao button:disabled{opacity:.6;cursor:wait}
+.erroIntegracao{margin:2px 8px 10px;border-radius:9px;padding:9px 11px;color:#ffdcbd;background:#533228;font-size:12px;line-height:1.4}
+.marcaReal{background:#24422d;color:#c3ffa0;border:1px solid #486c46;font-size:10px;font-weight:750;letter-spacing:.02em;border-radius:10px;padding:2px 6px;white-space:nowrap}
+.avisoEnvio{margin:0 6px 8px;color:#c8f4ac;border-radius:8px;border:1px solid rgba(167,232,119,.35);background:rgba(40,68,30,.5);padding:8px 12px;font-size:12px;line-height:1.45}
+.contatoRealPainel{gap:15px;color:#edf5eb}
+.contatoRealPainel>strong{font-size:18px;margin-top:5px}
+.contatoRealPainel>p{font-size:14px;line-height:1.65;color:#a8baa8;margin:0}
+.dadoContato{display:flex;flex-direction:column;gap:7px;padding:14px 10px;background:#18241b;border:1px solid #34493a;border-radius:10px;overflow-wrap:anywhere}
+.dadoContato small{color:#a4b7a4;font-size:12px}.dadoContato b{font-size:15px}
+.atalhoCrm{background:#c4f454;color:#17220c;display:inline-flex;justify-content:center;align-items:center;padding:12px;border-radius:10px;font-size:13px;font-weight:800;text-decoration:none}
+@media(max-width:600px){.statusIntegracao{font-size:11px;padding:7px}.contatoRealPainel{gap:10px}.contatoRealPainel>strong{font-size:16px}}
