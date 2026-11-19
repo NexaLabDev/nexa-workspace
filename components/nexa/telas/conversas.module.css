@@ -1471,3 +1471,22 @@
   .paginaConversa .lista,.paginaConversa .chat,.paginaConversa .painel{min-height:0;max-height:100%}
   .paginaConversa .itens{min-height:0}
 }
+
+@media(max-width:900px){
+  .paginaConversa.vista-lista .chat,
+  .paginaConversa.vista-lead .chat{display:none!important}
+  .paginaConversa.vista-chat .chat{display:flex!important}
+  .paginaConversa.vista-lista .lista{display:flex!important}
+  .paginaConversa.vista-chat .lista,
+  .paginaConversa.vista-lead .lista{display:none!important}
+}
+@media(max-width:700px){
+  .paginaConversa{
+    flex:1 1 auto!important;height:auto;min-height:0;max-height:100%;
+    margin-top:6px;overflow:hidden;
+  }
+  .paginaConversa .lista,
+  .paginaConversa .chat,
+  .paginaConversa .painel{height:100%;min-height:0;overflow:hidden}
+  .paginaConversa .painel{overflow-y:auto}
+}
