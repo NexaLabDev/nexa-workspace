@@ -1011,3 +1011,14 @@
   .raizMenuRetratil .menuLateral{top:10px;bottom:10px;left:10px;max-height:calc(100dvh - 20px)}
 }
 @media(prefers-reduced-motion:reduce){.raizMenuRetratil .menuLateral{transition:none}}
+
+/* O chat no celular usa toda a altura útil sem esconder o campo de mensagem. */
+@media(max-width:700px){
+  .raizMenuRetratil .principal{
+    display:flex;flex-direction:column;min-height:0;height:100%;
+    overflow:hidden;padding-bottom:max(6px,env(safe-area-inset-bottom));
+  }
+  .raizMenuRetratil .principal > *:not(.topo){
+    min-height:0;flex-shrink:1;
+  }
+}
