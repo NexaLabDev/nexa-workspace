@@ -89,7 +89,7 @@ export function normalizarMensagem(m: MensagemDaApi): MensagemZapclaw | null {
 }
 
 export async function requisicaoZapclaw(
-  caminho: '/send/messages' | '/send/text' | '/send/numbers',
+  caminho: '/send/messages' | '/send/text' | '/send/media' | '/send/numbers',
   chave: string,
   opcoes: { params?: URLSearchParams; corpo?: object; idempotencyKey?: string } = {}
 ): Promise<{ ok: boolean; status: number; dados: Record<string, unknown> }> {
