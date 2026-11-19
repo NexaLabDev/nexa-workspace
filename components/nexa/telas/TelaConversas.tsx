@@ -134,6 +134,7 @@ export default function TelaConversas() {
   const [selecionadaId, setSelecionadaId] = useState<string | null>(null);
   const [vista, setVista] = useState<Vista>('lista');
   const [painelDireitoAberto, setPainelDireitoAberto] = useState(false);
+  const [nomeNovoContato, setNomeNovoContato] = useState('');
   const [reais, setReais] = useState<MensagemReal[]>([]);
   const [erroApi, setErroApi] = useState('');
   const [limitado, setLimitado] = useState(false);
@@ -274,6 +275,7 @@ export default function TelaConversas() {
   const lead = selecionada ? leadDe(selecionada) : undefined;
 
   const abrir = (id: string) => {
+    setNomeNovoContato('');
     setSelecionadaId(id);
     setVista('chat');
     setPainelDireitoAberto(false);
@@ -325,6 +327,24 @@ export default function TelaConversas() {
   const fecharPainelDireito = () => {
     setPainelDireitoAberto(false);
     setVista('chat');
+  };
+
+  const cadastrarContatoWhatsApp = () => {
+    if (!selecionada || !selecionada.id.startsWith(EH_REAL) || leadVinculado) return;
+    const telefone = selecionada.id.slice(EH_REAL.length);
+    const empresa = nomeNovoContato.trim().slice(0,100) || telefoneFormatado(telefone);
+    const novo: Lead = {
+      id:'lead-wa-'+crypto.randomUUID(),
+      empresa,
+      descricao:'Contato do WhatsApp',
+      valor:null,
+      cor:'#268d57',
+      etapa:'novo',
+      origem:'WhatsApp',
+      telefone,
+    };
+    setLeads((l) => l.some((p) => p.telefone && numeroLimpo(p.telefone) === numeroLimpo(telefone)) ? l : [...l,novo]);
+    setNomeNovoContato('');
   };
 
   const contagem = (cn: CanalConversa) => ordenadas.filter((x) => x.canal === cn).length;
@@ -496,8 +516,12 @@ export default function TelaConversas() {
             </div>
             <p>Este contato está conectado pela API oficial da ZapClaw.</p>
             <div className={c.dadoContato}><small>Telefone</small><b>{telefoneFormatado(selecionada.id.slice(EH_REAL.length))}</b></div>
-            <p>Para exibir a ficha completa aqui, cadastre ou atualize um lead no CRM com esse número.</p>
-            <a className={c.atalhoCrm} href="/crm">Abrir CRM</a>
+            <p>Cadastre este contato na Nexa para abrir a ficha completa com serviços, documentos e contratos.</p>
+            <label className={c.rotuloNomeContato} htmlFor="nomeContatoWa">Nome do contato</label>
+            <input id="nomeContatoWa" className={c.campoEntrada} placeholder="Nome para salvar na Nexa"
+              value={nomeNovoContato} maxLength={100} onChange={e=>setNomeNovoContato(e.target.value)}/>
+            <small className={c.avisoNomeLocal}>Esse nome ficará apenas na Nexa e não altera o WhatsApp Business.</small>
+            <button type="button" className={c.atalhoCrm} onClick={cadastrarContatoWhatsApp}>Cadastrar e abrir ficha</button>
           </aside>
         )}
       </div>
