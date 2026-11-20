@@ -292,19 +292,19 @@ export async function responderNexa(req:Request) {
     const precoModelo=model==='gpt-6.1-terra'?
       (entradaTokens/1000000)+(saidaTokens*5/1000000):0;
     const gastoEstimado=precoModelo+custoAudio;
-    void db.from('nexa_intelligence_consumo').insert({
+    await db.from('nexa_intelligence_consumo').insert({
       workspace_id:perfil.workspace_id,usuario_id:perfil.id,chat_id:idChat,
       modelo:model,tokens_entrada:entradaTokens,tokens_saida:saidaTokens,
       custo_estimado_usd:Math.round(gastoEstimado*1000000)/1000000,
       audio_minutos_estimados:audioMinutos
-    }).then(()=>{});
+    });
     return NextResponse.json({
       chat:{id:idChat,titulo:chat.titulo,atualizado_em:atualizado},
       usuario:mensagemInserida.data,assistente:msg.data,
       consumo:{entrada:entradaTokens,saida:saidaTokens,
         custo_estimado_usd:Math.round(gastoEstimado*1000000)/1000000,
         custo_mes_estimado_usd:Math.round((gastoMes+gastoEstimado)*1000000)/1000000,
-        nota:arquivo&&arquivo.name.split('.').pop()?.toLowerCase() in tiposAudio && !audioMinutos?
+        nota:arquivo&&Boolean(tiposAudio[(arquivo.name.split('.').pop()||'').toLowerCase()])&&!audioMinutos?
           'Duração do áudio não informada; a transcrição não foi incluída na estimativa.':'Estimativa por tokens; imagens/documentos entram no total de entrada.'}
     },{headers:cabe});
   }catch(e){
