@@ -49,6 +49,7 @@ async function chamarAI(chave:string,corpo:Record<string,unknown>):Promise<Respo
 export async function responderNexa(req:Request) {
   const perfil=await perfilAtivo();
   if(!perfil||perfil.papel!=='administrador')return erro('Acesso restrito aos administradores.',403);
+  const perfilSeguro=perfil;
   const origem=req.headers.get('origin');
   if(origem){
     try{if(new URL(origem).host!==new URL(req.url).host)throw Error('origem');}
@@ -82,7 +83,7 @@ export async function responderNexa(req:Request) {
   const mes=new Date();
   const inicioMes=new Date(Date.UTC(mes.getUTCFullYear(),mes.getUTCMonth(),1)).toISOString();
   const {data:linhasUso}=await db.from('nexa_intelligence_consumo').select('custo_estimado_usd')
-    .eq('workspace_id',perfil.workspace_id).eq('usuario_id',perfil.id).gte('criado_em',inicioMes).limit(3000);
+    .eq('workspace_id',perfilSeguro.workspace_id).eq('usuario_id',perfilSeguro.id).gte('criado_em',inicioMes).limit(3000);
   const gastoMes=(linhasUso||[]).reduce((s,x)=>s+Number(x.custo_estimado_usd||0),0);
   const limiteMensal=Number(process.env.NEXA_AI_MONTHLY_USD_LIMIT||15);
   if(Number.isFinite(limiteMensal)&&limiteMensal>0&&gastoMes>=limiteMensal)
@@ -91,14 +92,14 @@ export async function responderNexa(req:Request) {
   let chat:Salvo|null=null;
   if(chatId){
     const r=await db.from('nexa_intelligence_chats').select('id,titulo,atualizado_em')
-      .eq('id',chatId).eq('workspace_id',perfil.workspace_id).eq('usuario_id',perfil.id).maybeSingle();
+      .eq('id',chatId).eq('workspace_id',perfilSeguro.workspace_id).eq('usuario_id',perfilSeguro.id).maybeSingle();
     if(r.error||!r.data)return erro('Conversa não encontrada.',404);
     chat=r.data;
   }
   const [custos,anterioresOrcamentos]=await Promise.all([
-    db.from('nexa_intelligence_config').select('dados').eq('workspace_id',perfil.workspace_id).maybeSingle(),
+    db.from('nexa_intelligence_config').select('dados').eq('workspace_id',perfilSeguro.workspace_id).maybeSingle(),
     db.from('nexa_intelligence_projetos').select('nome,categoria,entradas,calculo,criado_em')
-      .eq('workspace_id',perfil.workspace_id).order('criado_em',{ascending:false}).limit(6)
+      .eq('workspace_id',perfilSeguro.workspace_id).order('criado_em',{ascending:false}).limit(6)
   ]);
   if(custos.error||anterioresOrcamentos.error)return erro('Não foi possível consultar o histórico financeiro.',503);
   let configuracao:ConfigFinanceira={
@@ -152,7 +153,7 @@ export async function responderNexa(req:Request) {
   if(!chat){
     const titulo=(texto||sinalAnexo).replace(/\s+/g,' ').slice(0,72)||'Nova conversa';
     const r=await db.from('nexa_intelligence_chats').insert({
-      workspace_id:perfil.workspace_id,usuario_id:perfil.id,titulo
+      workspace_id:perfilSeguro.workspace_id,usuario_id:perfilSeguro.id,titulo
     }).select('id,titulo,atualizado_em').single();
     if(r.error||!r.data)return erro('Não foi possível iniciar a conversa.',503);
     chat=r.data;
@@ -203,7 +204,7 @@ export async function responderNexa(req:Request) {
       if(pos>=0)custosAtuais[pos]=item;else custosAtuais.push(item);
       const proxima={...configuracao,custos:custosAtuais};
       const {error:e}=await db.from('nexa_intelligence_config').upsert({
-        workspace_id:perfil.workspace_id,dados:proxima,atualizado_em:new Date().toISOString()
+        workspace_id:perfilSeguro.workspace_id,dados:proxima,atualizado_em:new Date().toISOString()
       });
       if(e)return 'Erro: não foi possível salvar a despesa no Supabase.';
       configuracao=proxima;
@@ -220,7 +221,7 @@ export async function responderNexa(req:Request) {
         return 'Erro: número de projetos/clientes precisa ser pelo menos 1.';
       const proxima={...configuracao,[campo]:Number(valor)};
       const {error:e}=await db.from('nexa_intelligence_config').upsert({
-        workspace_id:perfil.workspace_id,dados:proxima,atualizado_em:new Date().toISOString()
+        workspace_id:perfilSeguro.workspace_id,dados:proxima,atualizado_em:new Date().toISOString()
       });
       if(e)return 'Erro: não foi possível salvar o parâmetro no Supabase.';
       configuracao=proxima;
@@ -246,7 +247,7 @@ export async function responderNexa(req:Request) {
         notas:'Valores simulados. Implantação e suporte mensal são componentes diferentes.'};
       if(args.salvar===true){
         const r=await db.from('nexa_intelligence_projetos').insert({
-          workspace_id:perfil.workspace_id,nome:p.nome,categoria:p.categoria,entradas:p,calculo
+          workspace_id:perfilSeguro.workspace_id,nome:p.nome,categoria:p.categoria,entradas:p,calculo
         });
         if(r.error)return JSON.stringify({...resumo,aviso:'O cálculo foi feito, mas NÃO foi possível salvar no Supabase.'});
         relatoFerramentas.push('Orçamento salvo: '+p.nome);
@@ -288,12 +289,12 @@ export async function responderNexa(req:Request) {
     if(msg.error||!msg.data)return erro('Resposta gerada, mas não foi possível salvar o histórico.',503,{chatId:idChat});
     const atualizado=new Date().toISOString();
     await db.from('nexa_intelligence_chats').update({atualizado_em:atualizado}).eq('id',idChat)
-      .eq('usuario_id',perfil.id).eq('workspace_id',perfil.workspace_id);
+      .eq('usuario_id',perfilSeguro.id).eq('workspace_id',perfilSeguro.workspace_id);
     const precoModelo=model==='gpt-6.1-terra'?
       (entradaTokens/1000000)+(saidaTokens*5/1000000):0;
     const gastoEstimado=precoModelo+custoAudio;
     await db.from('nexa_intelligence_consumo').insert({
-      workspace_id:perfil.workspace_id,usuario_id:perfil.id,chat_id:idChat,
+      workspace_id:perfilSeguro.workspace_id,usuario_id:perfilSeguro.id,chat_id:idChat,
       modelo:model,tokens_entrada:entradaTokens,tokens_saida:saidaTokens,
       custo_estimado_usd:Math.round(gastoEstimado*1000000)/1000000,
       audio_minutos_estimados:audioMinutos
