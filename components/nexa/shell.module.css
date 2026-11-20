@@ -1028,7 +1028,7 @@
    O menu inferior permanece original e pode deslizar horizontalmente. */
 @media (max-width:700px) {
   .raiz,.raizInterna {
-    height:100dvh; height:100svh;
+    height:100svh; height:100dvh;
     min-width:0; min-height:0;
     grid-template-rows:minmax(0,1fr) auto;
     padding-left:max(10px,env(safe-area-inset-left));
@@ -1039,7 +1039,6 @@
     min-height:0;
     overflow-y:auto;
     overflow-x:hidden;
-    touch-action:pan-y;
     scroll-padding-bottom:16px;
     padding-bottom:16px;
     scrollbar-width:thin;
