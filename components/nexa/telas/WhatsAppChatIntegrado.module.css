@@ -167,3 +167,19 @@
   .anexoPrevia{gap:9px}
 }
 @media(prefers-reduced-motion:reduce){.pulsoVermelho{animation:none}}
+
+
+@media(max-width:700px) {
+  .chat { min-width:0; height:100%; max-height:100%; min-height:0; overflow:hidden; }
+  .cabecalho { gap:6px; padding:8px; min-width:0; }
+  .foto { flex:0 0 34px; width:34px; height:34px; }
+  .numero { font-size:13px; min-width:0; }
+  .acao { flex-basis:34px; width:34px; height:34px; }
+  .historico { padding:10px 8px; min-width:0; min-height:0; overflow-y:auto; }
+  .balao { max-width:93%; min-width:0; overflow-wrap:anywhere; }
+  .balao p { overflow-wrap:anywhere; }
+  .rodape { padding:8px; min-width:0; }
+  .formulario,.areaEscrita,.areaEscrita textarea { min-width:0; }
+  .areaEscrita textarea { max-height:100px; }
+  .anexoPrevia { min-width:0; max-width:100%; }
+}

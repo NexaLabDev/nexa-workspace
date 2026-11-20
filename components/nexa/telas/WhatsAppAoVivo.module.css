@@ -14,3 +14,20 @@
 @media(max-width:840px){.pagina{height:calc(100dvh - 158px);min-height:480px}.corpo{grid-template-columns:minmax(205px,36%) minmax(0,1fr)}.chatTopo{align-items:flex-start;flex-direction:column;gap:7px}.selo{white-space:normal}.contato{padding:12px 8px}.contato time{display:none}}
 @media(max-width:580px){.pagina{height:calc(100dvh - 130px);min-height:510px;border-radius:11px}.topo{padding:10px 12px}.topoInfo strong{font-size:14px}.atualizar{padding:9px;font-size:12px}.corpo{display:flex;flex-direction:column}.lista{flex:0 0 140px;border-right:none;border-bottom:1px solid #344034}.listaCabecalho{padding:8px 12px}.listaItens{display:flex;overflow-x:auto;overflow-y:hidden}.contato{flex:0 0 190px;border-right:1px solid #293729;border-bottom:none;padding:10px}.ativo{border-left:none;border-bottom:3px solid #b9ff48;padding-left:10px;padding-bottom:7px}.avatar{display:none}.chatTopo{padding:10px 13px;flex-direction:row;align-items:center}.chatTopo small{font-size:10px}.selo{font-size:10px;padding:5px 7px}.baloes{padding:12px;gap:9px}.balao{max-width:90%}.compositor{padding:9px}.rodape{padding:8px;font-size:10px}}
 @media(prefers-reduced-motion:reduce){.girando{animation:none}}
+
+
+@media(max-width:700px) {
+  .pagina { height:calc(100dvh - 155px); min-height:320px; max-height:calc(100dvh - 155px); border-radius:12px; }
+  .topo { padding:8px; gap:8px; flex-wrap:wrap; }
+  .topoInfo { min-width:0; gap:8px; }
+  .topoInfo strong { font-size:13px; overflow-wrap:anywhere; }
+  .corpo { grid-template-columns:minmax(0,1fr); min-height:0; }
+  .lista,.conversa { min-width:0; min-height:0; }
+  .chatTopo { gap:8px; padding:9px; }
+  .selo { min-width:0; max-width:45%; white-space:normal; text-align:right; }
+  .baloes { padding:12px 9px; min-height:0; }
+  .balao { max-width:94%; }
+  .compositor { padding:8px; }
+  .compositorLinha { gap:7px; }
+  .rodape { flex-wrap:wrap; padding:8px; }
+}

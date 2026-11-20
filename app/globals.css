@@ -33,3 +33,15 @@ html { overflow-x: clip; }
 body { overflow-x: clip; }
 img, video, canvas, svg { max-width: 100%; }
 input, textarea, select { min-width: 0; max-width: 100%; }
+
+
+/* Área útil do PWA (notch e teclado) e redução de overflow acidental. */
+html,body { min-height:100%; overscroll-behavior-x:none; }
+body { width:100%; }
+:where(button,a,input,textarea,select) { -webkit-tap-highlight-color:transparent; }
+@media (max-width:700px) {
+  :where(main,section,article,form,header,footer,nav,aside) { min-width:0; }
+  :where(p,dd,li) { overflow-wrap:anywhere; }
+  :where(img,video) { height:auto; }
+  :where(button,a) { touch-action:manipulation; }
+}

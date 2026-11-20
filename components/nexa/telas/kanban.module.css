@@ -604,3 +604,16 @@
   .cartaoPessoas span { white-space: normal; overflow-wrap: anywhere; }
   .cartaoEtiquetas li, .cartaoServicos li { overflow-wrap: anywhere; }
 }
+
+
+@media (max-width:700px) {
+  .cartao { min-width:0; max-width:100%; padding:12px; overflow-wrap:anywhere; }
+  .cartaoTopo,.cartaoRodape { min-width:0; gap:6px; }
+  .cartaoInfos { flex-wrap:wrap; min-width:0; }
+  .cartaoCampos { min-width:0; }
+  .cartaoCampos dd { min-width:0; overflow-wrap:anywhere; }
+  .cartaoPrazoLinha { flex-wrap:wrap; min-width:0; }
+  .linkBotoes,.vendaLinks { flex-wrap:wrap; }
+  .linkBotoes > *,.vendaLinks > * { min-width:0; max-width:100%; }
+  .dados dd { overflow-wrap:anywhere; }
+}

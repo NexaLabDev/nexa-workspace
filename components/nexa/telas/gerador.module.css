@@ -252,3 +252,13 @@
   .pagina, .cartao, .conteudo { min-width: 0; max-width: 100%; }
   .pagina :is(p,strong,small,h1,h2,h3) { overflow-wrap: anywhere; }
 }
+
+
+@media(max-width:700px) {
+  .gerador,.camposDoc,.faltam,.folha { min-width:0; max-width:100%; }
+  .camposDoc { grid-template-columns:minmax(0,1fr); }
+  .botoes { flex-wrap:wrap; }
+  .botoes > * { min-width:0; max-width:100%; }
+  .janela { width:100%; max-width:100%; max-height:100dvh; border-radius:12px; }
+  .folha { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+}
