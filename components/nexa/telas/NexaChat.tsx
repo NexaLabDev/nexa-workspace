@@ -2,8 +2,6 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { BrainCircuit, Plus, SendHorizontal, MessageSquareText, Trash2, Menu, X, Copy, Check, ShieldCheck, Sparkles, LoaderCircle } from 'lucide-react';
-import { supabaseNavegador } from '@/lib/supabase/navegador';
-import { identidade } from '../remoto';
 import s from './nexa-chat.module.css';
 
 type Chat = { id:string; titulo:string; atualizado_em:string };
@@ -38,25 +36,23 @@ export default function NexaChat() {
   const fim=useRef<HTMLDivElement>(null);
   const ativo=useRef(true);
 
+
   useEffect(()=>{
     ativo.current=true;
     const iniciar=async()=>{
-      const perfil=identidade();
-      if(!perfil||perfil.papel!=='administrador'){
-        setErro('Esta área é exclusiva para administradores.');
-        setCarregando(false);return;
-      }
-      const {data,error}=await supabaseNavegador().from('nexa_intelligence_chats')
-        .select('id,titulo,atualizado_em').eq('workspace_id',perfil.workspace_id)
-        .eq('usuario_id',perfil.id).order('atualizado_em',{ascending:false}).limit(80);
-      if(!ativo.current)return;
-      if(error)setErro('Não foi possível carregar o histórico. Verifique a conexão.');
-      else {
-        const lista=(data||[]) as Chat[];
+      try {
+        const resposta=await fetch('/api/intelligence/chat',{cache:'no-store'});
+        const dados=await resposta.json() as {conversas?:Chat[];erro?:string};
+        if(!ativo.current)return;
+        if(!resposta.ok)throw new Error(dados.erro||'Não foi possível consultar o histórico.');
+        const lista=Array.isArray(dados.conversas)?dados.conversas:[];
         setConversas(lista);
         if(lista.length)setSelecionada(lista[0].id);
+      }catch(e){
+        if(ativo.current)setErro(e instanceof Error?e.message:'Falha ao carregar o histórico.');
+      }finally{
+        if(ativo.current)setCarregando(false);
       }
-      setCarregando(false);
     };
     void iniciar();
     return()=>{ativo.current=false;};
@@ -67,18 +63,25 @@ export default function NexaChat() {
     setCarregandoMensagens(true);
     setMensagens([]);
     const carregar=async()=>{
-      const {data,error}=await supabaseNavegador().from('nexa_intelligence_chat_mensagens')
-        .select('id,chat_id,papel,texto,criado_em').eq('chat_id',selecionada)
-        .order('criado_em',{ascending:true}).limit(250);
-      if(!valid)return;
-      if(error)setErro('Não foi possível carregar as mensagens.');
-      else setMensagens((data||[]) as Mensagem[]);
-      setCarregandoMensagens(false);
+      try {
+        const resposta=await fetch('/api/intelligence/chat?chatId='+encodeURIComponent(selecionada),{cache:'no-store'});
+        const dados=await resposta.json() as {mensagens?:Mensagem[];erro?:string};
+        if(!valid)return;
+        if(!resposta.ok)throw new Error(dados.erro||'Não foi possível carregar as mensagens.');
+        setMensagens(Array.isArray(dados.mensagens)?dados.mensagens:[]);
+      }catch(e){
+        if(valid)setErro(e instanceof Error?e.message:'Falha ao consultar as mensagens.');
+      }finally{
+        if(valid)setCarregandoMensagens(false);
+      }
     };
     void carregar();
     return()=>{valid=false;};
   },[selecionada]);
-  useEffect(()=>fim.current?.scrollIntoView({behavior:'smooth',block:'end'}),[mensagens,enviando]);
+  useEffect(()=>{
+    const el=fim.current;
+    if(el && typeof el.scrollIntoView==='function') el.scrollIntoView({behavior:'instant',block:'end'});
+  },[mensagens,enviando]);
 
   function novaConversa() {
     if(enviando)return;
@@ -92,11 +95,19 @@ export default function NexaChat() {
   async function excluirConversa(id:string) {
     if(enviando)return;
     if(!window.confirm('Excluir esta conversa e todo o histórico de mensagens?'))return;
-    const perfil=identidade();
-    if(!perfil)return;
-    const {error}=await supabaseNavegador().from('nexa_intelligence_chats')
-      .delete().eq('id',id).eq('usuario_id',perfil.id).eq('workspace_id',perfil.workspace_id);
-    if(error){setErro('Não foi possível excluir essa conversa.');return;}
+
+    try {
+      const resposta=await fetch('/api/intelligence/chat',{
+        method:'DELETE',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({chatId:id}),cache:'no-store',
+      });
+      const dados=await resposta.json() as {erro?:string};
+      if(!resposta.ok)throw new Error(dados.erro||'Não foi possível excluir essa conversa.');
+    }catch(e){
+      setErro(e instanceof Error?e.message:'Não foi possível excluir essa conversa.');
+      return;
+    }
     setConversas(x=>x.filter(c=>c.id!==id));
     if(selecionada===id){setSelecionada(null);setMensagens([]);}
   }

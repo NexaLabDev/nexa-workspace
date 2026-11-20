@@ -4,19 +4,22 @@ import { Component, type ReactNode, type ErrorInfo } from 'react';
 import Link from 'next/link';
 
 type Props={rota:string;children:ReactNode};
-type State={erro:Error|null};
+type State={erro:Error|null;componentes:string};
 
 export default class ModuloComProtecao extends Component<Props,State> {
-  state:State={erro:null};
-  static getDerivedStateFromError(erro:Error):State {return {erro};}
+  state:State={erro:null,componentes:''};
+  static getDerivedStateFromError(erro:Error):Partial<State> {return {erro};}
   componentDidCatch(erro:Error, info:ErrorInfo) {
     // Só reporta o erro técnico no console do próprio navegador;
     // não envia nomes, mensagens de clientes nem outros dados para serviços externos.
     console.error('Nexa Workspace: falha no módulo '+this.props.rota,erro,info.componentStack);
+    this.setState({componentes:info.componentStack||''});
   }
   render() {
     if(!this.state.erro)return this.props.children;
     const detalhe=this.state.erro.message?.slice(0,350)||'Falha inesperada no navegador.';
+    const pilha=(this.state.erro.stack||'').slice(0,2000);
+    const componentes=(this.state.componentes||'').slice(0,1600);
     return <div style={{
       minHeight:'min(600px,80dvh)',display:'flex',flexDirection:'column',
       justifyContent:'center',alignItems:'center',gap:15,
@@ -28,7 +31,7 @@ export default class ModuloComProtecao extends Component<Props,State> {
       </p>
       <details style={{maxWidth:550,overflowWrap:'anywhere',textAlign:'left',fontSize:12,color:'#aac2a7'}}>
         <summary style={{cursor:'pointer'}}>Detalhes técnicos</summary>
-        <pre style={{whiteSpace:'pre-wrap'}}>{detalhe}</pre>
+        <pre style={{whiteSpace:'pre-wrap'}}>{detalhe}{'\n\n'}{pilha}{'\n\nComponentes:\n'}{componentes}</pre>
       </details>
       <div style={{display:'flex',flexWrap:'wrap',justifyContent:'center',gap:10}}>
         <button type="button" onClick={()=>window.location.reload()} style={{background:'#d5f66d',color:'#1a2016',border:0,borderRadius:10,padding:'11px 19px',cursor:'pointer',fontWeight:700}}>Recarregar página</button>
