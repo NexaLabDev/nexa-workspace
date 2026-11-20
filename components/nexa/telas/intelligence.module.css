@@ -60,3 +60,7 @@
 .rodape{font-size:11px;color:#8fa095;line-height:1.5;margin:0}
 @media(max-width:920px){.colunas{grid-template-columns:1fr}.pagina{padding:18px 12px 70px}.cabecalho h1{font-size:24px}}
 @media(max-width:540px){.formGrade{grid-template-columns:1fr}.custoLinha{grid-template-columns:minmax(0,1fr) 95px 24px}.painel{padding:16px}.grandeNumero strong{font-size:23px}.cabecalho p{max-width:280px}}
+
+.linkAtivo,.linkFerramenta,.linkVoltar{white-space:nowrap;display:inline-flex;align-items:center;gap:8px;padding:11px 16px;background:#232826;color:#bdc6c0;border:1px solid #3b4540;border-radius:11px;text-decoration:none;font-size:13px;font-weight:600}
+.linkAtivo{background:#d6f56a;color:#192014;border-color:#d6f56a}
+.linkFerramenta:hover,.linkVoltar:hover{border-color:#d6f56a;color:#e0f7ab}
