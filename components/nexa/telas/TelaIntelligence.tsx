@@ -7,8 +7,9 @@ import { identidade } from '../remoto';
 import { supabaseNavegador } from '@/lib/supabase/navegador';
 import { calcularProjeto, categorias, configInicial, projetoInicial, dinheiro, type ConfigFinanceira, type ProjetoPrecificado, type CalculoFinanceiro } from '@/lib/nexa/intelligence';
 import s from './intelligence.module.css';
+import NexaChat from './NexaChat';
 
-type Aba = 'precificar' | 'custos' | 'atendimento' | 'consultoria';
+type Aba = 'chat' | 'precificar' | 'custos' | 'atendimento' | 'consultoria';
 type Registro = {
   id: string; nome: string; categoria: string; entradas: ProjetoPrecificado;
   calculo: CalculoFinanceiro; criado_em: string;
@@ -29,7 +30,7 @@ const camposProjeto: Array<{chave:keyof ProjetoPrecificado;rotulo:string;info:st
   {chave:'despesasMensais',rotulo:'Gastos específicos mensais (R$)',info:'Hospedagem adicional, API por cliente, mensagens'},
 ];
 export default function TelaIntelligence() {
-  const [aba,setAba] = useState<Aba>('precificar');
+  const [aba,setAba] = useState<Aba>('chat');
   const [config,setConfig] = useState<ConfigFinanceira>(configInicial);
   const [projeto,setProjeto] = useState<ProjetoPrecificado>(projetoInicial);
   const [historico,setHistorico] = useState<Registro[]>([]);
@@ -188,12 +189,14 @@ export default function TelaIntelligence() {
       !autorizado ? <div className={s.painel}>Esta área é exclusiva para administradores da Nexa.</div> :
       <>
       <nav className={s.abas} aria-label="Áreas da Nexa Intelligence">
+        <button className={aba==='chat'?s.ativa:''} onClick={()=>{setAba('chat');setResposta('');}}><MessageSquareText size={17}/> Conversar com a IA</button>
         <button className={aba==='precificar'?s.ativa:''} onClick={()=>{setAba('precificar');setResposta('');}}> <Calculator size={17}/> Precificar</button>
         <button className={aba==='custos'?s.ativa:''} onClick={()=>{setAba('custos');setResposta('');}}> <Save size={17}/> Meus custos</button>
         <button className={aba==='atendimento'?s.ativa:''} onClick={()=>{setAba('atendimento');setResposta('');}}> <MessageSquareText size={17}/> Atendimento</button>
         <button className={aba==='consultoria'?s.ativa:''} onClick={()=>{setAba('consultoria');setResposta('');}}> <BrainCircuit size={17}/> Consultar IA</button>
       </nav>
       {aviso && <div role="status" className={s.aviso}>{aviso}<button aria-label="Dispensar aviso" onClick={()=>setAviso('')}>×</button></div>}
+      {aba==='chat' && <NexaChat/>}
       {aba==='precificar' && <div className={s.colunas}>
         <section className={s.painel}>
           <header className={s.painelTopo}><h2>Orçamento do projeto</h2><p>Inclua também automações simples, entregas únicas e projetos já existentes.</p></header>

@@ -1,0 +1,87 @@
+.raiz{display:grid;grid-template-columns:245px minmax(0,1fr);height:min(76dvh,850px);min-height:510px;max-height:900px;overflow:hidden;border:1px solid #354137;border-radius:19px;background:#101512;color:#f1f6ef}
+.barra{display:flex;flex-direction:column;background:#171d1a;border-right:1px solid #313b33;min-width:0}
+.topoBarra{padding:20px 16px 13px;display:flex;align-items:center;justify-content:space-between}
+.nomeBarra{font-size:13px;font-weight:700;display:flex;align-items:center;gap:9px;color:#cdd7c9}
+.fechar{display:none}
+.novo{margin:0 12px 16px;padding:12px;border-radius:11px;background:#d7f56b;border:0;color:#202a17;cursor:pointer;font-size:13px;font-weight:700;display:flex;gap:9px;align-items:center;justify-content:center}
+.novo:disabled,.itemAbrir:disabled{opacity:.45;cursor:default}
+.lista{overflow:auto;min-height:0;flex:1;padding:0 8px}
+.listaVazia{color:#829185;font-size:12px;text-align:center;line-height:1.5;margin:22px 14px}
+.item{display:flex;align-items:center;padding:3px 3px 3px 6px;border-radius:9px;gap:4px;min-width:0}
+.item:hover{background:#283128}
+.itemAtivo{background:#303d2d}
+.itemAbrir{display:flex;align-items:center;gap:8px;flex:1;min-width:0;cursor:pointer;border:0;color:#e0e6dc;background:none;padding:10px 4px;text-align:left}
+.itemAbrir svg{flex-shrink:0;color:#9bad9b}
+.itemAbrir span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.itemData{font-size:10px;color:#88988c;white-space:nowrap}
+.itemExcluir{border:0;background:transparent;color:#8a998d;padding:5px;cursor:pointer;display:grid;place-items:center}
+.itemExcluir:hover{color:#ffb3af}
+.rodapeBarra{padding:15px 12px;border-top:1px solid #303b32;display:flex;gap:8px;align-items:center;font-size:11px;color:#94a794}
+.principal{display:flex;flex-direction:column;min-width:0;min-height:0}
+.cabecalho{height:64px;min-height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 23px;border-bottom:1px solid #29342d;gap:12px}
+.titulos{display:flex;flex-direction:column;min-width:0;gap:4px}
+.titulos strong{font-size:14px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.titulos span{font-size:11px;color:#90a093}
+.menuMobile,.novaMobile{display:none}
+.mensagens{overflow:auto;flex:1;min-height:0;overscroll-behavior:contain;scrollbar-color:#455447 transparent;padding:24px 20px}
+.abertura{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;max-width:590px;margin:auto;text-align:center;gap:14px;padding:14px 0}
+.marca,.avatar{display:grid;place-items:center;background:#243b23;color:#d2f769}
+.marca{width:60px;height:60px;border-radius:18px;border:1px solid #466a34}
+.abertura h2{font-size:25px;letter-spacing:-.6px;margin:1px 0 0}
+.abertura p{font-size:13px;line-height:1.65;color:#a9b5aa;margin:0;max-width:470px}
+.sugestoes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:9px;width:100%}
+.sugestoes button{border:1px solid #3c4a3d;background:#1b241e;border-radius:11px;color:#dce6da;padding:14px;display:flex;gap:9px;align-items:center;text-align:left;cursor:pointer;font-size:12px;font-weight:600}
+.sugestoes button:hover{border-color:#a8d65e}
+.sugestoes svg{color:#a9d96a;flex-shrink:0}
+.troca{max-width:850px;margin:0 auto;display:flex;flex-direction:column;gap:23px}
+.mensagem{display:flex;gap:12px;align-items:flex-start;min-width:0}
+.usuario{justify-content:flex-end}
+.avatar{width:32px;height:32px;flex:0 0 32px;border-radius:11px}
+.balao{max-width:min(85%,740px);min-width:0}
+.usuario .balao{background:#2b402b;border:1px solid #416743;border-radius:16px 16px 4px 16px;padding:13px 16px}
+.assistente .balao{max-width:calc(100% - 44px);padding:5px 0}
+.texto{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;font-size:13px;color:#ecf0e9}
+.meta{display:flex;gap:8px;justify-content:flex-end;align-items:center;font-size:10px;color:#819282;margin-top:7px}
+.meta button{border:0;background:transparent;color:#8f9b90;cursor:pointer;padding:2px}
+.escrevendo{display:flex;align-items:center;gap:10px;color:#99ab99;font-size:12px}
+.pontos{display:flex;gap:4px}
+.pontos i{width:6px;height:6px;border-radius:50%;background:#b0d86a;animation:piscar 1s ease-in-out infinite alternate}
+.pontos i:nth-child(2){animation-delay:.2s}.pontos i:nth-child(3){animation-delay:.4s}
+@keyframes piscar{from{opacity:.25}to{opacity:1}}
+.carregamento{display:flex;gap:9px;align-items:center;justify-content:center;color:#a7b6a9;font-size:13px;padding:30px}
+.girando{animation:giro 1s linear infinite}
+@keyframes giro{to{transform:rotate(360deg)}}
+.base{padding:12px 22px 18px;border-top:1px solid #28332c;background:#101512}
+.composer{max-width:850px;margin:0 auto;display:flex;flex-direction:column;border:1px solid #536552;background:#202a21;border-radius:15px;padding:10px 12px 9px}
+.composer:focus-within{border-color:#b6e267}
+.composer textarea{resize:vertical;max-height:140px;min-height:40px;border:0;outline:0;background:transparent;color:#fff;font:inherit;font-size:13px;line-height:1.5;width:100%;padding:5px;box-sizing:border-box}
+.composer textarea::placeholder{color:#8e9c8e}
+.composerRodape{display:flex;justify-content:space-between;align-items:center;gap:10px;color:#809280;font-size:10px}
+.composerRodape button{display:grid;place-items:center;width:32px;height:32px;border:0;background:#d5f565;color:#1e291a;border-radius:10px;cursor:pointer}
+.composerRodape button:disabled{opacity:.4;cursor:default}
+.avisoPrivacidade{max-width:850px;margin:8px auto 0;text-align:center;font-size:10px;line-height:1.45;color:#8d9b8e}
+.erro{background:#432d2d;color:#ffc9c1;border:1px solid #a56a61;padding:9px 11px;border-radius:10px;display:flex;justify-content:space-between;gap:10px;align-items:center;margin:0 auto 9px;max-width:850px;font-size:12px}
+.erro button{border:0;color:inherit;background:none;cursor:pointer}
+.fundoMenu{display:none}
+@media(max-width:850px){.raiz{grid-template-columns:190px minmax(0,1fr);height:72dvh;min-height:490px}.base{padding:10px 12px}.mensagens{padding:18px 12px}.cabecalho{padding:0 14px}}
+@media(max-width:650px){
+ .raiz{display:block;position:relative;height:calc(100dvh - 155px);min-height:420px;border-radius:13px}
+ .principal{height:100%}
+ .barra{position:absolute;top:0;left:0;bottom:0;width:min(280px,82vw);z-index:12;transform:translateX(-105%);transition:transform .18s ease;box-shadow:5px 0 24px rgba(0,0,0,.3)}
+ .barraAberta{transform:translateX(0)}
+ .fundoMenu{display:block;position:absolute;inset:0;background:rgba(0,0,0,.6);border:0;z-index:11}
+ .menuMobile,.novaMobile{display:grid;place-items:center;background:none;border:0;color:#dce8dc;padding:6px;cursor:pointer}
+ .fechar{display:grid;place-items:center;background:none;border:0;color:#e0e8e0;cursor:pointer}
+ .cabecalho{height:55px;min-height:55px}
+ .mensagens{padding:14px 10px}
+ .abertura{gap:10px}
+ .abertura h2{font-size:20px}
+ .abertura p{font-size:12px}
+ .sugestoes{grid-template-columns:1fr 1fr;gap:7px}
+ .sugestoes button{padding:11px;font-size:11px}
+ .usuario .balao{max-width:88%}
+ .texto{font-size:13px}
+ .base{padding:8px 9px 12px}
+ .composerRodape span{font-size:9px}
+ .avisoPrivacidade{font-size:9px}
+}
