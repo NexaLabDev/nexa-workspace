@@ -40,8 +40,9 @@ export const dinheiro = (v: number | null) =>
 export function calcularProjeto(p: ProjetoPrecificado, c: ConfigFinanceira): CalculoFinanceiro {
   const alertas: string[] = [];
   const fixos = (c.custos || []).reduce((s,x)=>s+numero(x.valor),0);
-  const rateioImplantacao = fixos*numero(c.percentualImplantacao)/100/Math.max(1,numero(c.projetosPorMes));
-  const rateioMensal = fixos*(1-numero(c.percentualImplantacao)/100)/Math.max(1,numero(c.clientesAtivos));
+  const proporcao = Math.min(100,numero(c.percentualImplantacao))/100;
+  const rateioImplantacao = fixos*proporcao/Math.max(1,numero(c.projetosPorMes));
+  const rateioMensal = fixos*(1-proporcao)/Math.max(1,numero(c.clientesAtivos));
   const custoImplantacao = numero(p.horasImplantacao)*numero(c.valorHora)+numero(p.despesasImplantacao)+rateioImplantacao;
   const custoMensal = numero(p.horasSuporte)*numero(c.valorHora)+numero(p.despesasMensais)+rateioMensal;
   const despesasPercentuais = (numero(c.aliquota)+numero(c.taxaPagamento))/100;
