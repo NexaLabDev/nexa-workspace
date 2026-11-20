@@ -2,6 +2,7 @@
 
 import { lazy, Suspense, useDeferredValue, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import ModuloComProtecao from './ModuloComProtecao';
 
 // As telas já são componentes de cliente e leem os dados compartilhados do
 // Supabase. A primeira visita valida o usuário no servidor (AreaPrivada);
@@ -95,7 +96,9 @@ export default function WorkspaceConteudo() {
         </div>
       }
     >
-      <ModuloAtual rota={rotaVisivel} />
+      <ModuloComProtecao key={rotaVisivel} rota={rotaVisivel}>
+        <ModuloAtual rota={rotaVisivel} />
+      </ModuloComProtecao>
     </Suspense>
   );
 }
