@@ -16,6 +16,7 @@ const Cliente = lazy(() => import('@/components/nexa/telas/TelaCliente'));
 const Kanban = lazy(() => import('@/components/nexa/telas/TelaKanban'));
 const Catalogo = lazy(() => import('@/components/nexa/telas/TelaCatalogo'));
 const Calculadora = lazy(() => import('@/components/nexa/telas/TelaCalculadora'));
+const Intelligence = lazy(() => import('@/components/nexa/telas/TelaIntelligence'));
 const Documentos = lazy(() => import('@/components/nexa/telas/TelaDocumentos'));
 const Configuracoes = lazy(() => import('@/components/nexa/telas/TelaConfiguracoes'));
 
@@ -29,6 +30,7 @@ const titulos: Record<string, string> = {
   '/kanban': 'Kanban',
   '/catalogo': 'Serviços',
   '/calculadora': 'Calculadora de Serviço',
+  '/intelligence': 'Nexa Intelligence',
   '/documentos': 'Gerador de Documentos',
   '/configuracoes': 'Configurações',
 };
@@ -47,6 +49,7 @@ function ModuloAtual({ rota }: { rota: string }) {
     case '/kanban': return <Kanban />;
     case '/catalogo': return <Catalogo />;
     case '/calculadora': return <Calculadora />;
+    case '/intelligence': return <Intelligence />;
     case '/documentos': return <Documentos />;
     case '/configuracoes': return <Configuracoes />;
     default:
