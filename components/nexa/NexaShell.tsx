@@ -119,41 +119,41 @@ export default function NexaShell({
   const ativo = (href: string) => pathname === href ||
     (href === '/clientes' && pathname.startsWith('/clientes/'));
   const { raizRef, principalRef, navCelularRef } = useRolagemNavegacao(aba);
-  // O teclado virtual reduz a área visível no iOS/Android. Ajusta o shell do
-  // chat diretamente, sem remontar o compositor ou perder o texto digitado.
+  // Chat móvel: a altura normal é CSS (100dvh). Só reduzimos manualmente
+  // quando um campo está em foco, para acompanhar o teclado do iOS/Android.
   useEffect(() => {
     if (aba !== 'intelligence') return;
     const raiz = raizRef.current;
-    if (!raiz || typeof window === 'undefined') return;
+    if (!raiz) return;
     const viewport = window.visualViewport;
-    const ajustar = () => {
-      if (window.innerWidth > 700) {
-        raiz.style.removeProperty('--nexa-chat-viewport');
-        raiz.classList.remove(s.tecladoAberto);
-        return;
-      }
-      const altura = viewport?.height ?? window.innerHeight;
-      raiz.style.setProperty('--nexa-chat-viewport', Math.max(260, altura) + 'px');
+    const atualizar = () => {
+      const mobile = window.matchMedia('(max-width: 700px)').matches;
       const foco = document.activeElement;
-      const campoFocado = foco instanceof HTMLElement &&
-        raiz.contains(foco) && /^(INPUT|TEXTAREA)$/.test(foco.tagName);
-      const teclado = campoFocado && window.innerHeight - altura > 135;
-      raiz.classList.toggle(s.tecladoAberto, teclado);
+      const digitando = mobile && foco instanceof HTMLElement &&
+        raiz.contains(foco) && (foco.tagName === 'TEXTAREA' ||
+          (foco.tagName === 'INPUT' && (foco as HTMLInputElement).type !== 'file'));
+      raiz.classList.toggle(s.tecladoAberto, digitando);
+      if (digitando) {
+        // Evita a mudança de altura da barra do navegador durante a leitura.
+        // Ao digitar, segue exclusivamente o viewport visível.
+        const altura = viewport?.height ?? window.innerHeight;
+        raiz.style.setProperty('--chat-altura-visivel', Math.round(Math.max(180, altura)) + 'px');
+      } else {
+        raiz.style.removeProperty('--chat-altura-visivel');
+      }
     };
-    ajustar();
-    viewport?.addEventListener('resize', ajustar);
-    viewport?.addEventListener('scroll', ajustar);
-    window.addEventListener('resize', ajustar);
-    document.addEventListener('focusin', ajustar);
-    document.addEventListener('focusout', ajustar);
+    atualizar();
+    viewport?.addEventListener('resize', atualizar);
+    window.addEventListener('resize', atualizar);
+    document.addEventListener('focusin', atualizar);
+    document.addEventListener('focusout', atualizar);
     return () => {
-      viewport?.removeEventListener('resize', ajustar);
-      viewport?.removeEventListener('scroll', ajustar);
-      window.removeEventListener('resize', ajustar);
-      document.removeEventListener('focusin', ajustar);
-      document.removeEventListener('focusout', ajustar);
-      raiz.style.removeProperty('--nexa-chat-viewport');
+      viewport?.removeEventListener('resize', atualizar);
+      window.removeEventListener('resize', atualizar);
+      document.removeEventListener('focusin', atualizar);
+      document.removeEventListener('focusout', atualizar);
       raiz.classList.remove(s.tecladoAberto);
+      raiz.style.removeProperty('--chat-altura-visivel');
     };
   }, [aba, raizRef]);
   const inicio = aba === 'dashboard';

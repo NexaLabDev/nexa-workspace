@@ -42,6 +42,7 @@ export default function NexaChat() {
   const inicioGravacao=useRef(0);
   const duracaoAudio=useRef(0);
   const textarea=useRef<HTMLTextAreaElement>(null);
+  const pularProximoHistorico=useRef<string|null>(null);
   const areaMensagens=useRef<HTMLDivElement>(null);
   const rolarAoFim=useRef(true);
   const ativo=useRef(true);
@@ -102,6 +103,11 @@ export default function NexaChat() {
   },[]);
   useEffect(()=>{
     if(!selecionada){setMensagens([]);setCarregandoMensagens(false);return;}
+    if(pularProximoHistorico.current===selecionada) {
+      pularProximoHistorico.current=null;
+      setCarregandoMensagens(false);
+      return;
+    }
     let valid=true;
     setCarregandoMensagens(true);
     setMensagens([]);
@@ -128,6 +134,12 @@ export default function NexaChat() {
     if(!el || !rolarAoFim.current)return;
     el.scrollTop=el.scrollHeight;
   },[mensagens,enviando,carregandoMensagens]);
+  useLayoutEffect(()=>{
+    const campo=textarea.current;
+    if(!campo || !window.matchMedia('(max-width: 700px)').matches)return;
+    campo.style.height='auto';
+    campo.style.height=Math.min(Math.max(campo.scrollHeight,43),126)+'px';
+  },[texto]);
   function acompanharRolagem(){
     const el=areaMensagens.current;
     if(!el)return;
@@ -136,12 +148,14 @@ export default function NexaChat() {
 
   function novaConversa() {
     if(enviando)return;
+    pularProximoHistorico.current=null;
     rolarAoFim.current=true;
     setSelecionada(null);setMensagens([]);setTexto('');setArquivo(null);setErro('');setMenu(false);
     if(window.matchMedia('(min-width: 701px)').matches)textarea.current?.focus();
   }
   function abrirConversa(id:string) {
     if(enviando)return;
+    pularProximoHistorico.current=null;
     rolarAoFim.current=true;
     setSelecionada(id);setErro('');setMenu(false);
   }
@@ -201,7 +215,7 @@ export default function NexaChat() {
       if(typeof retorno.consumo?.custo_estimado_usd==='number')setUltimoConsumo(retorno.consumo.custo_estimado_usd);
       if(typeof retorno.consumo?.custo_mes_estimado_usd==='number')setConsumoMes(retorno.consumo.custo_mes_estimado_usd);
       duracaoAudio.current=0;
-      if(!origemChat)setSelecionada(chat.id);
+      if(!origemChat){pularProximoHistorico.current=chat.id;setSelecionada(chat.id);}
     }catch(e){
       setMensagens(m=>m.filter(x=>x.id!==temp));
       setTexto(entrada);
@@ -211,7 +225,9 @@ export default function NexaChat() {
   }
 
   function teclado(e:KeyboardEvent<HTMLTextAreaElement>) {
-    if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){
+    // No celular, Enter deve criar uma nova linha, como em outros mensageiros.
+    if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing &&
+       !window.matchMedia('(pointer: coarse)').matches){
       e.preventDefault();void enviar();
     }
   }
@@ -274,7 +290,7 @@ export default function NexaChat() {
         {erro&&<div className={s.erro} role="alert"><span>{erro}</span><button aria-label="Dispensar erro" onClick={()=>setErro('')}><X size={15}/></button></div>}
         {arquivo&&<div className={s.anexoSelecionado}><Paperclip size={15}/><span title={arquivo.name}>{arquivo.name}</span><small>{(arquivo.size/1024/1024).toFixed(2)} MB</small><button type="button" onClick={()=>{setArquivo(null);duracaoAudio.current=0;}} aria-label="Remover anexo"><X size={16}/></button></div>}
         <form className={s.composer} onSubmit={e=>{e.preventDefault();void enviar();}}>
-          <textarea ref={textarea} rows={2} maxLength={12000} value={texto} onChange={e=>setTexto(e.target.value)} onKeyDown={teclado}
+          <textarea ref={textarea} rows={1} maxLength={12000} value={texto} onChange={e=>setTexto(e.target.value)} onKeyDown={teclado}
             placeholder="Mensagem para a Nexa Intelligence..." aria-label="Mensagem para a Nexa Intelligence" disabled={enviando||carregandoMensagens||gravando}/>
           <input ref={seletorArquivo} className={s.inputArquivo} type="file"
             accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt,.md,.rtf,.mp3,.mp4,.m4a,.ogg,.wav,.flac,.webm"
