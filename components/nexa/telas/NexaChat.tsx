@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { BrainCircuit, Plus, SendHorizontal, MessageSquareText, Trash2, Menu, X, Copy, Check, ShieldCheck, Sparkles, LoaderCircle, Paperclip, Mic, Square } from 'lucide-react';
 import s from './nexa-chat.module.css';
 
@@ -42,7 +42,8 @@ export default function NexaChat() {
   const inicioGravacao=useRef(0);
   const duracaoAudio=useRef(0);
   const textarea=useRef<HTMLTextAreaElement>(null);
-  const fim=useRef<HTMLDivElement>(null);
+  const areaMensagens=useRef<HTMLDivElement>(null);
+  const rolarAoFim=useRef(true);
   const ativo=useRef(true);
   useEffect(()=>()=>{streamAudio.current?.getTracks().forEach(t=>t.stop());},[]);
   async function alternarGravacao() {
@@ -120,18 +121,28 @@ export default function NexaChat() {
     void carregar();
     return()=>{valid=false;};
   },[selecionada]);
-  useEffect(()=>{
-    const el=fim.current;
-    if(el && typeof el.scrollIntoView==='function') el.scrollIntoView({behavior:'instant',block:'end'});
-  },[mensagens,enviando]);
+  // Rola somente a lista de mensagens. scrollIntoView fazia a página inteira
+  // subir/descer no celular quando chegava resposta ou abria o teclado.
+  useLayoutEffect(()=>{
+    const el=areaMensagens.current;
+    if(!el || !rolarAoFim.current)return;
+    el.scrollTop=el.scrollHeight;
+  },[mensagens,enviando,carregandoMensagens]);
+  function acompanharRolagem(){
+    const el=areaMensagens.current;
+    if(!el)return;
+    rolarAoFim.current=el.scrollHeight-el.scrollTop-el.clientHeight<115;
+  }
 
   function novaConversa() {
     if(enviando)return;
+    rolarAoFim.current=true;
     setSelecionada(null);setMensagens([]);setTexto('');setArquivo(null);setErro('');setMenu(false);
-    textarea.current?.focus();
+    if(window.matchMedia('(min-width: 701px)').matches)textarea.current?.focus();
   }
   function abrirConversa(id:string) {
     if(enviando)return;
+    rolarAoFim.current=true;
     setSelecionada(id);setErro('');setMenu(false);
   }
   async function excluirConversa(id:string) {
@@ -161,6 +172,7 @@ export default function NexaChat() {
     if(enviando||gravando||carregandoMensagens||conteudo.length<2||conteudo.length>12000)return;
     const temp='temp-'+Date.now();
     const origemChat=selecionada;
+    rolarAoFim.current=true;
     setTexto('');setArquivo(null);setErro('');setEnviando(true);
     setMensagens(m=>[...m,{id:temp,chat_id:origemChat||'',papel:'usuario',
       texto:conteudo+(anexo?'\n[Anexo: '+anexo.name+']':''),criado_em:new Date().toISOString()}]);
@@ -236,7 +248,7 @@ export default function NexaChat() {
         <div className={s.titulos}><strong>{titulo}</strong><span>Consultora da Nexa · custos e projetos por conversa</span></div>
         <button className={s.novaMobile} onClick={novaConversa} aria-label="Nova conversa" disabled={enviando}><Plus size={21}/></button>
       </header>
-      <div className={s.mensagens} role="log" aria-live="polite" aria-label="Mensagens da conversa">
+      <div ref={areaMensagens} onScroll={acompanharRolagem} className={s.mensagens} role="log" aria-live="polite" aria-label="Mensagens da conversa">
         {carregandoMensagens?<div className={s.carregamento}><LoaderCircle size={20} className={s.girando}/> Carregando mensagens…</div>:
         vazio?<div className={s.abertura}>
           <div className={s.marca}><BrainCircuit size={29}/></div>
@@ -256,7 +268,6 @@ export default function NexaChat() {
           </article>)}
           {enviando&&<div className={s.escrevendo}><div className={s.avatar}><BrainCircuit size={17}/></div><div className={s.pontos}><i/><i/><i/></div><span>Preparando resposta…</span></div>}
         </div>}
-        <div ref={fim}/>
       </div>
 
       <div className={s.base}>
@@ -264,7 +275,7 @@ export default function NexaChat() {
         {arquivo&&<div className={s.anexoSelecionado}><Paperclip size={15}/><span title={arquivo.name}>{arquivo.name}</span><small>{(arquivo.size/1024/1024).toFixed(2)} MB</small><button type="button" onClick={()=>{setArquivo(null);duracaoAudio.current=0;}} aria-label="Remover anexo"><X size={16}/></button></div>}
         <form className={s.composer} onSubmit={e=>{e.preventDefault();void enviar();}}>
           <textarea ref={textarea} rows={2} maxLength={12000} value={texto} onChange={e=>setTexto(e.target.value)} onKeyDown={teclado}
-            placeholder="Converse comigo sobre seus gastos, projetos e clientes…" aria-label="Mensagem para a Nexa Intelligence" disabled={enviando||carregandoMensagens||gravando}/>
+            placeholder="Mensagem para a Nexa Intelligence..." aria-label="Mensagem para a Nexa Intelligence" disabled={enviando||carregandoMensagens||gravando}/>
           <input ref={seletorArquivo} className={s.inputArquivo} type="file"
             accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt,.md,.rtf,.mp3,.mp4,.m4a,.ogg,.wav,.flac,.webm"
             onChange={e=>{selecionarArquivo(e.target.files?.[0]||null);e.target.value='';}} />
@@ -274,7 +285,7 @@ export default function NexaChat() {
               <button className={s.botaoAnexo+(gravando?' '+s.gravando:'')} type="button"
                 aria-label={gravando?'Parar gravação':'Gravar áudio'} title={gravando?'Finalizar áudio':'Gravar áudio'}
                 onClick={()=>void alternarGravacao()} disabled={enviando}>{gravando?<Square size={17}/>:<Mic size={18}/>}</button>
-              <span>{gravando?'Gravando áudio…':'Enter envia · Shift + Enter quebra linha'}</span>
+              <span>{gravando?'Gravando áudio…':'Envie mensagem, áudio ou arquivo'}</span>
             </div>
             <button className={s.botaoEnviar} type="submit" aria-label="Enviar mensagem"
               disabled={enviando||gravando||carregandoMensagens||(!texto.trim()&&!arquivo)}>{enviando?<LoaderCircle className={s.girando} size={18}/>:<SendHorizontal size={19}/>}</button>

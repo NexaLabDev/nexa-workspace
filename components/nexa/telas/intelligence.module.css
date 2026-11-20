@@ -64,3 +64,22 @@
 .linkAtivo,.linkFerramenta,.linkVoltar{white-space:nowrap;display:inline-flex;align-items:center;gap:8px;padding:11px 16px;background:#232826;color:#bdc6c0;border:1px solid #3b4540;border-radius:11px;text-decoration:none;font-size:13px;font-weight:600}
 .linkAtivo{background:#d6f56a;color:#192014;border-color:#d6f56a}
 .linkFerramenta:hover,.linkVoltar:hover{border-color:#d6f56a;color:#e0f7ab}
+
+
+/* Nexa AI no celular é uma tela de conversa, não uma página longa. */
+@media(max-width:700px){
+  .pagina{
+    flex:1 1 auto;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+    height:100%;
+    max-height:100%;
+    overflow:hidden;
+    gap:0;
+    padding:0 0 3px;
+  }
+  .pagina > .cabecalho{
+    display:none;
+  }
+}
