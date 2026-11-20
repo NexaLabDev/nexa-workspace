@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { BrainCircuit, Calculator, ShieldCheck, Wallet } from 'lucide-react';
 import NexaShell from '../NexaShell';
 import NexaChat from './NexaChat';
+import ModuloComProtecao from '../ModuloComProtecao';
 import s from './intelligence.module.css';
 
 export default function TelaIntelligence() {
@@ -27,7 +28,9 @@ export default function TelaIntelligence() {
             <Calculator size={17} aria-hidden/> Precificação, custos e atendimento
           </Link>
         </nav>
-        <NexaChat/>
+        <ModuloComProtecao rota="intelligence-chat">
+          <NexaChat/>
+        </ModuloComProtecao>
         <p className={s.rodape}>A Nexa Intelligence usa os gastos e orçamentos cadastrados para contextualizar as respostas. Nenhuma conversa de cliente é analisada automaticamente.</p>
       </div>
     </NexaShell>
