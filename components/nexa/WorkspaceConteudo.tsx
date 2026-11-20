@@ -2,6 +2,7 @@
 
 import { lazy, Suspense, useDeferredValue, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import ModuloComProtecao from './ModuloComProtecao';
 
 // As telas já são componentes de cliente e leem os dados compartilhados do
 // Supabase. A primeira visita valida o usuário no servidor (AreaPrivada);
@@ -17,6 +18,7 @@ const Kanban = lazy(() => import('@/components/nexa/telas/TelaKanban'));
 const Catalogo = lazy(() => import('@/components/nexa/telas/TelaCatalogo'));
 const Calculadora = lazy(() => import('@/components/nexa/telas/TelaCalculadora'));
 const Intelligence = lazy(() => import('@/components/nexa/telas/TelaIntelligence'));
+const IntelligenceGestao = lazy(() => import('@/components/nexa/telas/TelaIntelligenceGestao'));
 const Documentos = lazy(() => import('@/components/nexa/telas/TelaDocumentos'));
 const Configuracoes = lazy(() => import('@/components/nexa/telas/TelaConfiguracoes'));
 
@@ -31,6 +33,7 @@ const titulos: Record<string, string> = {
   '/catalogo': 'Serviços',
   '/calculadora': 'Calculadora de Serviço',
   '/intelligence': 'Nexa Intelligence',
+  '/intelligence/gestao': 'Nexa Intelligence — Gestão',
   '/documentos': 'Gerador de Documentos',
   '/configuracoes': 'Configurações',
 };
@@ -50,6 +53,7 @@ function ModuloAtual({ rota }: { rota: string }) {
     case '/catalogo': return <Catalogo />;
     case '/calculadora': return <Calculadora />;
     case '/intelligence': return <Intelligence />;
+    case '/intelligence/gestao': return <IntelligenceGestao />;
     case '/documentos': return <Documentos />;
     case '/configuracoes': return <Configuracoes />;
     default:
@@ -92,7 +96,9 @@ export default function WorkspaceConteudo() {
         </div>
       }
     >
-      <ModuloAtual rota={rotaVisivel} />
+      <ModuloComProtecao key={rotaVisivel} rota={rotaVisivel}>
+        <ModuloAtual rota={rotaVisivel} />
+      </ModuloComProtecao>
     </Suspense>
   );
 }
