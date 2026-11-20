@@ -690,3 +690,22 @@
   font-size: 13.5px;
   color: #bdbdbd;
 }
+
+
+@media(max-width:700px) {
+  .pagina,.linha1,.linha2,.gradeMini,.financeiro { min-width:0; max-width:100%; }
+  .cabecalho { flex-wrap:wrap; gap:10px; }
+  .titulo { min-width:0; }
+  .andamento { padding:16px 13px; }
+  .andamentoTopo { gap:10px; flex-wrap:wrap; }
+  .andamentoTopo h2 { font-size:21px; overflow-wrap:anywhere; }
+  .andamentoTopo p { font-size:13px; line-height:1.45; }
+  .andamentoIcone { width:48px; height:48px; }
+  .andamentoLista { padding:5px 12px; }
+  .andamentoLista li { flex-wrap:wrap; font-size:14px; gap:7px; }
+  .andamentoLista strong { font-size:15px; white-space:normal; text-align:right; overflow-wrap:anywhere; }
+  .recorrente { padding:14px; gap:10px; }
+  .recorrenteNumeros { min-width:0; width:100%; margin-left:0; gap:9px 20px; }
+  .recorrenteNumeros strong { font-size:18px; overflow-wrap:anywhere; }
+  .barras { max-width:100%; }
+}

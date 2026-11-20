@@ -517,3 +517,31 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+
+@media(max-width:700px) {
+  .heroi { min-width:0; max-width:100%; gap:14px; padding:10px 0 16px; }
+  .clima { min-width:0; max-width:100%; width:100%; height:auto; min-height:100px; padding:14px; gap:14px; justify-content:center; }
+  .relogio { max-width:100%; white-space:normal; }
+  .hora { font-size:clamp(45px,17vw,72px); white-space:nowrap; }
+  .data { font-size:14px; }
+  .saudacao { min-width:0; max-width:100%; padding:0 2px; }
+  .saudacao h1 { font-size:clamp(21px,6vw,28px); line-height:1.2; }
+  .saudacao p { font-size:13px; line-height:1.5; }
+  .sublinhado { margin-top:14px; }
+  .indicadores { grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; min-width:0; max-width:100%; }
+  .cartao { min-height:110px; height:auto; gap:9px; padding:13px 10px; flex-wrap:wrap; }
+  .cartao > svg { width:22px; height:22px; }
+  .cartao :is(h2,strong,span) { min-width:0; overflow-wrap:anywhere; }
+  .paineis { width:100%; min-width:0; max-width:100%; margin-top:12px; gap:12px; }
+  .painel { padding:15px 12px; min-width:0; max-width:100%; }
+  .acoes { min-width:0; max-width:100%; }
+  .acao { min-width:0; max-width:100%; }
+  .agendaItem { min-width:0; max-width:100%; }
+  .metaValores strong { font-size:14px; }
+  .metaValores span { font-size:12px; }
+}
+@media(max-width:365px) {
+  .indicadores { grid-template-columns:minmax(0,1fr); }
+  .cartao { min-height:80px; }
+}

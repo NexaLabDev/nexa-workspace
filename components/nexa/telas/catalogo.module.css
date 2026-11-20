@@ -214,3 +214,13 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+
+@media(max-width:700px) {
+  .config,.config section,.linhaCampo { min-width:0; max-width:100%; }
+  .linhaCampoTopo { grid-template-columns:minmax(0,1fr); }
+  .linhaCampoRodape { flex-wrap:wrap; gap:8px; }
+  .listaChecklist li { min-width:0; flex-wrap:wrap; }
+  .listaChecklist li :global(input) { min-width:0; flex:1 1 180px; }
+  .arquivados li { flex-wrap:wrap; overflow-wrap:anywhere; }
+}

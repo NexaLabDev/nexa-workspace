@@ -1022,3 +1022,61 @@
     min-height:0;flex-shrink:1;
   }
 }
+
+
+/* Mobile: flex/scroll com uma única área vertical por tela.
+   O menu inferior permanece original e pode deslizar horizontalmente. */
+@media (max-width:700px) {
+  .raiz,.raizInterna {
+    height:100svh; height:100dvh;
+    min-width:0; min-height:0;
+    grid-template-rows:minmax(0,1fr) auto;
+    padding-left:max(10px,env(safe-area-inset-left));
+    padding-right:max(10px,env(safe-area-inset-right));
+    padding-top:max(8px,env(safe-area-inset-top));
+  }
+  .principal {
+    min-height:0;
+    overflow-y:auto;
+    overflow-x:hidden;
+    scroll-padding-bottom:16px;
+    padding-bottom:16px;
+    scrollbar-width:thin;
+    overscroll-behavior:contain;
+  }
+  .principal > *:not(.topo) { max-width:100%; }
+  .principal :is(.pagina,.grade,.quadro,.painel) { min-width:0; }
+  .topo { flex:0 0 auto; gap:8px; margin-bottom:4px; }
+  .topo .busca { min-height:48px; height:48px; border-radius:15px; }
+  .topo .buscaGatilho { margin-left:8px; font-size:13px; }
+  .topoComCanto { padding-right:0; }
+  .topo .btnNovo { height:36px; font-size:13px; }
+  .marcaTitulo { font-size:clamp(16px,5vw,20px); line-height:1.2; }
+  .navCelular {
+    width:calc(100% + max(10px,env(safe-area-inset-left)) + max(10px,env(safe-area-inset-right)));
+    margin-left:calc(-1 * max(10px,env(safe-area-inset-left)));
+    margin-right:calc(-1 * max(10px,env(safe-area-inset-right)));
+    min-width:0;
+    scroll-snap-type:x proximity;
+    scroll-padding-inline:10px;
+    overscroll-behavior-x:contain;
+  }
+  .navCelularItem {
+    flex:0 0 62px;
+    min-height:55px;
+    justify-content:center;
+    scroll-snap-align:center;
+    touch-action:pan-x;
+  }
+  .menuFlutuante { inset:auto 10px max(74px,env(safe-area-inset-bottom)) 10px; max-height:min(72dvh,620px); }
+  .paletaFundo { padding:max(12px,env(safe-area-inset-top)) 10px 12px; }
+  .paleta { width:100%; max-height:calc(100dvh - 24px); }
+  .raizMenuRetratil { padding-top:max(8px,env(safe-area-inset-top)); }
+  .raizMenuRetratil .principal { min-height:0; overflow-y:auto; overflow-x:hidden; }
+}
+@media (max-width:380px) {
+  .topo { gap:6px; }
+  .topo .marcaTitulo { font-size:16px; }
+  .topo .buscaSimples { height:42px; }
+  .navCelularItem { flex-basis:58px; }
+}

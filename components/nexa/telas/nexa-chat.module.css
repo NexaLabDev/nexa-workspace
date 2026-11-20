@@ -99,3 +99,40 @@
 .composerRodape .botaoEnviar{width:34px;height:34px;flex-shrink:0}
 .avisoPrivacidade{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}
 @media(max-width:650px){.acoesAnexo span{font-size:8px}.avisoPrivacidade{gap:4px}.avisoPrivacidade span{display:block;width:100%}}
+
+
+/* Chat da IA: distribui a altura entre cabeçalho, mensagens e teclado.
+   Nenhum min-height rígido em aparelhos pequenos / em paisagem. */
+@media(max-width:700px) {
+  .raiz {
+    display:flex; flex-direction:column; min-width:0;
+    width:100%; max-width:100%;
+    height:clamp(340px,calc(100dvh - 175px),900px);
+    min-height:0; overflow:hidden;
+  }
+  .principal { flex:1 1 auto; min-height:0; max-height:100%; }
+  .barra { min-height:0; }
+  .mensagens { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; }
+  .abertura { min-height:0; height:auto; padding:16px 4px; }
+  .abertura h2 { font-size:clamp(18px,5vw,22px); }
+  .sugestoes { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .sugestoes button { min-width:0; padding:10px 8px; }
+  .sugestoes button span { min-width:0; overflow-wrap:anywhere; }
+  .mensagem { min-width:0; }
+  .balao { max-width:calc(100% - 44px); overflow-wrap:anywhere; }
+  .usuario .balao { max-width:90%; }
+  .base { flex:0 0 auto; min-width:0; padding:8px; }
+  .composer { min-width:0; width:100%; }
+  .composer textarea { width:100%; min-height:40px; max-height:100px; resize:none; }
+  .avisoPrivacidade { gap:3px; max-height:34px; overflow:auto; }
+  .acessibilidade { overflow-wrap:anywhere; }
+}
+@media(max-width:380px) {
+  .sugestoes { grid-template-columns:minmax(0,1fr); }
+  .composerRodape .acoesAnexo span { display:none; }
+  .raiz { height:calc(100dvh - 160px); }
+}
+@media(max-height:650px) and (max-width:700px) {
+  .raiz { height:calc(100dvh - 130px); }
+  .abertura p { display:none; }
+}

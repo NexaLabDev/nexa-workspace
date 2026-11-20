@@ -439,3 +439,28 @@
   .item { gap: 8px; overflow-wrap: anywhere; }
   .item :is(span,strong,small,p) { min-width: 0; overflow-wrap: anywhere; }
 }
+
+
+@media(max-width:700px) {
+  .pagina,.corpo,.calendario,.lista { min-width:0; max-width:100%; }
+  .cabecalho { flex-wrap:wrap; gap:10px; }
+  .titulo { min-width:0; }
+  .seletorMes { max-width:100%; }
+  .numeros { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  .numero { padding:12px; min-width:0; }
+  .corpo { grid-template-columns:minmax(0,1fr); }
+  .calendario { min-width:0; }
+  .dias { min-width:0; }
+  .dia { min-width:0; padding:7px 1px; }
+  .dia small { font-size:9px; }
+  .listaTopo { gap:8px; }
+  .item { min-width:0; flex-wrap:wrap; align-items:center; }
+  .itemTexto { min-width:0; flex:1 1 55%; }
+  .itemTexto strong { white-space:normal; overflow-wrap:anywhere; }
+  .item > b { white-space:normal; overflow-wrap:anywhere; }
+}
+@media(max-width:360px) {
+  .numero { padding:9px; }
+  .dia b { font-size:12px; }
+  .dia small { font-size:8px; }
+}

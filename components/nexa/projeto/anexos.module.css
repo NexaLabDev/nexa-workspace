@@ -818,3 +818,21 @@
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   }
 }
+
+
+@media(max-width:700px) {
+  .aba,.envio,.resultados,.categorias { min-width:0; max-width:100%; }
+  .envio { padding:11px; }
+  .envioLinha { flex-wrap:wrap; min-width:0; gap:7px; }
+  .envioCategoria { flex-wrap:wrap; min-width:0; }
+  .envioCategoria select { width:100%; min-width:0; flex:1 1 160px; }
+  .linha { min-width:0; flex-wrap:wrap; gap:7px; }
+  .chips { padding-left:0; min-width:0; flex:1 1 100%; }
+  .grade { grid-template-columns:repeat(auto-fit,minmax(min(130px,100%),1fr)); }
+  .gaveta { min-width:0; width:min(100vw,440px); max-width:100%; height:100dvh; }
+  .gavetaTopo { padding:9px; }
+  .gavetaCorpo { padding:12px; overflow-y:auto; }
+  .novaVersao { flex-wrap:wrap; }
+  .versoes li { min-width:0; }
+  .versoes strong { overflow-wrap:anywhere; }
+}

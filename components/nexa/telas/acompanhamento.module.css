@@ -305,3 +305,27 @@
   font-size: 13px;
   opacity: 0.75;
 }
+
+
+@media(max-width:700px) {
+  .pagina { min-width:0; max-width:100%; padding:18px 11px max(42px,env(safe-area-inset-bottom)); overflow-x:hidden; }
+  .coluna { min-width:0; max-width:100%; gap:12px; }
+  .marca { gap:8px; }
+  .marca span { font-size:20px; }
+  .cabecalho { margin:12px 0 8px; }
+  .cabecalho h1 { font-size:clamp(23px,7vw,32px); }
+  .subtitulo { font-size:13px; line-height:1.5; }
+  .cartao { padding:14px 12px; min-width:0; overflow-wrap:anywhere; }
+  .linha { min-width:0; gap:10px; flex-wrap:wrap; }
+  .linha strong { font-size:15px; }
+  .iconeCaixa { width:48px; height:48px; }
+  .nomeProjeto { font-size:17px!important; overflow-wrap:anywhere; }
+  .progressoTopo { gap:10px; flex-wrap:wrap; }
+  .linhaTempo { padding-left:12px; }
+  .linhaTempo li { gap:12px; min-width:0; }
+  .linhaTempo strong { font-size:15px; overflow-wrap:anywhere; }
+  .linhaTempo p { font-size:13px; }
+  .status { padding:16px 14px; }
+  .statusNome { overflow-wrap:anywhere; }
+  .compacto { padding:13px; }
+}

@@ -663,3 +663,25 @@
   .cartaoRodape { flex-wrap: wrap; }
   .cartaoRodape b, .data { white-space: normal; overflow-wrap: anywhere; }
 }
+
+
+@media (max-width:700px) {
+  .pagina { width:100%; min-width:0; max-width:100%; }
+  .cabecalho { min-width:0; gap:10px; }
+  .numeros { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .numero { min-height:70px; }
+  .abas { overflow-x:auto; max-width:100%; flex-wrap:nowrap; overscroll-behavior-x:contain; scrollbar-width:none; }
+  .aba { flex:0 0 auto; white-space:nowrap; }
+  .filtros { min-width:0; max-width:100%; }
+  .filtros :is(select,input) { max-width:100%; }
+  .buscaFunil { flex:1 1 100%; min-width:0; }
+  .visoes { margin-left:auto; }
+  .quadro { max-width:100%; min-width:0; min-height:300px; }
+  .cartao { max-width:100%; min-width:0; }
+  .cartao :is(strong,span,p) { overflow-wrap:anywhere; }
+}
+@media (max-width:360px) {
+  .numeros { gap:6px; }
+  .numero { padding:8px; gap:6px; }
+  .numero strong { font-size:15px; }
+}

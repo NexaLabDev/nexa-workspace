@@ -13,7 +13,6 @@ import { usePathname } from 'next/navigation';
 import NavegacaoRapida from './NavegacaoRapida';
 import {
   Box,
-  Calculator,
   BrainCircuit,
   Columns2,
   FileText,
@@ -61,7 +60,6 @@ const TRILHO: Array<{ aba: AbaNexa; nome: string; curto: string; href: string; i
   { aba: 'clientes', nome: 'Clientes', curto: 'Clientes', href: '/clientes', icone: Users },
   { aba: 'kanban', nome: 'Kanban', curto: 'Kanban', href: '/kanban', icone: Columns2 },
   { aba: 'servicos', nome: 'Serviços', curto: 'Serviços', href: '/catalogo', icone: Box },
-  { aba: 'calculadora', nome: 'Calculadora de Serviço', curto: 'Calcular', href: '/calculadora', icone: Calculator },
   { aba: 'intelligence', nome: 'Nexa Intelligence', curto: 'Nexa IA', href: '/intelligence', icone: BrainCircuit },
   { aba: 'documentos', nome: 'Gerador de Documentos', curto: 'Docs', href: '/documentos', icone: FileText },
 ];

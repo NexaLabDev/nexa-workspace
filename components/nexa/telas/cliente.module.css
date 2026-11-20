@@ -123,3 +123,18 @@
     flex-wrap: wrap;
   }
 }
+
+
+@media(max-width:700px) {
+  .titulo { min-width:0; flex-wrap:wrap; gap:9px; }
+  .titulo h1 { font-size:clamp(22px,7vw,28px); overflow-wrap:anywhere; }
+  .titulo p { font-size:13px; overflow-wrap:anywhere; flex-wrap:wrap; }
+  .numerosCliente { min-width:0; margin-bottom:14px; }
+  .grade { grid-template-columns:minmax(0,1fr); gap:12px; }
+  .coluna { min-width:0; gap:12px; }
+  .lista > li { min-width:0; gap:8px; flex-wrap:wrap; }
+  .lista > li > div { min-width:0; }
+  .lista strong,.lista span { overflow-wrap:anywhere; }
+  .historico { max-height:none; overflow:visible; }
+  .historico li { min-width:0; }
+}
