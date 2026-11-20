@@ -10,6 +10,7 @@ type Parte = {type:'input_text';text:string}|{type:'input_image';image_url:strin
 const cabe = {'Cache-Control':'private, no-store'};
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const limiteArquivo=3*1024*1024;
+const chamadas=new Map<string,number[]>();
 const numerico=(v:unknown)=>typeof v==='number' && Number.isFinite(v) && v>=0 && v<=100000000;
 const tiposImagem:Record<string,string>={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif'};
 const tiposAudio:Record<string,string>={mp3:'audio/mpeg',mp4:'audio/mp4',m4a:'audio/mp4',ogg:'audio/ogg',webm:'audio/webm',wav:'audio/wav',flac:'audio/flac'};
@@ -55,6 +56,11 @@ export async function responderNexa(req:Request) {
     try{if(new URL(origem).host!==new URL(req.url).host)throw Error('origem');}
     catch{return erro('Origem não autorizada.',403);}
   }
+  const agora=Date.now();
+  const ultimas=(chamadas.get(perfilSeguro.id)||[]).filter(x=>agora-x<60000);
+  if(ultimas.length>=8)return erro('Máximo de 8 mensagens por minuto nesta versão.',429);
+  chamadas.set(perfilSeguro.id,[...ultimas,agora]);
+  if(chamadas.size>1500)chamadas.clear();
   const key=process.env.OPENAI_API_KEY?.trim();
   if(!key)return erro('Cadastre OPENAI_API_KEY nas variáveis da Vercel para ativar a Nexa Intelligence. O histórico e os custos continuam protegidos.',503,{configurado:false});
   const size=Number(req.headers.get('content-length')||0);
@@ -187,7 +193,7 @@ export async function responderNexa(req:Request) {
   ].join('\n');
 
   const entrada: Array<Record<string,unknown>>=(antigos||[]).filter(x=>x.papel==='usuario'||x.papel==='assistente')
-    .map(x=>({role:x.papel==='usuario'?'user':'assistant',content:x.texto}));
+    .map(x=>({role:x.papel==='usuario'?'user':'assistant',content:x.texto.slice(0,7000)}));
   const conteudos:Parte[]=[{type:'input_text',text:mensagem}];
   if(entradaArquivo)conteudos.push(entradaArquivo);
   entrada.push({role:'user',content:conteudos});
@@ -309,6 +315,21 @@ export async function responderNexa(req:Request) {
           'Duração do áudio não informada; a transcrição não foi incluída na estimativa.':'Estimativa por tokens; imagens/documentos entram no total de entrada.'}
     },{headers:cabe});
   }catch(e){
+    if(relatoFerramentas.length){
+      const textoFalha='Atualizei os dados solicitados ('+relatoFerramentas.join('; ')+
+        '), mas a OpenAI não concluiu a resposta desta vez. Confira os dados antes de enviar novamente.';
+      const r=await db.from('nexa_intelligence_chat_mensagens').insert({
+        chat_id:idChat,papel:'assistente',texto:textoFalha
+      }).select('id,chat_id,papel,texto,criado_em').single();
+      if(!r.error&&r.data){
+        return NextResponse.json({
+          chat:{id:idChat,titulo:chat.titulo,atualizado_em:new Date().toISOString()},
+          usuario:mensagemInserida.data,assistente:r.data,
+          consumo:{entrada:entradaTokens,saida:saidaTokens,custo_estimado_usd:0,
+            custo_mes_estimado_usd:gastoMes}
+        },{headers:cabe});
+      }
+    }
     return erro(e instanceof Error?e.message:'A conexão com a IA falhou.',502,{chatId:idChat});
   }
 }
