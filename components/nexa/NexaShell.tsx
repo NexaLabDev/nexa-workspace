@@ -119,6 +119,43 @@ export default function NexaShell({
   const ativo = (href: string) => pathname === href ||
     (href === '/clientes' && pathname.startsWith('/clientes/'));
   const { raizRef, principalRef, navCelularRef } = useRolagemNavegacao(aba);
+  // O teclado virtual reduz a área visível no iOS/Android. Ajusta o shell do
+  // chat diretamente, sem remontar o compositor ou perder o texto digitado.
+  useEffect(() => {
+    if (aba !== 'intelligence') return;
+    const raiz = raizRef.current;
+    if (!raiz || typeof window === 'undefined') return;
+    const viewport = window.visualViewport;
+    const ajustar = () => {
+      if (window.innerWidth > 700) {
+        raiz.style.removeProperty('--nexa-chat-viewport');
+        raiz.classList.remove(s.tecladoAberto);
+        return;
+      }
+      const altura = viewport?.height ?? window.innerHeight;
+      raiz.style.setProperty('--nexa-chat-viewport', Math.max(260, altura) + 'px');
+      const foco = document.activeElement;
+      const campoFocado = foco instanceof HTMLElement &&
+        raiz.contains(foco) && /^(INPUT|TEXTAREA)$/.test(foco.tagName);
+      const teclado = campoFocado && window.innerHeight - altura > 135;
+      raiz.classList.toggle(s.tecladoAberto, teclado);
+    };
+    ajustar();
+    viewport?.addEventListener('resize', ajustar);
+    viewport?.addEventListener('scroll', ajustar);
+    window.addEventListener('resize', ajustar);
+    document.addEventListener('focusin', ajustar);
+    document.addEventListener('focusout', ajustar);
+    return () => {
+      viewport?.removeEventListener('resize', ajustar);
+      viewport?.removeEventListener('scroll', ajustar);
+      window.removeEventListener('resize', ajustar);
+      document.removeEventListener('focusin', ajustar);
+      document.removeEventListener('focusout', ajustar);
+      raiz.style.removeProperty('--nexa-chat-viewport');
+      raiz.classList.remove(s.tecladoAberto);
+    };
+  }, [aba, raizRef]);
   const inicio = aba === 'dashboard';
   const [buscaAberta, setBuscaAberta] = useState(false);
   const [menuAberto, setMenuAberto] = useState(false);
@@ -156,7 +193,7 @@ export default function NexaShell({
   return (
     <div
       ref={raizRef}
-      className={`${s.raiz} ${inicio ? '' : s.raizInterna} ${menuRetratil ? s.raizMenuRetratil : ''}`}
+      className={`${s.raiz} ${inicio ? '' : s.raizInterna} ${menuRetratil ? s.raizMenuRetratil : ''} ${aba === 'intelligence' ? s.raizIntelligence : ''}`}
       style={escala > 1 ? { zoom: escala } : undefined}
     >
       {/* ===== Barra de ícones / menu lateral recolhível ===== */}
